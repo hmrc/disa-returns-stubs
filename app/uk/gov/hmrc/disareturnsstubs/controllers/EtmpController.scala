@@ -23,14 +23,12 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import javax.inject.Inject
 import scala.concurrent.Future
 
-class EtmpController @Inject()(cc: ControllerComponents) extends BackendController(cc) {
+class EtmpController @Inject() (cc: ControllerComponents) extends BackendController(cc) {
 
   def checkReturnsObligationStatus(isaManagerReferenceNumber: String): Action[AnyContent] = Action.async { request =>
     isaManagerReferenceNumber match {
-      case "Z1111" => Future.successful(Unauthorized(
-        Json.toJson(EtmpObligations(obligationAlreadyMet = true))))
-      case _ => Future.successful(Ok(
-        Json.toJson(EtmpObligations(obligationAlreadyMet = false))))
+      case "Z1111" => Future.successful(Unauthorized(Json.toJson(EtmpObligations(obligationAlreadyMet = true))))
+      case _       => Future.successful(Ok(Json.toJson(EtmpObligations(obligationAlreadyMet = false))))
     }
   }
 
@@ -38,7 +36,7 @@ class EtmpController @Inject()(cc: ControllerComponents) extends BackendControll
     request.headers.get("Test-Scenario") match {
       case Some("reporting-window-closed") =>
         Future.successful(Unauthorized(Json.toJson(EtmpReportingWindow(reportingWindowOpen = false))))
-      case _ =>
+      case _                               =>
         Future.successful(Ok(Json.toJson(EtmpReportingWindow(reportingWindowOpen = true))))
     }
   }
