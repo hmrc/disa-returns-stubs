@@ -1,1 +1,6 @@
 # microservice specific routes
+
+
+GET /etmp/check-obligation-status/:isaManagerReferenceNumber                uk.gov.hmrc.disareturnsstubs.controllers.EtmpController.checkReturnsObligationStatus(isaManagerReferenceNumber: String)
+
+GET /etmp/check-reporting-window                                            uk.gov.hmrc.disareturnsstubs.controllers.EtmpController.checkReportingWindowStatus()
