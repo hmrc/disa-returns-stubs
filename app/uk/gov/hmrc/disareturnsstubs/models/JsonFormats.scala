@@ -14,16 +14,20 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.disareturnsstubs.config
+package uk.gov.hmrc.disareturnsstubs.models
 
-import javax.inject.{Inject, Singleton}
-import play.api.Configuration
+import play.api.libs.json._
+import uk.gov.hmrc.http.UpstreamErrorResponse
 
-@Singleton
-class AppConfig @Inject() (config: Configuration) {
+object JsonFormats {
 
-  val appName: String = config.get[String]("appName")
-
-  val reportingWindowScenario: String = config.get[String]("stub.reportingWindowScenario")
-
+  // Custom Writes for UpstreamErrorResponse (since it's not serializable by default)?
+  implicit val upstreamErrorResponseWrites: Writes[UpstreamErrorResponse] = new Writes[UpstreamErrorResponse] {
+    def writes(e: UpstreamErrorResponse): JsValue = Json.obj(
+      "message"    -> e.message,
+      "statusCode" -> e.statusCode,
+      "reportAs"   -> e.reportAs,
+      "headers"    -> e.headers
+    )
+  }
 }
