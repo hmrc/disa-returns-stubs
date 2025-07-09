@@ -32,9 +32,12 @@ class EtmpController @Inject() (cc: ControllerComponents, appConfig: AppConfig) 
   def checkReturnsObligationStatus(isaManagerReferenceNumber: String): Action[AnyContent] = Action.async { request =>
     isaManagerReferenceNumber match {
       case "Z1111" => Future.successful(Ok(Json.toJson(EtmpObligations(obligationAlreadyMet = true))))
-      case "Z1234" => Future.successful(InternalServerError(Json.toJson(UpstreamErrorResponse(
-        statusCode = INTERNAL_SERVER_ERROR,
-        message = "Upstream error"))))
+      case "Z1234" =>
+        Future.successful(
+          InternalServerError(
+            Json.toJson(UpstreamErrorResponse(statusCode = INTERNAL_SERVER_ERROR, message = "Upstream error"))
+          )
+        )
       case "Z4321" =>
         Future.successful(
           BadRequest(Json.obj("error" -> "Unknown failure: Bad_Request"))
@@ -45,14 +48,14 @@ class EtmpController @Inject() (cc: ControllerComponents, appConfig: AppConfig) 
 
   def checkReportingWindowStatus: Action[AnyContent] = Action.async {
     appConfig.reportingWindowScenario.toLowerCase match {
-      case "open" =>
+      case "open"    =>
         Future.successful(Ok(Json.toJson(EtmpReportingWindow(reportingWindowOpen = true))))
-      case "closed" =>
+      case "closed"  =>
         Future.successful(Ok(Json.toJson(EtmpReportingWindow(reportingWindowOpen = false))))
       case "failure" =>
         val error = UpstreamErrorResponse("Upstream error", 500)
         Future.successful(InternalServerError(Json.toJson(error)))
-      case _ =>
+      case _         =>
         Future.successful(
           BadRequest(Json.obj("error" -> "Unknown failure: Bad_Request"))
         )
