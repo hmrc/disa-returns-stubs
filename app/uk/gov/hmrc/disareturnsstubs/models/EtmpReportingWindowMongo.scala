@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.disareturnsstubs.config
+package uk.gov.hmrc.disareturnsstubs.models
 
-import javax.inject.{Inject, Singleton}
-import play.api.Configuration
+import play.api.libs.json.{Json, OFormat}
 
-@Singleton
-class AppConfig @Inject() (config: Configuration) {
+case class EtmpReportingWindowMongo(_id: String = "test-scenario", reportingWindowOpen: Boolean)
 
-  val appName: String = config.get[String]("appName")
+object EtmpReportingWindowMongo {
+  implicit val format: OFormat[EtmpReportingWindowMongo] = Json.format[EtmpReportingWindowMongo]
 }
