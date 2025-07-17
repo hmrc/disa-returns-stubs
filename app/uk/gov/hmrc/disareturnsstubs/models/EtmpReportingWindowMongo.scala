@@ -23,4 +23,3 @@ case class EtmpReportingWindowDTO(_id: String = "test-scenario", reportingWindow
 object EtmpReportingWindowDTO {
   implicit val format: OFormat[EtmpReportingWindowDTO] = Json.format[EtmpReportingWindowDTO]
 }
-

@@ -17,7 +17,7 @@
 package uk.gov.hmrc.disareturnsstubs.repositories
 
 import org.mongodb.scala.model.{Filters, ReplaceOptions}
-import uk.gov.hmrc.disareturnsstubs.models.EtmpReportingWindowMongo
+import uk.gov.hmrc.disareturnsstubs.models.EtmpReportingWindowDTO
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
@@ -26,15 +26,15 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class ReportingWindowRepository @Inject() (mc: MongoComponent)(implicit ec: ExecutionContext)
-    extends PlayMongoRepository[EtmpReportingWindowMongo](
+    extends PlayMongoRepository[EtmpReportingWindowDTO](
       mongoComponent = mc,
       collectionName = "reportingWindow",
-      domainFormat = EtmpReportingWindowMongo.format,
+      domainFormat = EtmpReportingWindowDTO.format,
       indexes = Seq.empty
     ) {
 
   def setReportingWindowState(open: Boolean): Future[Unit] = {
-    val doc = EtmpReportingWindowMongo(reportingWindowOpen = open)
+    val doc = EtmpReportingWindowDTO(reportingWindowOpen = open)
     collection
       .replaceOne(
         Filters.eq("_id", "test-scenario"),
