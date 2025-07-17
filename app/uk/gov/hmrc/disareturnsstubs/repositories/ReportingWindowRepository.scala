@@ -28,7 +28,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class ReportingWindowRepository @Inject() (mc: MongoComponent)(implicit ec: ExecutionContext)
     extends PlayMongoRepository[EtmpReportingWindowMongo](
       mongoComponent = mc,
-      collectionName = "initiateSubmission",
+      collectionName = "reportingWindow",
       domainFormat = EtmpReportingWindowMongo.format,
       indexes = Seq.empty
     ) {

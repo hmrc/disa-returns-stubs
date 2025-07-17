@@ -18,8 +18,9 @@ package uk.gov.hmrc.disareturnsstubs.models
 
 import play.api.libs.json.{Json, OFormat}
 
-case class EtmpReportingWindowMongo(_id: String = "test-scenario", reportingWindowOpen: Boolean)
+case class EtmpReportingWindowDTO(_id: String = "test-scenario", reportingWindowOpen: Boolean)
 
-object EtmpReportingWindowMongo {
-  implicit val format: OFormat[EtmpReportingWindowMongo] = Json.format[EtmpReportingWindowMongo]
+object EtmpReportingWindowDTO {
+  implicit val format: OFormat[EtmpReportingWindowDTO] = Json.format[EtmpReportingWindowDTO]
 }
+
