@@ -25,8 +25,8 @@ import uk.gov.hmrc.disareturnsstubs.repositories.ReportingWindowRepository
 
 class EtmpControllerISpec extends PlaySpec with GuiceOneAppPerSuite with DefaultAwaitTimeout {
 
-  val obligationStatusEndpoint = "/disa-returns-stubs/etmp/check-obligation-status"
-  val reportingWindowEndpoint = "/disa-returns-stubs/etmp/check-reporting-window"
+  val obligationStatusEndpoint = "/etmp/check-obligation-status"
+  val reportingWindowEndpoint = "/etmp/check-reporting-window"
 
   "EtmpController GET /etmp/check-obligation-status/:isaManagerReferenceNumber" should {
 
