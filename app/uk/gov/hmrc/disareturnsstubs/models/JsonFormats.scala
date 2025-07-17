@@ -20,8 +20,6 @@ import play.api.libs.json._
 import uk.gov.hmrc.http.UpstreamErrorResponse
 
 object JsonFormats {
-
-  // Custom Writes for UpstreamErrorResponse (since it's not serializable by default)?
   implicit val upstreamErrorResponseWrites: Writes[UpstreamErrorResponse] = new Writes[UpstreamErrorResponse] {
     def writes(e: UpstreamErrorResponse): JsValue = Json.obj(
       "message"    -> e.message,

@@ -25,7 +25,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ReportingWindowRepository @Inject()(mc: MongoComponent)(implicit ec: ExecutionContext)
+class ReportingWindowRepository @Inject() (mc: MongoComponent)(implicit ec: ExecutionContext)
     extends PlayMongoRepository[EtmpReportingWindowMongo](
       mongoComponent = mc,
       collectionName = "initiateSubmission",
@@ -35,17 +35,20 @@ class ReportingWindowRepository @Inject()(mc: MongoComponent)(implicit ec: Execu
 
   def setReportingWindowState(open: Boolean): Future[Unit] = {
     val doc = EtmpReportingWindowMongo(reportingWindowOpen = open)
-    collection.replaceOne(
-      Filters.eq("_id", "test-scenario"),
-      doc,
-      new ReplaceOptions().upsert(true)
-    ).toFuture().map(_ => ())
+    collection
+      .replaceOne(
+        Filters.eq("_id", "test-scenario"),
+        doc,
+        new ReplaceOptions().upsert(true)
+      )
+      .toFuture()
+      .map(_ => ())
   }
 
-  def getReportingWindowState: Future[Option[Boolean]] = {
-    collection.find(Filters.eq("_id", "test-scenario"))
+  def getReportingWindowState: Future[Option[Boolean]] =
+    collection
+      .find(Filters.eq("_id", "test-scenario"))
       .first()
       .toFutureOption()
       .map(_.map(_.reportingWindowOpen))
-  }
 }

@@ -26,15 +26,16 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class ReportingWindowController @Inject() (
-                                            cc: ControllerComponents,
-                                            repository: ReportingWindowRepository
-                                          )(implicit ec: ExecutionContext) extends AbstractController(cc) {
+  cc: ControllerComponents,
+  repository: ReportingWindowRepository
+)(implicit ec: ExecutionContext)
+    extends AbstractController(cc) {
 
   def setReportingWindowState(): Action[JsValue] = Action.async(parse.json) { request =>
     request.body.validate[EtmpReportingWindow] match {
       case JsSuccess(value, _) =>
         repository.setReportingWindowState(value.reportingWindowOpen).map(_ => NoContent)
-      case JsError(_) =>
+      case JsError(_)          =>
         Future.successful(BadRequest(Json.obj("error" -> "Missing or invalid 'reportingWindowOpen' field")))
     }
   }
