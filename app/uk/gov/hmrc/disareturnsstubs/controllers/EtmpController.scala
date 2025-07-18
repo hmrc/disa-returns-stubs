@@ -16,28 +16,45 @@
 
 package uk.gov.hmrc.disareturnsstubs.controllers
 
+import play.api.Logging
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import uk.gov.hmrc.disareturnsstubs.models.JsonFormats._
 import uk.gov.hmrc.disareturnsstubs.models.{EtmpObligations, EtmpReportingWindow}
+import uk.gov.hmrc.disareturnsstubs.repositories.ReportingWindowRepository
+import uk.gov.hmrc.http.UpstreamErrorResponse
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-import javax.inject.Inject
-import scala.concurrent.Future
 
-class EtmpController @Inject() (cc: ControllerComponents) extends BackendController(cc) {
+import javax.inject.Inject
+import scala.concurrent.{ExecutionContext, Future}
+
+class EtmpController @Inject() (cc: ControllerComponents, reportingWindowRepository: ReportingWindowRepository)(implicit
+  executionContext: ExecutionContext
+) extends BackendController(cc)
+    with Logging {
 
   def checkReturnsObligationStatus(isaManagerReferenceNumber: String): Action[AnyContent] = Action.async { request =>
     isaManagerReferenceNumber match {
-      case "Z1111" => Future.successful(Unauthorized(Json.toJson(EtmpObligations(obligationAlreadyMet = true))))
-      case _       => Future.successful(Ok(Json.toJson(EtmpObligations(obligationAlreadyMet = false))))
+      case "Z1111" =>
+        Future.successful(Ok(Json.toJson(EtmpObligations(obligationAlreadyMet = true))))
+      case "Z1234" =>
+        Future.successful(
+          InternalServerError(
+            Json.toJson(UpstreamErrorResponse(statusCode = INTERNAL_SERVER_ERROR, message = "Upstream error"))
+          )
+        )
+      case _       =>
+        Future.successful(Ok(Json.toJson(EtmpObligations(obligationAlreadyMet = false))))
     }
   }
 
-  def checkReportingWindowStatus: Action[AnyContent] = Action.async { request =>
-    request.headers.get("Test-Scenario") match {
-      case Some("reporting-window-closed") =>
-        Future.successful(Unauthorized(Json.toJson(EtmpReportingWindow(reportingWindowOpen = false))))
-      case _                               =>
-        Future.successful(Ok(Json.toJson(EtmpReportingWindow(reportingWindowOpen = true))))
+  def checkReportingWindowStatus: Action[AnyContent] = Action.async {
+    reportingWindowRepository.getReportingWindowState.map {
+      case Some(open) =>
+        logger.info(s"ETMP Reporting Window isOpen: $open")
+        Ok(Json.toJson(EtmpReportingWindow(reportingWindowOpen = open)))
+      case None       =>
+        NotFound(Json.obj("error" -> "No reporting window state found"))
     }
   }
 }

@@ -18,22 +18,23 @@ package uk.gov.hmrc.disareturnsstubs.controllers
 
 import org.scalatestplus.play._
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.test._
-import play.api.test.Helpers._
 import play.api.libs.json._
+import play.api.test.Helpers._
+import play.api.test._
+import uk.gov.hmrc.disareturnsstubs.repositories.ReportingWindowRepository
 
-class EtmpControllerISpec extends PlaySpec with GuiceOneAppPerSuite {
+class EtmpControllerISpec extends PlaySpec with GuiceOneAppPerSuite with DefaultAwaitTimeout {
 
-  val obligationStatusEndpoint = "/disa-returns-stubs/etmp/check-obligation-status"
-  val reportingWindowEndpoint = "/disa-returns-stubs/etmp/check-reporting-window"
+  val obligationStatusEndpoint = "/etmp/check-obligation-status"
+  val reportingWindowEndpoint = "/etmp/check-reporting-window"
 
   "EtmpController GET /etmp/check-obligation-status/:isaManagerReferenceNumber" should {
 
-    "return 401 with obligationAlreadyMet = true for Z1111" in {
+    "return 200 with obligationAlreadyMet = true for Z1111" in {
       val request = FakeRequest(GET, s"$obligationStatusEndpoint/Z1111").withJsonBody(Json.obj())
       val result = route(app, request).get
 
-      status(result) mustBe UNAUTHORIZED
+      status(result) mustBe OK
       contentAsJson(result) mustBe Json.obj(
         "obligationAlreadyMet" -> true
       )
@@ -48,29 +49,45 @@ class EtmpControllerISpec extends PlaySpec with GuiceOneAppPerSuite {
         "obligationAlreadyMet" -> false
       )
     }
+
+    "return 500 with error message when stub.reportingWindowScenario is 'failure'" in {
+      val request = FakeRequest(GET, s"$obligationStatusEndpoint/Z1234")
+      val result = route(app, request).get
+
+      status(result) mustBe INTERNAL_SERVER_ERROR
+      contentAsJson(result) mustBe Json.obj(
+        "message" -> "Upstream error",
+        "statusCode" -> 500,
+        "reportAs" -> 500,
+        "headers" -> Json.obj()
+      )
+    }
   }
 
   "EtmpController GET /etmp/check-reporting-window" should {
 
-    "return 401 with reportingWindowOpen = false for request with 'Test-Scenario - reporting-window-closed' headers provided " in {
-      val request = FakeRequest(GET, s"$reportingWindowEndpoint").withJsonBody(Json.obj())
-        .withHeaders("Test-Scenario" -> "reporting-window-closed")
-      val result = route(app, request).get
+    "return 200 with reportingWindowOpen = false when stub.reportingWindowScenario is 'closed'" in {
+        lazy val mockReportingWindowState: ReportingWindowRepository =
+          app.injector.instanceOf[ReportingWindowRepository]
+        await(mockReportingWindowState.setReportingWindowState(false))
 
-      status(result) mustBe UNAUTHORIZED
-      contentAsJson(result) mustBe Json.obj(
-        "reportingWindowOpen" -> false
-      )
+        val request = FakeRequest(GET, reportingWindowEndpoint)
+        val result = route(app, request).get
+
+        status(result) mustBe OK
+        contentAsJson(result) mustBe Json.obj("reportingWindowOpen" -> false)
     }
 
-    "return 200 with reportingWindowOpen = true with no Test-Scenario header provided" in {
-      val request = FakeRequest(GET, s"$reportingWindowEndpoint").withJsonBody(Json.obj())
-      val result = route(app, request).get
+    "return 200 with reportingWindowOpen = true when stub.reportingWindowScenario is 'open'" in {
+        lazy val mockReportingWindowState: ReportingWindowRepository =
+          app.injector.instanceOf[ReportingWindowRepository]
+        await(mockReportingWindowState.setReportingWindowState(true))
 
-      status(result) mustBe OK
-      contentAsJson(result) mustBe Json.obj(
-        "reportingWindowOpen" -> true
-      )
-    }
+        val request = FakeRequest(GET, reportingWindowEndpoint)
+        val result = route(app, request).get
+
+        status(result) mustBe OK
+        contentAsJson(result) mustBe Json.obj("reportingWindowOpen" -> true)
+      }
   }
 }
