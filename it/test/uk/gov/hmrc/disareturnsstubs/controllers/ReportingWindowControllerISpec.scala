@@ -43,7 +43,7 @@ class ReportingWindowControllerISpec
 
   override def fakeApplication(): Application =
     new GuiceApplicationBuilder()
-      .configure("play.http.router" -> "app.Routes") // This must match your generated routes class
+      .configure("play.http.router" -> "test.Routes")
       .overrides(
         bind[ReportingWindowRepository].toInstance(mockReportingWindowState)
       )
@@ -53,7 +53,7 @@ class ReportingWindowControllerISpec
     "return 204 NoContent when valid boolean is provided" in {
       when(mockReportingWindowState.setReportingWindowState(true)) thenReturn Future.unit
 
-      val request = FakeRequest(POST, "/test-only/setup-obligation-window")
+      val request = FakeRequest(POST, "/setup-obligation-window")
         .withHeaders("Content-Type" -> "application/json")
         .withJsonBody(Json.obj("reportingWindowOpen" -> true))
 
@@ -63,7 +63,7 @@ class ReportingWindowControllerISpec
     }
 
     "return 400 BadRequest when request body is missing or invalid" in {
-      val invalidRequest = FakeRequest(POST, "/test-only/setup-obligation-window")
+      val invalidRequest = FakeRequest(POST, "/setup-obligation-window")
         .withHeaders("Content-Type" -> "application/json")
         .withJsonBody(Json.obj("invalidField" -> "oops"))
 
@@ -78,7 +78,7 @@ class ReportingWindowControllerISpec
     "return 200 with correct JSON when data exists" in {
       when(mockReportingWindowState.getReportingWindowState) thenReturn Future.successful(Some(true))
 
-      val request = FakeRequest(GET, "/test-only/obligation-window-state")
+      val request = FakeRequest(GET, "/obligation-window-state")
       val result = route(app, request).get
 
       status(result) mustBe OK
@@ -88,7 +88,7 @@ class ReportingWindowControllerISpec
     "return 404 when no data is found" in {
       when(mockReportingWindowState.getReportingWindowState) thenReturn Future.successful(None)
 
-      val request = FakeRequest(GET, "/test-only/obligation-window-state")
+      val request = FakeRequest(GET, "/obligation-window-state")
       val result = route(app, request).get
 
       status(result) mustBe NOT_FOUND

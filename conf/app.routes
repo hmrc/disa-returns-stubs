@@ -5,6 +5,4 @@ GET     /etmp/check-obligation-status/:isaManagerReferenceNumber            uk.g
 
 GET     /etmp/check-reporting-window                                        uk.gov.hmrc.disareturnsstubs.controllers.EtmpController.checkReportingWindowStatus()
 
-POST    /test-only/setup-obligation-window                                  uk.gov.hmrc.disareturnsstubs.controllers.ReportingWindowController.setReportingWindowState
-
-GET     /test-only/obligation-window-state                                  uk.gov.hmrc.disareturnsstubs.controllers.ReportingWindowController.getReportingWindowState
+POST    /nps/submit/:isaManagerReferenceNumber                              uk.gov.hmrc.disareturnsstubs.controllers.NpsController.submitMonthlyReturn(isaManagerReferenceNumber: String)
