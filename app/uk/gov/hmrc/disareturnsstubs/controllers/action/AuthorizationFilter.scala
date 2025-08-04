@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,22 +14,24 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.disareturnsstubs.utils
+package uk.gov.hmrc.disareturnsstubs.controllers.action
 
+import com.google.inject.Singleton
 import play.api.libs.json.Json
 import play.api.mvc.Results.Forbidden
-import play.api.mvc.{Request, Result}
+import play.api.mvc._
 
-import scala.concurrent.Future
+import javax.inject.Inject
+import scala.concurrent.{ExecutionContext, Future}
 
-object HeaderValidator {
+@Singleton
+class AuthorizationFilter @Inject() (implicit val executionContext: ExecutionContext)
+    extends ActionRefiner[Request, Request] {
 
-  private val MissingAuthHeaderError =
-    Forbidden(Json.obj("code" -> "403", "reason" -> "Missing required bearer token"))
-
-  def validate(request: Request[_])(block: => Future[Result]): Future[Result] =
+  override def refine[A](request: Request[A]): Future[Either[Result, Request[A]]] =
     request.headers.get("Authorization") match {
-      case Some(_) => block
-      case None    => Future.successful(MissingAuthHeaderError)
+      case Some(_) => Future.successful(Right(request))
+      case None    =>
+        Future.successful(Left(Forbidden(Json.obj("code" -> "403", "reason" -> "Missing required bearer token"))))
     }
 }

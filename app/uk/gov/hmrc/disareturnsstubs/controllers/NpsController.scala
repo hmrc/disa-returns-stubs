@@ -20,8 +20,8 @@ import jakarta.inject.Singleton
 import play.api.Logging
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, ControllerComponents, Result}
+import uk.gov.hmrc.disareturnsstubs.controllers.action.AuthorizationFilter
 import uk.gov.hmrc.disareturnsstubs.models.ErrorResponse.{BadRequestErr, ServiceUnavailableErr}
-import uk.gov.hmrc.disareturnsstubs.utils.HeaderValidator
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.Inject
@@ -29,15 +29,15 @@ import scala.concurrent.Future
 
 @Singleton
 class NpsController @Inject() (
-  cc: ControllerComponents
+  cc: ControllerComponents,
+  authorizationFilter: AuthorizationFilter
 ) extends BackendController(cc)
     with Logging {
 
-  def submitMonthlyReturn(isaReferenceNumber: String): Action[JsValue] = Action.async(parse.json) { implicit request =>
-    HeaderValidator.validate(request) {
+  def submitMonthlyReturn(isaReferenceNumber: String): Action[JsValue] =
+    (Action andThen authorizationFilter).async(parse.json) { implicit request =>
       handleRequest(isaReferenceNumber, request.body)
     }
-  }
 
   private def handleRequest(isaRef: String, body: JsValue): Future[Result] = {
     logger.info(s"Nps Stub received payload for ISA ref $isaRef: ${Json.prettyPrint(body)}")

@@ -74,7 +74,7 @@ sbt scalafmt
 |:-------:|:------:|:-------------------:|
 | Z111400 |  400   |     BAD REQUEST     |
 | Z111503 |  503   | SERVICE UNAVAILABLE |
-|   Any   |  201   |     NO CONTENT      |
+|   Any   |  204   |     NO CONTENT      |
 
 ### Further documentation
 
