@@ -33,25 +33,24 @@ class AuthorizationFilterSpec extends AnyWordSpec with Matchers with ScalaFuture
 
   "AuthorizationFilter" should {
 
-    "allow requests with Authorization header" in {
+    "allow requests with an Authorization header" in {
       val request = FakeRequest().withHeaders("Authorization" -> "Bearer token")
 
-      whenReady(authorizationFilter.refine(request)) {
-        case Left(_)    => fail("Expected request to be allowed")
-        case Right(req) => req shouldBe request
+      whenReady(authorizationFilter.filter(request)) { resultOption =>
+        resultOption shouldBe None
       }
     }
 
-    "returning 403 forbidden for any requests without Authorization header" in {
+    "return 403 Forbidden for requests without an Authorization header" in {
       val request = FakeRequest()
 
-      whenReady(authorizationFilter.refine(request)) {
-        case Left(result) =>
-          val resultF = Future.successful(result)
-          status(resultF)        shouldBe FORBIDDEN
-          contentAsJson(resultF) shouldBe Json.obj("code" -> "403", "reason" -> "Missing required bearer token")
-        case Right(_)     =>
-          fail("Expected Forbidden but got a successful refinement")
+      whenReady(authorizationFilter.filter(request)) { resultOption =>
+        val result = resultOption.get
+        result.header.status                     shouldBe FORBIDDEN
+        contentAsJson(Future.successful(result)) shouldBe Json.obj(
+          "code"   -> "403",
+          "reason" -> "Missing required bearer token"
+        )
       }
     }
   }

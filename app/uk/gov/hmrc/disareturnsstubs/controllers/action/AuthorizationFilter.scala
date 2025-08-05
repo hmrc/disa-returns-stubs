@@ -25,13 +25,12 @@ import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class AuthorizationFilter @Inject() (implicit val executionContext: ExecutionContext)
-    extends ActionRefiner[Request, Request] {
+class AuthorizationFilter @Inject() (implicit val executionContext: ExecutionContext) extends ActionFilter[Request] {
 
-  override def refine[A](request: Request[A]): Future[Either[Result, Request[A]]] =
+  override def filter[A](request: Request[A]): Future[Option[Result]] =
     request.headers.get("Authorization") match {
-      case Some(_) => Future.successful(Right(request))
+      case Some(_) => Future.successful(None)
       case None    =>
-        Future.successful(Left(Forbidden(Json.obj("code" -> "403", "reason" -> "Missing required bearer token"))))
+        Future.successful(Some(Forbidden(Json.obj("code" -> "403", "reason" -> "Missing required bearer token"))))
     }
 }
