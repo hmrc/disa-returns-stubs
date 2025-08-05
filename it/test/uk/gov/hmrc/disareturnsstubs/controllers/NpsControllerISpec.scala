@@ -100,7 +100,7 @@ class NpsControllerISpec extends PlaySpec with GuiceOneAppPerSuite with DefaultA
 
       val result = route(app, request).get
       status(result) mustBe FORBIDDEN
-      (contentAsJson(result) \ "reason").asOpt[String] mustBe Some("Missing required bearer token")
+      (contentAsJson(result) \ "message").asOpt[String] mustBe Some("Missing required bearer token")
     }
   }
 }

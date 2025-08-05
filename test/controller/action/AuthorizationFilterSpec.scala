@@ -48,8 +48,8 @@ class AuthorizationFilterSpec extends AnyWordSpec with Matchers with ScalaFuture
         val result = resultOption.get
         result.header.status                     shouldBe FORBIDDEN
         contentAsJson(Future.successful(result)) shouldBe Json.obj(
-          "code"   -> "403",
-          "reason" -> "Missing required bearer token"
+          "code"    -> "FORBIDDEN",
+          "message" -> "Missing required bearer token"
         )
       }
     }
