@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.disareturnsstubs.controllers
+package uk.gov.hmrc.disareturnsstubs.testonly.controllers
 
 import play.api.libs.json._
 import play.api.mvc._

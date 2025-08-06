@@ -16,10 +16,10 @@ docker run --restart unless-stopped --name mongodb -p 27017:27017 -d percona/per
 
 Reference instructions for [setting up docker](https://docs.tax.service.gov.uk/mdtp-handbook/documentation/developer-set-up/install-docker.html) and [running mongodb](https://docs.tax.service.gov.uk/mdtp-handbook/documentation/developer-set-up/set-up-mongodb.html#install-mongodb-applesilicon-mac).
 
-### Running the app
+### Running the app locally
 
 ```bash
-sbt run
+sbt 'run -Dapplication.router=testOnlyDoNotUseInAppConf.Routes'
 ```
 
 You can then query the app to ensure it is working with the following command:
@@ -68,6 +68,14 @@ sbt scalafmtSbt
 # formats just the main source files (excludes test and configuration files)
 sbt scalafmt
 ```
+## ZREF Responses for NPS
+
+|  ZREF   | Status |        Type         |
+|:-------:|:------:|:-------------------:|
+| Z111400 |  400   |     BAD REQUEST     |
+| Z111503 |  503   | SERVICE UNAVAILABLE |
+|   Any   |  204   |     NO CONTENT      |
+
 ### Further documentation
 
 You can view further information regarding this service via our [service guide](#).
