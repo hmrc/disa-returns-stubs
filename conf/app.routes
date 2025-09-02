@@ -7,6 +7,6 @@ GET     /etmp/check-reporting-window                                        uk.g
 
 POST    /nps/submit/:isaManagerReferenceNumber                              uk.gov.hmrc.disareturnsstubs.controllers.NpsController.submitMonthlyReturn(isaManagerReferenceNumber: String)
 
-POST     /close-obligation-status/:isaManagerReferenceNumber                                 uk.gov.hmrc.disareturnsstubs.controllers.EtmpController.closeObligationStatus(isaManagerReferenceNumber: String)
+POST     /etmp/close-obligation-status/:isaManagerReferenceNumber                                 uk.gov.hmrc.disareturnsstubs.controllers.EtmpController.closeObligationStatus(isaManagerReferenceNumber: String)
 
-POST     /open-obligation-status/:isaManagerReferenceNumber                                 uk.gov.hmrc.disareturnsstubs.controllers.EtmpController.openObligationStatus(isaManagerReferenceNumber: String)
+POST     /etmp/open-obligation-status/:isaManagerReferenceNumber                                 uk.gov.hmrc.disareturnsstubs.controllers.EtmpController.openObligationStatus(isaManagerReferenceNumber: String)
