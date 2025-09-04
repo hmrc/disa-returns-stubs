@@ -19,20 +19,28 @@ package uk.gov.hmrc.disareturnsstubs.controllers
 import org.scalatestplus.play._
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.libs.json._
+import play.api.mvc.{AnyContentAsJson, Result}
 import play.api.test.Helpers._
 import play.api.test._
-import uk.gov.hmrc.disareturnsstubs.repositories.ReportingWindowRepository
+import uk.gov.hmrc.disareturnsstubs.repositories.{ObligationStatusRepository, ReportingWindowRepository}
+
+import scala.concurrent.Future
 
 class EtmpControllerISpec extends PlaySpec with GuiceOneAppPerSuite with DefaultAwaitTimeout {
 
-  val obligationStatusEndpoint = "/etmp/check-obligation-status"
-  val reportingWindowEndpoint = "/etmp/check-reporting-window"
+  val obligationStatusEndpoint                                        = "/etmp/check-obligation-status"
+  val reportingWindowEndpoint                                         = "/etmp/check-reporting-window"
+  val isaManagerReference                                             = "Z1111"
+  lazy val mockObligationStatusRepository: ObligationStatusRepository =
+    app.injector.instanceOf[ObligationStatusRepository]
 
   "EtmpController GET /etmp/check-obligation-status/:isaManagerReferenceNumber" should {
 
-    "return 200 with obligationAlreadyMet = true for Z1111" in {
-      val request = FakeRequest(GET, s"$obligationStatusEndpoint/Z1111").withJsonBody(Json.obj())
-      val result = route(app, request).get
+    "return 200 with obligationAlreadyMet = true" in {
+      await(mockObligationStatusRepository.closeObligationStatus(isaManagerReference))
+      val request: FakeRequest[AnyContentAsJson] =
+        FakeRequest(GET, s"$obligationStatusEndpoint/$isaManagerReference").withJsonBody(Json.obj())
+      val result: Future[Result]                 = route(app, request).get
 
       status(result) mustBe OK
       contentAsJson(result) mustBe Json.obj(
@@ -40,26 +48,15 @@ class EtmpControllerISpec extends PlaySpec with GuiceOneAppPerSuite with Default
       )
     }
 
-    "return 200 with obligationAlreadyMet = false for any other reference" in {
-      val request = FakeRequest(GET, s"$obligationStatusEndpoint/ANY123").withJsonBody(Json.obj())
-      val result = route(app, request).get
+    "return 200 with obligationAlreadyMet = false" in {
+      await(mockObligationStatusRepository.openObligationStatus(isaManagerReference))
+      val request: FakeRequest[AnyContentAsJson] =
+        FakeRequest(GET, s"$obligationStatusEndpoint/$isaManagerReference").withJsonBody(Json.obj())
+      val result: Future[Result]                 = route(app, request).get
 
       status(result) mustBe OK
       contentAsJson(result) mustBe Json.obj(
         "obligationAlreadyMet" -> false
-      )
-    }
-
-    "return 500 with error message when stub.reportingWindowScenario is 'failure'" in {
-      val request = FakeRequest(GET, s"$obligationStatusEndpoint/Z1234")
-      val result = route(app, request).get
-
-      status(result) mustBe INTERNAL_SERVER_ERROR
-      contentAsJson(result) mustBe Json.obj(
-        "message" -> "Upstream error",
-        "statusCode" -> 500,
-        "reportAs" -> 500,
-        "headers" -> Json.obj()
       )
     }
   }
@@ -67,27 +64,27 @@ class EtmpControllerISpec extends PlaySpec with GuiceOneAppPerSuite with Default
   "EtmpController GET /etmp/check-reporting-window" should {
 
     "return 200 with reportingWindowOpen = false when stub.reportingWindowScenario is 'closed'" in {
-        lazy val mockReportingWindowState: ReportingWindowRepository =
-          app.injector.instanceOf[ReportingWindowRepository]
-        await(mockReportingWindowState.setReportingWindowState(false))
+      lazy val mockReportingWindowState: ReportingWindowRepository =
+        app.injector.instanceOf[ReportingWindowRepository]
+      await(mockReportingWindowState.setReportingWindowState(false))
 
-        val request = FakeRequest(GET, reportingWindowEndpoint)
-        val result = route(app, request).get
+      val request = FakeRequest(GET, reportingWindowEndpoint)
+      val result  = route(app, request).get
 
-        status(result) mustBe OK
-        contentAsJson(result) mustBe Json.obj("reportingWindowOpen" -> false)
+      status(result) mustBe OK
+      contentAsJson(result) mustBe Json.obj("reportingWindowOpen" -> false)
     }
 
     "return 200 with reportingWindowOpen = true when stub.reportingWindowScenario is 'open'" in {
-        lazy val mockReportingWindowState: ReportingWindowRepository =
-          app.injector.instanceOf[ReportingWindowRepository]
-        await(mockReportingWindowState.setReportingWindowState(true))
+      lazy val mockReportingWindowState: ReportingWindowRepository =
+        app.injector.instanceOf[ReportingWindowRepository]
+      await(mockReportingWindowState.setReportingWindowState(true))
 
-        val request = FakeRequest(GET, reportingWindowEndpoint)
-        val result = route(app, request).get
+      val request = FakeRequest(GET, reportingWindowEndpoint)
+      val result  = route(app, request).get
 
-        status(result) mustBe OK
-        contentAsJson(result) mustBe Json.obj("reportingWindowOpen" -> true)
-      }
+      status(result) mustBe OK
+      contentAsJson(result) mustBe Json.obj("reportingWindowOpen" -> true)
+    }
   }
 }

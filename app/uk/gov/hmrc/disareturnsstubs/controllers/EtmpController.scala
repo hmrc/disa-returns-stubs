@@ -19,34 +19,21 @@ package uk.gov.hmrc.disareturnsstubs.controllers
 import play.api.Logging
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import uk.gov.hmrc.disareturnsstubs.models.JsonFormats._
 import uk.gov.hmrc.disareturnsstubs.models.{EtmpObligations, EtmpReportingWindow}
-import uk.gov.hmrc.disareturnsstubs.repositories.ReportingWindowRepository
-import uk.gov.hmrc.http.UpstreamErrorResponse
+import uk.gov.hmrc.disareturnsstubs.repositories.{ObligationStatusRepository, ReportingWindowRepository}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.Inject
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
-class EtmpController @Inject() (cc: ControllerComponents, reportingWindowRepository: ReportingWindowRepository)(implicit
+class EtmpController @Inject() (
+  cc: ControllerComponents,
+  reportingWindowRepository: ReportingWindowRepository,
+  obligationStatusRepository: ObligationStatusRepository
+)(implicit
   executionContext: ExecutionContext
 ) extends BackendController(cc)
     with Logging {
-
-  def checkReturnsObligationStatus(isaManagerReferenceNumber: String): Action[AnyContent] = Action.async { request =>
-    isaManagerReferenceNumber match {
-      case "Z1111" =>
-        Future.successful(Ok(Json.toJson(EtmpObligations(obligationAlreadyMet = true))))
-      case "Z1234" =>
-        Future.successful(
-          InternalServerError(
-            Json.toJson(UpstreamErrorResponse(statusCode = INTERNAL_SERVER_ERROR, message = "Upstream error"))
-          )
-        )
-      case _       =>
-        Future.successful(Ok(Json.toJson(EtmpObligations(obligationAlreadyMet = false))))
-    }
-  }
 
   def checkReportingWindowStatus: Action[AnyContent] = Action.async {
     reportingWindowRepository.getReportingWindowState.map {
@@ -55,6 +42,27 @@ class EtmpController @Inject() (cc: ControllerComponents, reportingWindowReposit
         Ok(Json.toJson(EtmpReportingWindow(reportingWindowOpen = open)))
       case None       =>
         NotFound(Json.obj("error" -> "No reporting window state found"))
+    }
+  }
+
+  def closeObligationStatus(isaManagerReference: String): Action[AnyContent] = Action.async {
+    obligationStatusRepository
+      .closeObligationStatus(isaManagerReference)
+      .map(_ => Ok(Json.toJson(EtmpObligations(obligationAlreadyMet = true))))
+  }
+  def openObligationStatus(isaManagerReference: String): Action[AnyContent]  = Action.async {
+    obligationStatusRepository
+      .openObligationStatus(isaManagerReference)
+      .map(_ => Ok(Json.toJson(EtmpObligations(obligationAlreadyMet = false))))
+  }
+
+  def checkReturnsObligationStatus(isaManagerReferenceNumber: String): Action[AnyContent] = Action.async {
+    obligationStatusRepository.getObligationStatus(isaManagerReferenceNumber).map {
+      case Some(status) => Ok(Json.toJson(EtmpObligations(obligationAlreadyMet = status)))
+      case None         =>
+        NotFound(
+          Json.obj("error" -> s"No obligation status found for IsaManagerReference :$isaManagerReferenceNumber")
+        )
     }
   }
 }
