@@ -70,11 +70,11 @@ sbt scalafmt
 ```
 ## ZREF Responses for NPS
 
-|  ZREF   | Status |        Type         |
-|:-------:|:------:|:-------------------:|
-| Z111400 |  400   |     BAD REQUEST     |
-| Z111503 |  503   | SERVICE UNAVAILABLE |
-|   Any   |  204   |     NO CONTENT      |
+| ZREF  | Status |        Type         |
+|:-----:|:------:|:-------------------:|
+| Z1400 |  400   |     BAD REQUEST     |
+| Z1503 |  503   | SERVICE UNAVAILABLE |
+|  Any  |  204   |     NO CONTENT      |
 
 ### Further documentation
 

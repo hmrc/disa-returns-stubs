@@ -66,7 +66,7 @@ class NpsControllerISpec extends PlaySpec with GuiceOneAppPerSuite with DefaultA
   "POST /nps/submit/:isaReferenceNumber" should {
 
     "return 204 NoContent for any non-error ISA ref" in {
-      val request = FakeRequest(POST, s"$endpoint/Z123456")
+      val request = FakeRequest(POST, s"$endpoint/Z1234")
         .withHeaders("Authorization" -> "Bearer token")
         .withJsonBody(validPayload)
 
@@ -74,8 +74,8 @@ class NpsControllerISpec extends PlaySpec with GuiceOneAppPerSuite with DefaultA
       status(result) mustBe NO_CONTENT
     }
 
-    "return 400 BadRequest for isaRef Z111400" in {
-      val request = FakeRequest(POST, s"$endpoint/Z111400")
+    "return 400 BadRequest for isaRef Z1400" in {
+      val request = FakeRequest(POST, s"$endpoint/Z1400")
         .withHeaders("Authorization" -> "Bearer token")
         .withJsonBody(validPayload)
 
@@ -84,8 +84,8 @@ class NpsControllerISpec extends PlaySpec with GuiceOneAppPerSuite with DefaultA
       (contentAsJson(result) \ "code").asOpt[String] mustBe Some("BAD_REQUEST")
     }
 
-    "return 503 ServiceUnavailable for isaRef Z111503" in {
-      val request = FakeRequest(POST, s"$endpoint/Z111503")
+    "return 503 ServiceUnavailable for isaRef Z1503" in {
+      val request = FakeRequest(POST, s"$endpoint/Z1503")
         .withHeaders("Authorization" -> "Bearer token")
         .withJsonBody(validPayload)
 
@@ -95,7 +95,7 @@ class NpsControllerISpec extends PlaySpec with GuiceOneAppPerSuite with DefaultA
     }
 
     "return 403 Forbidden when Authorization header is missing" in {
-      val request = FakeRequest(POST, s"$endpoint/Z123456")
+      val request = FakeRequest(POST, s"$endpoint/Z1234")
         .withJsonBody(validPayload)
 
       val result = route(app, request).get
