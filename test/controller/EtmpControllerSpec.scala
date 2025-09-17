@@ -70,17 +70,6 @@ class EtmpControllerSpec extends BaseUnitSpec {
     }
   }
 
-  "openObligationStatus" should {
-    "return 200 with obligationAlreadyMet = false" in {
-      when(mockObligationRepo.openObligationStatus(any()))
-        .thenReturn(Future.unit)
-
-      val result = controller.openObligationStatus(isaManagerReference)(FakeRequest())
-      status(result)        shouldBe OK
-      contentAsJson(result) shouldBe Json.toJson(EtmpObligations(obligationAlreadyMet = false))
-    }
-  }
-
   "checkReturnsObligationStatus" should {
     "return 200 with obligationAlreadyMet = true if repo returns Some(true)" in {
       when(mockObligationRepo.getObligationStatus(any()))

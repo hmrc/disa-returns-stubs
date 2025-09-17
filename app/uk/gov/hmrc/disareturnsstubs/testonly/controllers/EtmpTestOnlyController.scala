@@ -18,32 +18,39 @@ package uk.gov.hmrc.disareturnsstubs.testonly.controllers
 
 import play.api.libs.json._
 import play.api.mvc._
-import uk.gov.hmrc.disareturnsstubs.models.EtmpReportingWindow
-import uk.gov.hmrc.disareturnsstubs.repositories.ReportingWindowRepository
+import uk.gov.hmrc.disareturnsstubs.models.{EtmpObligations, EtmpReportingWindow}
+import uk.gov.hmrc.disareturnsstubs.repositories.{ObligationStatusRepository, ReportingWindowRepository}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ReportingWindowController @Inject() (
+class EtmpTestOnlyController @Inject() (
   cc: ControllerComponents,
-  repository: ReportingWindowRepository
+  reportingWindowRepository: ReportingWindowRepository,
+  obligationStatusRepository: ObligationStatusRepository
 )(implicit ec: ExecutionContext)
     extends AbstractController(cc) {
 
   def setReportingWindowState(): Action[JsValue] = Action.async(parse.json) { request =>
     request.body.validate[EtmpReportingWindow] match {
       case JsSuccess(value, _) =>
-        repository.setReportingWindowState(value.reportingWindowOpen).map(_ => NoContent)
+        reportingWindowRepository.setReportingWindowState(value.reportingWindowOpen).map(_ => NoContent)
       case JsError(_)          =>
         Future.successful(BadRequest(Json.obj("error" -> "Missing or invalid 'reportingWindowOpen' field")))
     }
   }
 
   def getReportingWindowState: Action[AnyContent] = Action.async {
-    repository.getReportingWindowState.map {
+    reportingWindowRepository.getReportingWindowState.map {
       case Some(open) => Ok(Json.obj("reportingWindowOpen" -> open))
       case None       => NotFound(Json.obj("error" -> "No reporting window state found"))
     }
+  }
+
+  def openObligationStatus(isaManagerReference: String): Action[AnyContent] = Action.async {
+    obligationStatusRepository
+      .openObligationStatus(isaManagerReference)
+      .map(_ => Ok(Json.toJson(EtmpObligations(obligationAlreadyMet = false))))
   }
 }

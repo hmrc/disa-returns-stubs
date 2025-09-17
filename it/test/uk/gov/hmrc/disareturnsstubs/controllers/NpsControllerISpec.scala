@@ -16,15 +16,18 @@
 
 package uk.gov.hmrc.disareturnsstubs.controllers
 
-import org.scalatestplus.play._
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers._
 import play.api.test._
+import uk.gov.hmrc.disareturnsstubs.BaseISpec
+import uk.gov.hmrc.disareturnsstubs.models.ErrorResponse.{InternalSeverErr, ResultSummaryNotFoundErr, ReturnNotFoundErr}
 
-class NpsControllerISpec extends PlaySpec with GuiceOneAppPerSuite with DefaultAwaitTimeout {
+class NpsControllerISpec extends BaseISpec {
 
-  val endpoint = "/nps/submit"
+  val submitMonthlyReturnEndpoint = "/nps/submit"
+  val getReturnResultsSummaryEndpoint = "/nps/summary-results"
+  val month = "APR"
+  val taxYear = "2025"
 
   val validPayload: JsValue = Json.parse("""[
   |  {
@@ -66,7 +69,7 @@ class NpsControllerISpec extends PlaySpec with GuiceOneAppPerSuite with DefaultA
   "POST /nps/submit/:isaReferenceNumber" should {
 
     "return 204 NoContent for any non-error ISA ref" in {
-      val request = FakeRequest(POST, s"$endpoint/Z1234")
+      val request = FakeRequest(POST, s"$submitMonthlyReturnEndpoint/Z1234")
         .withHeaders("Authorization" -> "Bearer token")
         .withJsonBody(validPayload)
 
@@ -75,7 +78,7 @@ class NpsControllerISpec extends PlaySpec with GuiceOneAppPerSuite with DefaultA
     }
 
     "return 400 BadRequest for isaRef Z1400" in {
-      val request = FakeRequest(POST, s"$endpoint/Z1400")
+      val request = FakeRequest(POST, s"$submitMonthlyReturnEndpoint/Z1400")
         .withHeaders("Authorization" -> "Bearer token")
         .withJsonBody(validPayload)
 
@@ -85,7 +88,7 @@ class NpsControllerISpec extends PlaySpec with GuiceOneAppPerSuite with DefaultA
     }
 
     "return 503 ServiceUnavailable for isaRef Z1503" in {
-      val request = FakeRequest(POST, s"$endpoint/Z1503")
+      val request = FakeRequest(POST, s"$submitMonthlyReturnEndpoint/Z1503")
         .withHeaders("Authorization" -> "Bearer token")
         .withJsonBody(validPayload)
 
@@ -95,12 +98,70 @@ class NpsControllerISpec extends PlaySpec with GuiceOneAppPerSuite with DefaultA
     }
 
     "return 403 Forbidden when Authorization header is missing" in {
-      val request = FakeRequest(POST, s"$endpoint/Z1234")
+      val request = FakeRequest(POST, s"$submitMonthlyReturnEndpoint/Z1234")
         .withJsonBody(validPayload)
 
       val result = route(app, request).get
       status(result) mustBe FORBIDDEN
       (contentAsJson(result) \ "message").asOpt[String] mustBe Some("Missing required bearer token")
+    }
+  }
+
+  "POST /nps/summary-results/:isaManagerReferenceNumber/:returnId" should {
+    "return 200 OK for any non-error ISA ref" in {
+      val request = FakeRequest(GET, s"$getReturnResultsSummaryEndpoint/Z1234/$returnId")
+        .withHeaders("Authorization" -> "Bearer token")
+
+      val result = route(app, request).get
+      status(result) mustBe OK
+      contentAsJson(result) mustBe Json.obj("totalRecords" -> 10)
+    }
+
+    "return 404 NOT_FOUND for Z1404 ISA ref" in {
+      val request = FakeRequest(GET, s"$getReturnResultsSummaryEndpoint/Z1404/$returnId")
+        .withHeaders("Authorization" -> "Bearer token")
+
+      val result = route(app, request).get
+      status(result) mustBe NOT_FOUND
+      contentAsJson(result) mustBe Json.toJson(ReturnNotFoundErr(returnId))
+    }
+
+    "return 500 INTERNAL_SERVER_ERROR for Z1500 ISA ref" in {
+      val request = FakeRequest(GET, s"$getReturnResultsSummaryEndpoint/Z1500/$returnId")
+        .withHeaders("Authorization" -> "Bearer token")
+
+      val result = route(app, request).get
+      status(result) mustBe INTERNAL_SERVER_ERROR
+      contentAsJson(result) mustBe Json.toJson(InternalSeverErr)
+    }
+  }
+
+  "POST /nps/summary-results/:isaManagerReferenceNumber/:taxYear/:month" should {
+    "return 200 OK for any non-error ISA ref" in {
+      val request = FakeRequest(GET, s"$getReturnResultsSummaryEndpoint/Z1234/$taxYear/$month")
+        .withHeaders("Authorization" -> "Bearer token")
+
+      val result = route(app, request).get
+      status(result) mustBe OK
+      contentAsJson(result) mustBe Json.obj("totalRecords" -> 10)
+    }
+
+    "return 404 NOT_FOUND for Z1404 ISA ref" in {
+      val request = FakeRequest(GET, s"$getReturnResultsSummaryEndpoint/Z1404/$taxYear/$month")
+        .withHeaders("Authorization" -> "Bearer token")
+
+      val result = route(app, request).get
+      status(result) mustBe NOT_FOUND
+      contentAsJson(result) mustBe Json.toJson(ResultSummaryNotFoundErr("Z1404", taxYear, month))
+    }
+
+    "return 500 INTERNAL_SERVER_ERROR for Z1500 ISA ref" in {
+      val request = FakeRequest(GET, s"$getReturnResultsSummaryEndpoint/Z1500/$taxYear/$month")
+        .withHeaders("Authorization" -> "Bearer token")
+
+      val result = route(app, request).get
+      status(result) mustBe INTERNAL_SERVER_ERROR
+      contentAsJson(result) mustBe Json.toJson(InternalSeverErr)
     }
   }
 }

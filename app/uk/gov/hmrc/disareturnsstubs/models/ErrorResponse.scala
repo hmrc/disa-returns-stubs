@@ -24,4 +24,13 @@ object ErrorResponse {
   implicit val format: OFormat[ErrorResponse] = Json.format[ErrorResponse]
   val BadRequestErr: ErrorResponse            = ErrorResponse("BAD_REQUEST", "Bad request")
   val ServiceUnavailableErr: ErrorResponse    = ErrorResponse("SERVICE_UNAVAILABLE", "Service unavailable")
+  val InternalSeverErr: ErrorResponse         = ErrorResponse("INTERNAL_SERVER_ERROR", "Internal Server Error")
+
+  def ReturnNotFoundErr(returnId: String): ErrorResponse =
+    ErrorResponse("RETURN_NOT_FOUND", s"Return not found for $returnId")
+
+  def ResultSummaryNotFoundErr(isaManagerRef: String, taxYear: String, month: String): ErrorResponse = ErrorResponse(
+    "RETURN_NOT_FOUND",
+    s"Return result summary not found for $isaManagerRef for TaxYear: $taxYear, Month: $month"
+  )
 }

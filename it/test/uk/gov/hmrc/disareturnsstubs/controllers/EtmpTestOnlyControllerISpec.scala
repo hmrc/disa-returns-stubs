@@ -17,43 +17,23 @@
 package uk.gov.hmrc.disareturnsstubs.controllers
 
 
-import org.apache.pekko.stream.Materializer
-import org.mockito.Mockito._
-import org.scalatestplus.mockito.MockitoSugar
-import org.scalatestplus.play._
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
-import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import play.api.test._
-import uk.gov.hmrc.disareturnsstubs.repositories.ReportingWindowRepository
+import uk.gov.hmrc.disareturnsstubs.BaseISpec
 
-import scala.concurrent.Future
-
-class ReportingWindowControllerISpec
-  extends PlaySpec
-    with GuiceOneAppPerSuite
-    with Injecting {
-
-  implicit lazy val mat: Materializer = app.materializer
-
-  val mockReportingWindowState: ReportingWindowRepository = MockitoSugar.mock[ReportingWindowRepository]
+class EtmpTestOnlyControllerISpec extends BaseISpec {
 
   override def fakeApplication(): Application =
     new GuiceApplicationBuilder()
       .configure("play.http.router" -> "test.Routes")
-      .overrides(
-        bind[ReportingWindowRepository].toInstance(mockReportingWindowState)
-      )
       .build()
 
   "setReportingWindowState" should {
     "return 204 NoContent when valid boolean is provided" in {
-      when(mockReportingWindowState.setReportingWindowState(true)) thenReturn Future.unit
-
-      val request = FakeRequest(POST, "/setup-obligation-window")
+      val request = FakeRequest(POST, "/etmp/reporting-window-state")
         .withHeaders("Content-Type" -> "application/json")
         .withJsonBody(Json.obj("reportingWindowOpen" -> true))
 
@@ -63,7 +43,7 @@ class ReportingWindowControllerISpec
     }
 
     "return 400 BadRequest when request body is missing or invalid" in {
-      val invalidRequest = FakeRequest(POST, "/setup-obligation-window")
+      val invalidRequest = FakeRequest(POST, "/etmp/reporting-window-state")
         .withHeaders("Content-Type" -> "application/json")
         .withJsonBody(Json.obj("invalidField" -> "oops"))
 
@@ -76,9 +56,7 @@ class ReportingWindowControllerISpec
 
   "getReportingWindowState" should {
     "return 200 with correct JSON when data exists" in {
-      when(mockReportingWindowState.getReportingWindowState) thenReturn Future.successful(Some(true))
-
-      val request = FakeRequest(GET, "/obligation-window-state")
+      val request = FakeRequest(GET, "/etmp/reporting-window-state")
       val result = route(app, request).get
 
       status(result) mustBe OK
@@ -86,13 +64,21 @@ class ReportingWindowControllerISpec
     }
 
     "return 404 when no data is found" in {
-      when(mockReportingWindowState.getReportingWindowState) thenReturn Future.successful(None)
-
-      val request = FakeRequest(GET, "/obligation-window-state")
+      await(reportingWindowRepository.collection.drop().toFuture())
+      val request = FakeRequest(GET, "/etmp/reporting-window-state")
       val result = route(app, request).get
 
       status(result) mustBe NOT_FOUND
       (contentAsJson(result) \ "error").as[String] must include("No reporting window state")
+    }
+  }
+
+  "openObligationStatus" should {
+    "return 200 with obligationAlreadyMet = false" in {
+      val request = FakeRequest(POST, s"/etmp/open-obligation-status/$isaManagerReferenceNumber")
+      val result = route(app, request).get
+      status(result) mustBe OK
+      contentAsJson(result) mustBe Json.obj("obligationAlreadyMet" -> false)
     }
   }
 }

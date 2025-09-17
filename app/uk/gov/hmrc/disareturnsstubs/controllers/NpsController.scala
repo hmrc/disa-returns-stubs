@@ -19,9 +19,9 @@ package uk.gov.hmrc.disareturnsstubs.controllers
 import jakarta.inject.Singleton
 import play.api.Logging
 import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.{Action, ControllerComponents, Result}
+import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
 import uk.gov.hmrc.disareturnsstubs.controllers.action.AuthorizationFilter
-import uk.gov.hmrc.disareturnsstubs.models.ErrorResponse.{BadRequestErr, ServiceUnavailableErr}
+import uk.gov.hmrc.disareturnsstubs.models.ErrorResponse._
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.Inject
@@ -50,4 +50,25 @@ class NpsController @Inject() (
     }
   }
 
+  def getResultsSummary(isaReferenceNumber: String, returnId: String): Action[AnyContent] =
+    (Action andThen authorizationFilter).async { implicit request =>
+      isaReferenceNumber match {
+        case "Z1404" =>
+          Future.successful(NotFound(Json.toJson(ReturnNotFoundErr(returnId))))
+        case "Z1500" =>
+          Future.successful(InternalServerError(Json.toJson(InternalSeverErr)))
+        case _       => Future.successful(Ok(Json.obj("totalRecords" -> 10)))
+      }
+    }
+
+  def getResultsSummaryHeaderless(isaReferenceNumber: String, taxYear: String, month: String): Action[AnyContent] =
+    (Action andThen authorizationFilter).async { implicit request =>
+      isaReferenceNumber match {
+        case "Z1404" =>
+          Future.successful(NotFound(Json.toJson(ResultSummaryNotFoundErr(isaReferenceNumber, taxYear, month))))
+        case "Z1500" =>
+          Future.successful(InternalServerError(Json.toJson(InternalSeverErr)))
+        case _       => Future.successful(Ok(Json.obj("totalRecords" -> 10)))
+      }
+    }
 }

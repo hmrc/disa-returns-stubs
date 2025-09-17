@@ -14,17 +14,16 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.disareturnsstubs.repositories
+package repositories
 
-import org.scalatestplus.play._
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.test.Helpers.{await, defaultAwaitTimeout}
+import play.api.test.Helpers.await
+import uk.gov.hmrc.disareturnsstubs.repositories.ReportingWindowRepository
 import uk.gov.hmrc.mongo.MongoComponent
-import scala.concurrent.ExecutionContext.Implicits.global
+import utils.BaseUnitSpec
 
-class ReportingWindowStateISpec extends PlaySpec with GuiceOneAppPerSuite {
+class ReportingWindowRepositorySpec extends BaseUnitSpec {
 
   override lazy val app: Application = new GuiceApplicationBuilder().build()
   lazy val mongoComponent: MongoComponent = app.injector.instanceOf[MongoComponent]
@@ -37,7 +36,7 @@ class ReportingWindowStateISpec extends PlaySpec with GuiceOneAppPerSuite {
       await(repo.setReportingWindowState(open = true))
 
       val result = await(repo.getReportingWindowState)
-      result mustBe Some(true)
+      result shouldBe Some(true)
     }
 
     "update the document if it already exists" in {
@@ -45,7 +44,7 @@ class ReportingWindowStateISpec extends PlaySpec with GuiceOneAppPerSuite {
       await(repo.setReportingWindowState(open = false))
 
       val result = await(repo.getReportingWindowState)
-      result mustBe Some(false)
+      result shouldBe Some(false)
     }
   }
 
@@ -54,7 +53,7 @@ class ReportingWindowStateISpec extends PlaySpec with GuiceOneAppPerSuite {
       await(repo.collection.drop().toFuture())
 
       val result = await(repo.getReportingWindowState)
-      result mustBe None
+      result shouldBe None
     }
   }
 }
