@@ -25,9 +25,9 @@ import utils.BaseUnitSpec
 
 class ReportingWindowRepositorySpec extends BaseUnitSpec {
 
-  override lazy val app: Application = new GuiceApplicationBuilder().build()
+  override lazy val app: Application      = new GuiceApplicationBuilder().build()
   lazy val mongoComponent: MongoComponent = app.injector.instanceOf[MongoComponent]
-  lazy val repo = new ReportingWindowRepository(mongoComponent)
+  lazy val repo                           = new ReportingWindowRepository(mongoComponent)
 
   "setReportingWindowState" should {
     "create the document when it doesn't exist" in {
