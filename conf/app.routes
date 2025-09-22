@@ -7,8 +7,4 @@ GET     /etmp/check-reporting-window                                       uk.go
 
 POST    /nps/submit/:isaManagerReferenceNumber                             uk.gov.hmrc.disareturnsstubs.controllers.NpsController.submitMonthlyReturn(isaManagerReferenceNumber: String)
 
-GET     /nps/summary-results/:isaManagerReferenceNumber/:returnId          uk.gov.hmrc.disareturnsstubs.controllers.NpsController.getResultsSummary(isaManagerReferenceNumber: String, returnId: String)
-
-GET     /nps/summary-results/:isaManagerReferenceNumber/:taxYear/:month    uk.gov.hmrc.disareturnsstubs.controllers.NpsController.getResultsSummaryHeaderless(isaManagerReferenceNumber: String, taxYear: String, month: String)
-
 POST    /etmp/close-obligation-status/:isaManagerReferenceNumber           uk.gov.hmrc.disareturnsstubs.controllers.EtmpController.closeObligationStatus(isaManagerReferenceNumber: String)
