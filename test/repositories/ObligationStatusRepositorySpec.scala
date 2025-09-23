@@ -24,13 +24,10 @@ import utils.BaseUnitSpec
 
 class ObligationStatusRepositorySpec extends BaseUnitSpec {
 
-  protected val databaseName = "disa-returns-test"
-
-  val isaManagerReference = "Z1110"
-
-  protected val mongoUri: String                 = s"mongodb://127.0.0.1:27017/$databaseName"
-  lazy val mongoComponentForTest: MongoComponent = MongoComponent(mongoUri)
-
+  protected val databaseName                           = "disa-returns-test"
+  val isaManagerReference                              = "Z1110"
+  protected val mongoUri: String                       = s"mongodb://127.0.0.1:27017/$databaseName"
+  lazy val mongoComponentForTest: MongoComponent       = MongoComponent(mongoUri)
   protected val repository: ObligationStatusRepository =
     new ObligationStatusRepository(mongoComponentForTest)
 

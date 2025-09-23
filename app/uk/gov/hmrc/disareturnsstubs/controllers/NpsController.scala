@@ -21,7 +21,7 @@ import play.api.Logging
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, ControllerComponents, Result}
 import uk.gov.hmrc.disareturnsstubs.controllers.action.AuthorizationFilter
-import uk.gov.hmrc.disareturnsstubs.models.ErrorResponse.{BadRequestErr, ServiceUnavailableErr}
+import uk.gov.hmrc.disareturnsstubs.models.ErrorResponse._
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.Inject
@@ -49,5 +49,4 @@ class NpsController @Inject() (
       case _       => Future.successful(NoContent)
     }
   }
-
 }

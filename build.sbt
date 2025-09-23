@@ -15,6 +15,9 @@ lazy val microservice = Project("disa-returns-stubs", file("."))
   .settings(PlayKeys.playDefaultPort := 1204)
 
 addCommandAlias("prePrChecks", "scalafmtCheckAll;scalafmtSbtCheck")
+
+addCommandAlias("precommit", ";scalafmtAll;coverage;test;it/test;coverageReport")
+
 lazy val it = project
   .enablePlugins(PlayScala)
   .dependsOn(microservice % "test->test")

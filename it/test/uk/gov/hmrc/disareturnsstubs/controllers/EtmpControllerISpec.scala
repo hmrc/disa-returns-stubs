@@ -16,28 +16,23 @@
 
 package uk.gov.hmrc.disareturnsstubs.controllers
 
-import org.scalatestplus.play._
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.libs.json._
 import play.api.mvc.{AnyContentAsJson, Result}
 import play.api.test.Helpers._
 import play.api.test._
-import uk.gov.hmrc.disareturnsstubs.repositories.{ObligationStatusRepository, ReportingWindowRepository}
-
+import uk.gov.hmrc.disareturnsstubs.BaseISpec
 import scala.concurrent.Future
 
-class EtmpControllerISpec extends PlaySpec with GuiceOneAppPerSuite with DefaultAwaitTimeout {
+class EtmpControllerISpec extends BaseISpec {
 
   val obligationStatusEndpoint                                        = "/etmp/check-obligation-status"
   val reportingWindowEndpoint                                         = "/etmp/check-reporting-window"
   val isaManagerReference                                             = "Z1111"
-  lazy val mockObligationStatusRepository: ObligationStatusRepository =
-    app.injector.instanceOf[ObligationStatusRepository]
 
   "EtmpController GET /etmp/check-obligation-status/:isaManagerReferenceNumber" should {
 
     "return 200 with obligationAlreadyMet = true" in {
-      await(mockObligationStatusRepository.closeObligationStatus(isaManagerReference))
+      await(obligationStatusRepository.closeObligationStatus(isaManagerReference))
       val request: FakeRequest[AnyContentAsJson] =
         FakeRequest(GET, s"$obligationStatusEndpoint/$isaManagerReference").withJsonBody(Json.obj())
       val result: Future[Result]                 = route(app, request).get
@@ -49,7 +44,7 @@ class EtmpControllerISpec extends PlaySpec with GuiceOneAppPerSuite with Default
     }
 
     "return 200 with obligationAlreadyMet = false" in {
-      await(mockObligationStatusRepository.openObligationStatus(isaManagerReference))
+      await(obligationStatusRepository.openObligationStatus(isaManagerReference))
       val request: FakeRequest[AnyContentAsJson] =
         FakeRequest(GET, s"$obligationStatusEndpoint/$isaManagerReference").withJsonBody(Json.obj())
       val result: Future[Result]                 = route(app, request).get
@@ -64,9 +59,7 @@ class EtmpControllerISpec extends PlaySpec with GuiceOneAppPerSuite with Default
   "EtmpController GET /etmp/check-reporting-window" should {
 
     "return 200 with reportingWindowOpen = false when stub.reportingWindowScenario is 'closed'" in {
-      lazy val mockReportingWindowState: ReportingWindowRepository =
-        app.injector.instanceOf[ReportingWindowRepository]
-      await(mockReportingWindowState.setReportingWindowState(false))
+      await(reportingWindowRepository.setReportingWindowState(false))
 
       val request = FakeRequest(GET, reportingWindowEndpoint)
       val result  = route(app, request).get
@@ -76,10 +69,7 @@ class EtmpControllerISpec extends PlaySpec with GuiceOneAppPerSuite with Default
     }
 
     "return 200 with reportingWindowOpen = true when stub.reportingWindowScenario is 'open'" in {
-      lazy val mockReportingWindowState: ReportingWindowRepository =
-        app.injector.instanceOf[ReportingWindowRepository]
-      await(mockReportingWindowState.setReportingWindowState(true))
-
+      await(reportingWindowRepository.setReportingWindowState(true))
       val request = FakeRequest(GET, reportingWindowEndpoint)
       val result  = route(app, request).get
 

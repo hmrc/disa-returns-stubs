@@ -16,15 +16,17 @@
 
 package uk.gov.hmrc.disareturnsstubs.controllers
 
-import org.scalatestplus.play._
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers._
 import play.api.test._
+import uk.gov.hmrc.disareturnsstubs.BaseISpec
 
-class NpsControllerISpec extends PlaySpec with GuiceOneAppPerSuite with DefaultAwaitTimeout {
+class NpsControllerISpec extends BaseISpec {
 
-  val endpoint = "/nps/submit"
+  val submitMonthlyReturnEndpoint = "/nps/submit"
+  val getReturnResultsSummaryEndpoint = "/nps/summary-results"
+  val month = "APR"
+  val taxYear = "2025"
 
   val validPayload: JsValue = Json.parse("""[
   |  {
@@ -66,7 +68,7 @@ class NpsControllerISpec extends PlaySpec with GuiceOneAppPerSuite with DefaultA
   "POST /nps/submit/:isaReferenceNumber" should {
 
     "return 204 NoContent for any non-error ISA ref" in {
-      val request = FakeRequest(POST, s"$endpoint/Z1234")
+      val request = FakeRequest(POST, s"$submitMonthlyReturnEndpoint/Z1234")
         .withHeaders("Authorization" -> "Bearer token")
         .withJsonBody(validPayload)
 
@@ -75,7 +77,7 @@ class NpsControllerISpec extends PlaySpec with GuiceOneAppPerSuite with DefaultA
     }
 
     "return 400 BadRequest for isaRef Z1400" in {
-      val request = FakeRequest(POST, s"$endpoint/Z1400")
+      val request = FakeRequest(POST, s"$submitMonthlyReturnEndpoint/Z1400")
         .withHeaders("Authorization" -> "Bearer token")
         .withJsonBody(validPayload)
 
@@ -85,7 +87,7 @@ class NpsControllerISpec extends PlaySpec with GuiceOneAppPerSuite with DefaultA
     }
 
     "return 503 ServiceUnavailable for isaRef Z1503" in {
-      val request = FakeRequest(POST, s"$endpoint/Z1503")
+      val request = FakeRequest(POST, s"$submitMonthlyReturnEndpoint/Z1503")
         .withHeaders("Authorization" -> "Bearer token")
         .withJsonBody(validPayload)
 
@@ -95,7 +97,7 @@ class NpsControllerISpec extends PlaySpec with GuiceOneAppPerSuite with DefaultA
     }
 
     "return 403 Forbidden when Authorization header is missing" in {
-      val request = FakeRequest(POST, s"$endpoint/Z1234")
+      val request = FakeRequest(POST, s"$submitMonthlyReturnEndpoint/Z1234")
         .withJsonBody(validPayload)
 
       val result = route(app, request).get
