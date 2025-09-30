@@ -19,18 +19,13 @@ package services
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito._
-import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
-import org.scalatestplus.mockito.MockitoSugar
+import org.mongodb.scala.result.UpdateResult
 import uk.gov.hmrc.disareturnsstubs.models._
 import uk.gov.hmrc.disareturnsstubs.repositories.ReportRepository
-import org.mongodb.scala.result.UpdateResult
 import uk.gov.hmrc.disareturnsstubs.services.GenerateReportsService
 import utils.BaseUnitSpec
 
 import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits.global
 
 class GenerateReportsServiceSpec extends BaseUnitSpec {
 
@@ -77,7 +72,7 @@ class GenerateReportsServiceSpec extends BaseUnitSpec {
       val request       = GenerateReportRequest(oversubscribed = 0, traceAndMatch = 1, failedEligibility = 1)
       val isaManagerRef = "Z456"
       val year          = "2025"
-      val month         = "02"
+      val month         = "JAN"
 
       when(mockRepo.insertReport(any[MonthlyReport]))
         .thenReturn(Future.successful(mock[UpdateResult]))
