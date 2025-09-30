@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.disareturnsstubs.repositories
 
-import org.mongodb.scala.model.Filters.equal
-import org.mongodb.scala.model.{Filters, ReplaceOptions}
+import org.mongodb.scala.model.Filters.{and, equal}
+import org.mongodb.scala.model.ReplaceOptions
 import org.mongodb.scala.result.UpdateResult
 import uk.gov.hmrc.disareturnsstubs.models.MonthlyReport
 import uk.gov.hmrc.mongo.MongoComponent
@@ -36,7 +36,7 @@ class ReportRepository @Inject() (mc: MongoComponent)(implicit ec: ExecutionCont
     ) {
 
   def insertReport(monthlyReport: MonthlyReport): Future[UpdateResult] = {
-    val filter = Filters.and(
+    val filter = and(
       equal("month", monthlyReport.month),
       equal("year", monthlyReport.year),
       equal("isaManagerReferenceNumber", monthlyReport.isaManagerReferenceNumber)

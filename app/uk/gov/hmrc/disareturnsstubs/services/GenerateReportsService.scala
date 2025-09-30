@@ -89,11 +89,11 @@ class GenerateReportsService @Inject() (monthlyReportsRepository: ReportReposito
     oversubscribedResults ++ traceAndMatchResults ++ failedEligibilityResults
   }
 
-  val randomSixDigit: Int          = 100000 + Random.nextInt(899999)
-  val randomBigDecimal: BigDecimal =
+  def randomSixDigit: Int          = 100000 + Random.nextInt(899999)
+  def randomBigDecimal: BigDecimal =
     BigDecimal(0.01 + Random.nextDouble() * 9999.99)
       .setScale(2, RoundingMode.HALF_UP)
-  val randomNino                   = s"AB${randomSixDigit}C"
-  val randomAccountNumber          = s"100$randomSixDigit"
+  def randomNino: String           = s"AB${randomSixDigit}C"
+  def randomAccountNumber: String  = s"100$randomSixDigit"
 
 }
