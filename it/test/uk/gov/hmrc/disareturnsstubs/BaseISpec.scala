@@ -21,7 +21,7 @@ import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.test.{DefaultAwaitTimeout, FakeRequest}
-import uk.gov.hmrc.disareturnsstubs.repositories.{ObligationStatusRepository, ReportingWindowRepository}
+import uk.gov.hmrc.disareturnsstubs.repositories.{ReportRepository, ObligationStatusRepository, ReportingWindowRepository}
 
 abstract class BaseISpec
   extends PlaySpec
@@ -36,6 +36,9 @@ abstract class BaseISpec
 
   lazy val obligationStatusRepository: ObligationStatusRepository =
     app.injector.instanceOf[ObligationStatusRepository]
+
+  lazy val reportsRepository: ReportRepository =
+  app.injector.instanceOf[ReportRepository]
 
   val isaManagerReferenceNumber = "Z1234"
   val returnId = "b4aba7b8-0d34-4936-923c-d9ef2747c099"

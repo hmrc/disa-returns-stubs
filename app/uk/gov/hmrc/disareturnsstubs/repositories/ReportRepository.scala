@@ -16,8 +16,10 @@
 
 package uk.gov.hmrc.disareturnsstubs.repositories
 
+import org.mongodb.scala.model.Filters.equal
 import org.mongodb.scala.model.{Filters, ReplaceOptions}
-import uk.gov.hmrc.disareturnsstubs.models.ReportingWindowStateMongo
+import org.mongodb.scala.result.UpdateResult
+import uk.gov.hmrc.disareturnsstubs.models.MonthlyReport
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
@@ -25,30 +27,25 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ReportingWindowRepository @Inject() (mc: MongoComponent)(implicit ec: ExecutionContext)
-    extends PlayMongoRepository[ReportingWindowStateMongo](
+class ReportRepository @Inject()(mc: MongoComponent)(implicit ec: ExecutionContext)
+    extends PlayMongoRepository[MonthlyReport](
       mongoComponent = mc,
-      collectionName = "reportingWindow",
-      domainFormat = ReportingWindowStateMongo.format,
+      collectionName = "monthlyReport",
+      domainFormat = MonthlyReport.format,
       indexes = Seq.empty
     ) {
 
-  def setReportingWindowState(open: Boolean): Future[Unit] = {
-    val doc = ReportingWindowStateMongo(reportingWindowOpen = open)
+  def insertReport(monthlyReport: MonthlyReport): Future[UpdateResult] = {
+    val filter = Filters.and(
+      equal("month", monthlyReport.month),
+      equal("isaManagerReferenceNumber", monthlyReport.isaManagerReferenceNumber)
+    )
     collection
       .replaceOne(
-        Filters.eq("_id", "test-scenario"),
-        doc,
-        new ReplaceOptions().upsert(true)
+        filter = filter,
+        replacement = monthlyReport,
+        options = new ReplaceOptions().upsert(true)
       )
       .toFuture()
-      .map(_ => ())
   }
-
-  def getReportingWindowState: Future[Option[Boolean]] =
-    collection
-      .find(Filters.eq("_id", "test-scenario"))
-      .first()
-      .toFutureOption()
-      .map(_.map(_.reportingWindowOpen))
 }
