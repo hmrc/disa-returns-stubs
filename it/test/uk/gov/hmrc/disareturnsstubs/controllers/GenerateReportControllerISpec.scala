@@ -61,7 +61,7 @@ class GenerateReportControllerISpec extends BaseISpec {
 
       status(result) mustBe NO_CONTENT
 
-      val report = await(reportsRepository.collection.find().toFuture())
+      val report = await(reportRepository.collection.find().toFuture())
 
       report.exists(report =>
         report.isaManagerReferenceNumber == isaManagerReferenceNumber &&

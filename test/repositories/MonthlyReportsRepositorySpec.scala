@@ -27,35 +27,44 @@ import utils.BaseUnitSpec
 
 class MonthlyReportsRepositorySpec extends BaseUnitSpec {
 
-  override lazy val app: Application = new GuiceApplicationBuilder().build()
+  override lazy val app: Application      = new GuiceApplicationBuilder().build()
   lazy val mongoComponent: MongoComponent = app.injector.instanceOf[MongoComponent]
-  lazy val repo = new ReportRepository(mongoComponent)
-  val report1: MonthlyReport = MonthlyReport(
+  lazy val repo                           = new ReportRepository(mongoComponent)
+  val report1: MonthlyReport              = MonthlyReport(
     isaManagerReferenceNumber = "Z123",
     year = "2025-26",
     month = "JAN",
-    returnResults = Seq(ReturnResult(
-      accountNumber = "100000001",
-      nino = "AB123457C",
-      issueIdentified = IssueIdentifiedOverSubscribed(
-        code = "OVER_SUBSCRIBED",
-        overSubscribedAmount = 1000.00
-      ))))
+    returnResults = Seq(
+      ReturnResult(
+        accountNumber = "100000001",
+        nino = "AB123457C",
+        issueIdentified = IssueIdentifiedOverSubscribed(
+          code = "OVER_SUBSCRIBED",
+          overSubscribedAmount = 1000.00
+        )
+      )
+    )
+  )
 
-  val report2: MonthlyReport = report1.copy(returnResults = Seq(ReturnResult(
-    accountNumber = "100000002",
-    nino = "AB123456C",
-    issueIdentified = IssueIdentifiedMessage(
-      code = "UNABLE_TO_IDENTIFY_INVESTOR",
-      message = "UNABLE_TO_IDENTIFY_INVESTOR"
-    ))))
+  val report2: MonthlyReport = report1.copy(returnResults =
+    Seq(
+      ReturnResult(
+        accountNumber = "100000002",
+        nino = "AB123456C",
+        issueIdentified = IssueIdentifiedMessage(
+          code = "UNABLE_TO_IDENTIFY_INVESTOR",
+          message = "UNABLE_TO_IDENTIFY_INVESTOR"
+        )
+      )
+    )
+  )
 
   "insert a new document when it doesn't exist" in {
     await(repo.collection.drop().toFuture())
 
     val result: UpdateResult = await(repo.insertReport(report1))
     result.wasAcknowledged() shouldBe true
-    result.getUpsertedId should not be null
+    result.getUpsertedId       should not be null
 
     val stored = await(repo.collection.find().headOption())
     stored shouldBe Some(report1)
@@ -66,8 +75,8 @@ class MonthlyReportsRepositorySpec extends BaseUnitSpec {
     val result: UpdateResult = await(repo.insertReport(report2))
 
     result.wasAcknowledged() shouldBe true
-    result.getUpsertedId shouldBe null
-    result.getModifiedCount should be > 0L
+    result.getUpsertedId     shouldBe null
+    result.getModifiedCount    should be > 0L
 
     val stored = await(repo.collection.find().headOption())
     stored shouldBe Some(report2)

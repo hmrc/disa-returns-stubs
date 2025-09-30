@@ -25,13 +25,14 @@ import scala.math.BigDecimal.RoundingMode
 import scala.util.Random
 
 @Singleton
-class GenerateReportsService @Inject()(monthlyReportsRepository: ReportRepository)(implicit ec: ExecutionContext) {
+class GenerateReportsService @Inject() (monthlyReportsRepository: ReportRepository)(implicit ec: ExecutionContext) {
 
-
-  def generateAndStore(generateReportRequest: GenerateReportRequest,
-                       isaManagerReferenceNumber: String,
-                       year: String,
-                       month: String): Future[Seq[ReturnResult]] = {
+  def generateAndStore(
+    generateReportRequest: GenerateReportRequest,
+    isaManagerReferenceNumber: String,
+    year: String,
+    month: String
+  ): Future[Seq[ReturnResult]] = {
 
     val results: Seq[ReturnResult] = generateResults(generateReportRequest)
 
@@ -42,7 +43,8 @@ class GenerateReportsService @Inject()(monthlyReportsRepository: ReportRepositor
       returnResults = results
     )
 
-    monthlyReportsRepository.insertReport(monthlyReport)
+    monthlyReportsRepository
+      .insertReport(monthlyReport)
       .map(_ => results)
   }
 
@@ -87,12 +89,11 @@ class GenerateReportsService @Inject()(monthlyReportsRepository: ReportRepositor
     oversubscribedResults ++ traceAndMatchResults ++ failedEligibilityResults
   }
 
-
-  val randomSixDigit: Int = 100000 + Random.nextInt(899999)
+  val randomSixDigit: Int          = 100000 + Random.nextInt(899999)
   val randomBigDecimal: BigDecimal =
     BigDecimal(0.01 + Random.nextDouble() * 9999.99)
       .setScale(2, RoundingMode.HALF_UP)
-  val randomNino = s"AB${randomSixDigit}C"
-  val randomAccountNumber = s"100$randomSixDigit"
+  val randomNino                   = s"AB${randomSixDigit}C"
+  val randomAccountNumber          = s"100$randomSixDigit"
 
 }

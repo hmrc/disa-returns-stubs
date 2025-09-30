@@ -19,10 +19,10 @@ package uk.gov.hmrc.disareturnsstubs.models
 import play.api.libs.json.{Json, OFormat}
 
 case class ReturnResult(
-                         accountNumber: String,
-                         nino: String,
-                         issueIdentified: IssueIdentified
-                       )
+  accountNumber: String,
+  nino: String,
+  issueIdentified: IssueIdentified
+)
 
 object ReturnResult {
   implicit val format: OFormat[ReturnResult] = Json.format[ReturnResult]

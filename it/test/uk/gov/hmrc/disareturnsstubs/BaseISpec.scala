@@ -37,7 +37,7 @@ abstract class BaseISpec
   lazy val obligationStatusRepository: ObligationStatusRepository =
     app.injector.instanceOf[ObligationStatusRepository]
 
-  lazy val reportsRepository: ReportRepository =
+  lazy val reportRepository: ReportRepository =
   app.injector.instanceOf[ReportRepository]
 
   val isaManagerReferenceNumber = "Z1234"

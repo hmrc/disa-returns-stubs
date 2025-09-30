@@ -18,10 +18,12 @@ package uk.gov.hmrc.disareturnsstubs.models
 
 import play.api.libs.json.{Json, OFormat}
 
-case class MonthlyReport(isaManagerReferenceNumber: String,
-                         year: String,
-                         month: String,
-                         returnResults: Seq[ReturnResult])
+case class MonthlyReport(
+  isaManagerReferenceNumber: String,
+  year: String,
+  month: String,
+  returnResults: Seq[ReturnResult]
+)
 
 object MonthlyReport {
   implicit val format: OFormat[MonthlyReport] = Json.format[MonthlyReport]

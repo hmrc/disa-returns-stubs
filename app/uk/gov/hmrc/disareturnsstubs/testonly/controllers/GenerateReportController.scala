@@ -27,10 +27,13 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class GenerateReportController @Inject()(generateReportsService: GenerateReportsService,
-                                         authorizationFilter: AuthorizationFilter,
-                                         cc: ControllerComponents)(implicit ec: ExecutionContext)
-  extends AbstractController(cc) with WithJsonBody {
+class GenerateReportController @Inject() (
+  generateReportsService: GenerateReportsService,
+  authorizationFilter: AuthorizationFilter,
+  cc: ControllerComponents
+)(implicit ec: ExecutionContext)
+    extends AbstractController(cc)
+    with WithJsonBody {
 
   def create(isaManagerReferenceNumber: String, year: String, month: String): Action[JsValue] =
     (Action andThen authorizationFilter).async(parse.json) { implicit request =>

@@ -18,8 +18,8 @@ package uk.gov.hmrc.disareturnsstubs.models
 
 import play.api.libs.json.{Json, OFormat}
 
-case class ReportingWindowStateMongo(_id: String = "test-scenario", reportingWindowOpen: Boolean)
+case class ReportingWindowState(_id: String = "test-scenario", reportingWindowOpen: Boolean)
 
-object ReportingWindowStateMongo {
-  implicit val format: OFormat[ReportingWindowStateMongo] = Json.format[ReportingWindowStateMongo]
+object ReportingWindowState {
+  implicit val format: OFormat[ReportingWindowState] = Json.format[ReportingWindowState]
 }

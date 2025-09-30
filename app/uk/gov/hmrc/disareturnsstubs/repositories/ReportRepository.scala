@@ -27,7 +27,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ReportRepository @Inject()(mc: MongoComponent)(implicit ec: ExecutionContext)
+class ReportRepository @Inject() (mc: MongoComponent)(implicit ec: ExecutionContext)
     extends PlayMongoRepository[MonthlyReport](
       mongoComponent = mc,
       collectionName = "monthlyReport",
@@ -38,6 +38,7 @@ class ReportRepository @Inject()(mc: MongoComponent)(implicit ec: ExecutionConte
   def insertReport(monthlyReport: MonthlyReport): Future[UpdateResult] = {
     val filter = Filters.and(
       equal("month", monthlyReport.month),
+      equal("year", monthlyReport.year),
       equal("isaManagerReferenceNumber", monthlyReport.isaManagerReferenceNumber)
     )
     collection

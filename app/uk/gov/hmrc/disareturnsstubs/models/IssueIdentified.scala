@@ -25,14 +25,14 @@ sealed trait IssueIdentified {
 }
 
 case class IssueIdentifiedMessage(
-                                   code: String,
-                                   message: String
-                                 ) extends IssueIdentified
+  code: String,
+  message: String
+) extends IssueIdentified
 
 case class IssueIdentifiedOverSubscribed(
-                                          code: String,
-                                          overSubscribedAmount: BigDecimal
-                                        ) extends IssueIdentified
+  code: String,
+  overSubscribedAmount: BigDecimal
+) extends IssueIdentified
 
 object IssueIdentified {
   implicit val messageFormat: OFormat[IssueIdentifiedMessage] =
@@ -42,17 +42,15 @@ object IssueIdentified {
     Json.format[IssueIdentifiedOverSubscribed]
 
   implicit val format: Format[IssueIdentified] = new Format[IssueIdentified] {
-    override def reads(json: JsValue): JsResult[IssueIdentified] = {
+    override def reads(json: JsValue): JsResult[IssueIdentified] =
       (json \ "code").validate[String].flatMap {
         case "OVER_SUBSCRIBED" => json.validate[IssueIdentifiedOverSubscribed]
         case _                 => json.validate[IssueIdentifiedMessage]
       }
-    }
 
     override def writes(issue: IssueIdentified): JsValue = issue match {
-      case o: IssueIdentifiedOverSubscribed => overSubscribedFormat.writes(o)
-      case m: IssueIdentifiedMessage        => messageFormat.writes(m)
+      case overSubscribed: IssueIdentifiedOverSubscribed => overSubscribedFormat.writes(overSubscribed)
+      case message: IssueIdentifiedMessage               => messageFormat.writes(message)
     }
   }
 }
-
