@@ -17,7 +17,7 @@
 package uk.gov.hmrc.disareturnsstubs.repositories
 
 import org.mongodb.scala.model.Filters.{and, equal}
-import org.mongodb.scala.model.ReplaceOptions
+import org.mongodb.scala.model.{IndexModel, IndexOptions, Indexes, ReplaceOptions}
 import org.mongodb.scala.result.UpdateResult
 import uk.gov.hmrc.disareturnsstubs.models.MonthlyReport
 import uk.gov.hmrc.mongo.MongoComponent
@@ -32,7 +32,16 @@ class ReportRepository @Inject() (mc: MongoComponent)(implicit ec: ExecutionCont
       mongoComponent = mc,
       collectionName = "monthlyReport",
       domainFormat = MonthlyReport.format,
-      indexes = Seq.empty
+      indexes = Seq(
+        IndexModel(
+          Indexes.compoundIndex(
+            Indexes.ascending("isaManagerReferenceNumber"),
+            Indexes.ascending("year"),
+            Indexes.ascending("month")
+          ),
+          IndexOptions().unique(true)
+        )
+      )
     ) {
 
   def insertReport(monthlyReport: MonthlyReport): Future[UpdateResult] = {

@@ -43,9 +43,9 @@ class NpsController @Inject() (
     logger.info(s"Nps Stub received payload for ISA ref $isaRef: ${Json.prettyPrint(body)}")
     isaRef match {
       case "Z1400" =>
-        Future.successful(BadRequest(Json.toJson(BadRequestErr)))
+        Future.successful(BadRequest(Json.toJson(badRequestError)))
       case "Z1503" =>
-        Future.successful(ServiceUnavailable(Json.toJson(ServiceUnavailableErr)))
+        Future.successful(ServiceUnavailable(Json.toJson(serviceUnavailableError)))
       case _       => Future.successful(NoContent)
     }
   }

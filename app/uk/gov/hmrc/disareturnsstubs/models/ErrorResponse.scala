@@ -22,6 +22,8 @@ case class ErrorResponse(code: String, message: String)
 
 object ErrorResponse {
   implicit val format: OFormat[ErrorResponse] = Json.format[ErrorResponse]
-  val BadRequestErr: ErrorResponse            = ErrorResponse("BAD_REQUEST", "Bad request")
-  val ServiceUnavailableErr: ErrorResponse    = ErrorResponse("SERVICE_UNAVAILABLE", "Service unavailable")
+  val badRequestError: ErrorResponse          = ErrorResponse("BAD_REQUEST", "Bad request")
+  val serviceUnavailableError: ErrorResponse  = ErrorResponse("SERVICE_UNAVAILABLE", "Service unavailable")
+
+  def internalServerErr(message: String): ErrorResponse = ErrorResponse("INTERNAL_SERVER_ERROR", message)
 }

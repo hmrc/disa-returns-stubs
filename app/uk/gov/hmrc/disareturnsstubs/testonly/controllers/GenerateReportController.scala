@@ -22,7 +22,7 @@ import uk.gov.hmrc.disareturnsstubs.controllers.action.AuthorizationFilter
 import uk.gov.hmrc.disareturnsstubs.models.GenerateReportRequest
 import uk.gov.hmrc.disareturnsstubs.services.GenerateReportsService
 import uk.gov.hmrc.play.bootstrap.controller.WithJsonBody
-
+import uk.gov.hmrc.disareturnsstubs.models.ErrorResponse._
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
@@ -41,6 +41,9 @@ class GenerateReportController @Inject() (
         generateReportsService
           .generateAndStore(generateReport, isaManagerReferenceNumber, year, month)
           .map(_ => NoContent)
+          .recover { case ex =>
+            InternalServerError(Json.toJson(internalServerErr(ex.getMessage)))
+          }
       }
     }
 }
