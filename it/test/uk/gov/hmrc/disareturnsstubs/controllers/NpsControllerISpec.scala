@@ -26,7 +26,7 @@ class NpsControllerISpec extends BaseISpec {
   val submitMonthlyReturnEndpoint = "/nps/submit"
   val getReturnResultsSummaryEndpoint = "/nps/summary-results"
   val month = "APR"
-  val taxYear = "2025"
+  val taxYear = "2025-26"
 
   val validPayload: JsValue = Json.parse("""[
   |  {

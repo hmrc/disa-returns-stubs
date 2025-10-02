@@ -18,8 +18,12 @@ package uk.gov.hmrc.disareturnsstubs.models
 
 import play.api.libs.json.{Json, OFormat}
 
-case class EtmpReportingWindowDTO(_id: String = "test-scenario", reportingWindowOpen: Boolean)
+case class ReturnResult(
+  accountNumber: String,
+  nino: String,
+  issueIdentified: IssueIdentified
+)
 
-object EtmpReportingWindowDTO {
-  implicit val format: OFormat[EtmpReportingWindowDTO] = Json.format[EtmpReportingWindowDTO]
+object ReturnResult {
+  implicit val format: OFormat[ReturnResult] = Json.format[ReturnResult]
 }

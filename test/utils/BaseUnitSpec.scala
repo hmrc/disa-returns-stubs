@@ -39,6 +39,7 @@ abstract class BaseUnitSpec
     with MockitoSugar
     with DefaultAwaitTimeout
     with GuiceOneAppPerSuite {
+
   implicit val ec: ExecutionContext           = scala.concurrent.ExecutionContext.Implicits.global
   implicit val hc: HeaderCarrier              = HeaderCarrier()
   override def fakeApplication(): Application = GuiceApplicationBuilder()

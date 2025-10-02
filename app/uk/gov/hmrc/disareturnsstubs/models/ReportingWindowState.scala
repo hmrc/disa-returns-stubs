@@ -18,12 +18,8 @@ package uk.gov.hmrc.disareturnsstubs.models
 
 import play.api.libs.json.{Json, OFormat}
 
-case class ErrorResponse(code: String, message: String)
+case class ReportingWindowState(_id: String = "test-scenario", reportingWindowOpen: Boolean)
 
-object ErrorResponse {
-  implicit val format: OFormat[ErrorResponse] = Json.format[ErrorResponse]
-  val badRequestError: ErrorResponse          = ErrorResponse("BAD_REQUEST", "Bad request")
-  val serviceUnavailableError: ErrorResponse  = ErrorResponse("SERVICE_UNAVAILABLE", "Service unavailable")
-
-  def internalServerErr(message: String): ErrorResponse = ErrorResponse("INTERNAL_SERVER_ERROR", message)
+object ReportingWindowState {
+  implicit val format: OFormat[ReportingWindowState] = Json.format[ReportingWindowState]
 }
