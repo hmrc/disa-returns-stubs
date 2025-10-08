@@ -16,6 +16,7 @@
 
 package utils
 
+import org.mockito.Mockito
 import org.scalatest._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
@@ -24,10 +25,12 @@ import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.mvc.{Request, Result}
 import play.api.test.DefaultAwaitTimeout
+import uk.gov.hmrc.disareturnsstubs.controllers.action.AuthorizationFilter
 import uk.gov.hmrc.http.HeaderCarrier
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 abstract class BaseUnitSpec
     extends AnyWordSpec
@@ -40,8 +43,17 @@ abstract class BaseUnitSpec
     with DefaultAwaitTimeout
     with GuiceOneAppPerSuite {
 
-  implicit val ec: ExecutionContext           = scala.concurrent.ExecutionContext.Implicits.global
-  implicit val hc: HeaderCarrier              = HeaderCarrier()
+  implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
+  implicit val hc: HeaderCarrier    = HeaderCarrier()
+  val stubAuthFilter                = new StubAuthorizationFilter(None)
+
+  override def beforeEach(): Unit = Mockito.reset()
+
   override def fakeApplication(): Application = GuiceApplicationBuilder()
     .build()
+
+  class StubAuthorizationFilter(result: Option[Result])(implicit ec: ExecutionContext) extends AuthorizationFilter {
+    override def filter[A](request: Request[A]): Future[Option[Result]] = Future.successful(result)
+  }
+
 }

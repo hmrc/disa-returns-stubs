@@ -18,29 +18,28 @@ package uk.gov.hmrc.disareturnsstubs.controllers
 
 import jakarta.inject.Singleton
 import play.api.Logging
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.disareturnsstubs.controllers.action.AuthorizationFilter
 import uk.gov.hmrc.disareturnsstubs.models.ErrorResponse._
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.Inject
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class NpsController @Inject() (
   cc: ControllerComponents,
   authorizationFilter: AuthorizationFilter
-) extends BackendController(cc)
+)(implicit ec: ExecutionContext)
+    extends BackendController(cc)
     with Logging {
 
-  def submitMonthlyReturn(isaReferenceNumber: String): Action[JsValue] =
-    (Action andThen authorizationFilter).async(parse.json) { _ =>
+  def submitMonthlyReturn(isaReferenceNumber: String): Action[AnyContent] =
+    (Action andThen authorizationFilter).async { _ =>
       isaReferenceNumber match {
-        case "Z1400" =>
-          Future.successful(BadRequest(Json.toJson(badRequestError)))
-        case "Z1503" =>
-          Future.successful(ServiceUnavailable(Json.toJson(serviceUnavailableError)))
+        case "Z1400" => Future.successful(BadRequest(Json.toJson(badRequestError)))
+        case "Z1503" => Future.successful(ServiceUnavailable(Json.toJson(serviceUnavailableError)))
         case _       => Future.successful(NoContent)
       }
     }

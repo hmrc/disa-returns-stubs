@@ -111,15 +111,12 @@ class NpsControllerISpec extends BaseISpec {
 
     "return 204 NoContent for any non-error ISA ref" in {
       val request = FakeRequest(POST, s"$npsDeclarationEndpoint/Z1234")
-        .withHeaders("Authorization" -> "Bearer token")
-
       val result = route(app, request).get
       status(result) mustBe NO_CONTENT
     }
 
     "return 500 InternalServerError for ISA ref Z5000" in {
       val request = FakeRequest(POST, s"$npsDeclarationEndpoint/Z5000")
-        .withHeaders("Authorization" -> "Bearer token")
 
       val result = route(app, request).get
       status(result) mustBe INTERNAL_SERVER_ERROR
