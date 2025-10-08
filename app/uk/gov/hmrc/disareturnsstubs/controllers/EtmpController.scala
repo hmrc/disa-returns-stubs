@@ -45,10 +45,10 @@ class EtmpController @Inject() (
     }
   }
 
-  def closeObligationStatus(isaManagerReference: String): Action[AnyContent] = Action.async {
+  def declare(isaManagerReference: String): Action[AnyContent] = Action.async {
     obligationStatusRepository
       .closeObligationStatus(isaManagerReference)
-      .map(_ => Ok(Json.toJson(EtmpObligations(obligationAlreadyMet = true))))
+      .map(_ => NoContent)
   }
 
   def checkReturnsObligationStatus(isaManagerReferenceNumber: String): Action[AnyContent] = Action.async {

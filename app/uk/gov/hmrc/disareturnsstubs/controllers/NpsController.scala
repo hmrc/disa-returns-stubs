@@ -19,7 +19,7 @@ package uk.gov.hmrc.disareturnsstubs.controllers
 import jakarta.inject.Singleton
 import play.api.Logging
 import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.{Action, ControllerComponents, Result}
+import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.disareturnsstubs.controllers.action.AuthorizationFilter
 import uk.gov.hmrc.disareturnsstubs.models.ErrorResponse._
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
@@ -35,18 +35,21 @@ class NpsController @Inject() (
     with Logging {
 
   def submitMonthlyReturn(isaReferenceNumber: String): Action[JsValue] =
-    (Action andThen authorizationFilter).async(parse.json) { implicit request =>
-      handleRequest(isaReferenceNumber, request.body)
+    (Action andThen authorizationFilter).async(parse.json) { _ =>
+      isaReferenceNumber match {
+        case "Z1400" =>
+          Future.successful(BadRequest(Json.toJson(badRequestError)))
+        case "Z1503" =>
+          Future.successful(ServiceUnavailable(Json.toJson(serviceUnavailableError)))
+        case _       => Future.successful(NoContent)
+      }
     }
 
-  private def handleRequest(isaRef: String, body: JsValue): Future[Result] = {
-    logger.info(s"Nps Stub received payload for ISA ref $isaRef: ${Json.prettyPrint(body)}")
-    isaRef match {
-      case "Z1400" =>
-        Future.successful(BadRequest(Json.toJson(badRequestError)))
-      case "Z1503" =>
-        Future.successful(ServiceUnavailable(Json.toJson(serviceUnavailableError)))
-      case _       => Future.successful(NoContent)
+  def notification(isaReferenceNumber: String): Action[AnyContent] = Action {
+    isaReferenceNumber match {
+      case "Z5000" => InternalServerError(Json.toJson(internalServerErr("Internal issue, try again later")))
+      case _       => NoContent
     }
   }
+
 }

@@ -68,13 +68,20 @@ sbt scalafmtSbt
 # formats just the main source files (excludes test and configuration files)
 sbt scalafmt
 ```
-## ZREF Responses for NPS
+## ZREF Responses for NPS submit endpoint
 
 | ZREF  | Status |        Type         |
 |:-----:|:------:|:-------------------:|
 | Z1400 |  400   |     BAD REQUEST     |
 | Z1503 |  503   | SERVICE UNAVAILABLE |
 |  Any  |  204   |     NO CONTENT      |
+
+## ZREF Responses for NPS declaration endpoint
+
+| ZREF  | Status |         Type          |
+|:-----:|:------:|:---------------------:|
+| Z1500 |  500   | INTERNAL SERVER ERROR |
+|  Any  |  204   |      NO CONTENT       |
 
 ### Further documentation
 

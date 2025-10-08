@@ -60,13 +60,12 @@ class EtmpControllerSpec extends BaseUnitSpec {
   }
 
   "closeObligationStatus" should {
-    "return 200 with obligationAlreadyMet = true" in {
+    "return 204 no content when closeObligationStatus is successful" in {
       when(mockObligationRepo.closeObligationStatus(any()))
         .thenReturn(Future.unit)
 
-      val result = controller.closeObligationStatus(isaManagerReference)(FakeRequest())
-      status(result)        shouldBe OK
-      contentAsJson(result) shouldBe Json.toJson(EtmpObligations(obligationAlreadyMet = true))
+      val result = controller.declare(isaManagerReference)(FakeRequest())
+      status(result) shouldBe NO_CONTENT
     }
   }
 
