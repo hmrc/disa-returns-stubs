@@ -44,7 +44,7 @@ class NpsController @Inject() (
       }
     }
 
-  def notification(isaReferenceNumber: String): Action[AnyContent] = Action {
+  def send(isaReferenceNumber: String): Action[AnyContent] = Action {
     isaReferenceNumber match {
       case "Z5000" => InternalServerError(Json.toJson(internalServerErr("Internal issue, try again later")))
       case _       => NoContent

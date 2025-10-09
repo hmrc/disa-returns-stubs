@@ -60,12 +60,12 @@ class NpsControllerSpec extends BaseUnitSpec {
     }
   }
 
-  "notification" should {
-    "return 204 no content for successful notification" in {
+  "send" should {
+    "return 204 no content when a declaration has been sent successfully" in {
       val request =
         FakeRequest(POST, s"/nps/declaration/$isaManagerReference")
 
-      val result = controller.notification(isaManagerReference)(request)
+      val result = controller.send(isaManagerReference)(request)
       status(result) shouldBe NO_CONTENT
     }
 
@@ -73,7 +73,7 @@ class NpsControllerSpec extends BaseUnitSpec {
       val isaManagerReference = "Z5000"
       val request             = FakeRequest(POST, s"/nps/declaration/$isaManagerReference")
 
-      val result = controller.notification(isaManagerReference)(request)
+      val result = controller.send(isaManagerReference)(request)
       status(result)                                 shouldBe INTERNAL_SERVER_ERROR
       (contentAsJson(result) \ "code").as[String]    shouldBe "INTERNAL_SERVER_ERROR"
       (contentAsJson(result) \ "message").as[String] shouldBe "Internal issue, try again later"

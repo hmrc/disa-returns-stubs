@@ -15,7 +15,7 @@ lazy val microservice = Project("disa-returns-stubs", file("."))
 
 addCommandAlias("prePrChecks", "scalafmtCheckAll;scalafmtSbtCheck")
 
-addCommandAlias("preCommit", ";scalafmtAll;coverage;test;it/test;coverageReport")
+addCommandAlias("precommit", ";scalafmtAll;coverage;test;it/test;coverageReport")
 
 lazy val it = project
   .enablePlugins(PlayScala)

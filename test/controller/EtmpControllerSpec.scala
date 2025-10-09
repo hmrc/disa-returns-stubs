@@ -88,13 +88,15 @@ class EtmpControllerSpec extends BaseUnitSpec {
       contentAsJson(result) shouldBe Json.toJson(EtmpObligations(obligationAlreadyMet = false))
     }
 
-    "return 404 if repo returns None" in {
+    "return 200 with obligationAlreadyMet = false when no existing data is found and new data is created" in {
       when(mockObligationRepo.getObligationStatus(any()))
         .thenReturn(Future.successful(None))
+      when(mockObligationRepo.openObligationStatus(any()))
+        .thenReturn(Future.successful())
 
       val result = controller.checkReturnsObligationStatus(isaManagerReference)(FakeRequest())
-      status(result)                             shouldBe NOT_FOUND
-      (contentAsJson(result) \ "error").as[String] should include("No obligation status found")
+      status(result)        shouldBe OK
+      contentAsJson(result) shouldBe Json.toJson(EtmpObligations(obligationAlreadyMet = false))
     }
   }
 }

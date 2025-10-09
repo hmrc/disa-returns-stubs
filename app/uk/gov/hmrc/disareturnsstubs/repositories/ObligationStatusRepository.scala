@@ -21,6 +21,8 @@ import uk.gov.hmrc.disareturnsstubs.models.ObligationStatus
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
+import java.time.Instant
+import java.util.concurrent.TimeUnit
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -30,7 +32,15 @@ class ObligationStatusRepository @Inject() (mc: MongoComponent)(implicit ec: Exe
       mongoComponent = mc,
       collectionName = "obligationStatus",
       domainFormat = ObligationStatus.format,
-      indexes = Seq(IndexModel(Indexes.ascending("isaManagerReference"), IndexOptions().unique(true)))
+      indexes = Seq(
+        IndexModel(
+          keys = Indexes.ascending("createdAt"),
+          indexOptions = IndexOptions()
+            .name("createdAtTtlIdx")
+            .expireAfter(5, TimeUnit.DAYS)
+        ),
+        IndexModel(Indexes.ascending("isaManagerReference"), IndexOptions().unique(true))
+      )
     ) {
 
   def closeObligationStatus(isaManagerReference: String): Future[Unit] =
@@ -39,7 +49,8 @@ class ObligationStatusRepository @Inject() (mc: MongoComponent)(implicit ec: Exe
         Filters.eq("isaManagerReference", isaManagerReference),
         Updates.combine(
           Updates.set("obligationAlreadyMet", true),
-          Updates.setOnInsert("isaManagerReference", isaManagerReference)
+          Updates.setOnInsert("isaManagerReference", isaManagerReference),
+          Updates.setOnInsert("createdAt", Instant.now)
         ),
         UpdateOptions().upsert(true)
       )
@@ -52,7 +63,8 @@ class ObligationStatusRepository @Inject() (mc: MongoComponent)(implicit ec: Exe
         Filters.eq("isaManagerReference", isaManagerReference),
         Updates.combine(
           Updates.set("obligationAlreadyMet", false),
-          Updates.setOnInsert("isaManagerReference", isaManagerReference)
+          Updates.setOnInsert("isaManagerReference", isaManagerReference),
+          Updates.setOnInsert("createdAt", Instant.now)
         ),
         UpdateOptions().upsert(true)
       )

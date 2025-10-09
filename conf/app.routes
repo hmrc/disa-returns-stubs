@@ -7,6 +7,6 @@ GET     /etmp/check-reporting-window                                       uk.go
 
 POST    /nps/submit/:isaManagerReferenceNumber                             uk.gov.hmrc.disareturnsstubs.controllers.NpsController.submitMonthlyReturn(isaManagerReferenceNumber: String)
 
-POST    /nps/declaration/:isaManagerReferenceNumber                        uk.gov.hmrc.disareturnsstubs.controllers.NpsController.notification(isaManagerReferenceNumber: String)
+POST    /nps/declaration/:isaManagerReferenceNumber                        uk.gov.hmrc.disareturnsstubs.controllers.NpsController.send(isaManagerReferenceNumber: String)
 
 POST    /etmp/declaration/:isaManagerReferenceNumber                       uk.gov.hmrc.disareturnsstubs.controllers.EtmpController.declare(isaManagerReferenceNumber: String)
