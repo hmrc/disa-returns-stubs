@@ -23,10 +23,11 @@ import uk.gov.hmrc.disareturnsstubs.BaseISpec
 
 class NpsControllerISpec extends BaseISpec {
 
-  val submitMonthlyReturnEndpoint = "/nps/submit"
+  val submitMonthlyReturnEndpoint     = "/nps/submit"
+  val npsDeclarationEndpoint          = "/nps/declaration"
   val getReturnResultsSummaryEndpoint = "/nps/summary-results"
-  val month = "APR"
-  val taxYear = "2025-26"
+  val month                           = "APR"
+  val taxYear                         = "2025-26"
 
   val validPayload: JsValue = Json.parse("""[
   |  {
@@ -103,6 +104,24 @@ class NpsControllerISpec extends BaseISpec {
       val result = route(app, request).get
       status(result) mustBe FORBIDDEN
       (contentAsJson(result) \ "message").asOpt[String] mustBe Some("Missing required bearer token")
+    }
+  }
+
+  "POST /nps/declaration/:isaReferenceNumber" should {
+
+    "return 204 NoContent for any non-error ISA ref" in {
+      val request = FakeRequest(POST, s"$npsDeclarationEndpoint/Z1234")
+      val result = route(app, request).get
+      status(result) mustBe NO_CONTENT
+    }
+
+    "return 500 InternalServerError for ISA ref Z5000" in {
+      val request = FakeRequest(POST, s"$npsDeclarationEndpoint/Z5000")
+
+      val result = route(app, request).get
+      status(result) mustBe INTERNAL_SERVER_ERROR
+      (contentAsJson(result) \ "code").asOpt[String] mustBe Some("INTERNAL_SERVER_ERROR")
+      (contentAsJson(result) \ "message").asOpt[String] mustBe Some("Internal issue, try again later")
     }
   }
 }

@@ -24,7 +24,7 @@ import uk.gov.hmrc.disareturnsstubs.repositories.{ObligationStatusRepository, Re
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.Inject
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 class EtmpController @Inject() (
   cc: ControllerComponents,
@@ -45,19 +45,23 @@ class EtmpController @Inject() (
     }
   }
 
-  def closeObligationStatus(isaManagerReference: String): Action[AnyContent] = Action.async {
+  def declare(isaManagerReference: String): Action[AnyContent] = Action.async {
     obligationStatusRepository
       .closeObligationStatus(isaManagerReference)
-      .map(_ => Ok(Json.toJson(EtmpObligations(obligationAlreadyMet = true))))
+      .map(_ => NoContent)
   }
 
   def checkReturnsObligationStatus(isaManagerReferenceNumber: String): Action[AnyContent] = Action.async {
-    obligationStatusRepository.getObligationStatus(isaManagerReferenceNumber).map {
-      case Some(status) => Ok(Json.toJson(EtmpObligations(obligationAlreadyMet = status)))
-      case None         =>
-        NotFound(
-          Json.obj("error" -> s"No obligation status found for IsaManagerReference :$isaManagerReferenceNumber")
-        )
-    }
+    obligationStatusRepository
+      .getObligationStatus(isaManagerReferenceNumber)
+      .flatMap {
+        case Some(status) =>
+          Future.successful(Ok(Json.toJson(EtmpObligations(obligationAlreadyMet = status))))
+        case None         =>
+          obligationStatusRepository
+            .openObligationStatus(isaManagerReferenceNumber)
+            .map(_ => Ok(Json.toJson(EtmpObligations(obligationAlreadyMet = false))))
+      }
   }
+
 }
