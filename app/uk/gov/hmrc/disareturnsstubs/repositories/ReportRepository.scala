@@ -58,4 +58,20 @@ class ReportRepository @Inject() (mc: MongoComponent)(implicit ec: ExecutionCont
       )
       .toFuture()
   }
+
+  def getMonthlyReport(
+    isaManagerReferenceNumber: String,
+    taxYear: String,
+    month: String
+  ): Future[Option[MonthlyReport]] = {
+    val filter = and(
+      equal("isaManagerReferenceNumber", isaManagerReferenceNumber),
+      equal("year", taxYear),
+      equal("month", month)
+    )
+
+    collection
+      .find(filter)
+      .headOption()
+  }
 }

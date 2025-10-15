@@ -28,6 +28,7 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.mvc.{Request, Result}
 import play.api.test.DefaultAwaitTimeout
 import uk.gov.hmrc.disareturnsstubs.controllers.action.AuthorizationFilter
+import uk.gov.hmrc.disareturnsstubs.repositories.ReportRepository
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -46,6 +47,8 @@ abstract class BaseUnitSpec
   implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
   implicit val hc: HeaderCarrier    = HeaderCarrier()
   val stubAuthFilter                = new StubAuthorizationFilter(None)
+
+  val mockReportRepository: ReportRepository = mock[ReportRepository]
 
   override def beforeEach(): Unit = Mockito.reset()
 

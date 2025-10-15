@@ -32,15 +32,14 @@ class GenerateReportsServiceSpec extends BaseUnitSpec {
   "GenerateReportsService" should {
 
     "generate the correct number of ReturnResults and store the MonthlyReport" in {
-      val mockRepo = mock[ReportRepository]
-      val service  = new GenerateReportsService(mockRepo)(ec)
+      val service = new GenerateReportsService(mockReportRepository)(ec)
 
       val request       = GenerateReportRequest(oversubscribed = 2, traceAndMatch = 1, failedEligibility = 1)
       val isaManagerRef = "Z1234"
       val year          = "2025-26"
       val month         = "JAN"
 
-      when(mockRepo.insertReport(any[MonthlyReport]))
+      when(mockReportRepository.insertReport(any[MonthlyReport]))
         .thenReturn(Future.successful(mock[UpdateResult]))
 
       val futureResults = service.generateAndStore(request, isaManagerRef, year, month)
@@ -55,7 +54,7 @@ class GenerateReportsServiceSpec extends BaseUnitSpec {
 
       val captor: ArgumentCaptor[MonthlyReport] = ArgumentCaptor.forClass(classOf[MonthlyReport])
 
-      verify(mockRepo).insertReport(captor.capture())
+      verify(mockReportRepository).insertReport(captor.capture())
 
       val capturedReport = captor.getValue
 
@@ -66,15 +65,14 @@ class GenerateReportsServiceSpec extends BaseUnitSpec {
     }
 
     "generate different types of ReturnResults correctly" in {
-      val mockRepo = mock[ReportRepository]
-      val service  = new GenerateReportsService(mockRepo)(ec)
+      val service = new GenerateReportsService(mockReportRepository)(ec)
 
       val request       = GenerateReportRequest(oversubscribed = 0, traceAndMatch = 1, failedEligibility = 1)
       val isaManagerRef = "Z456"
       val year          = "2025"
       val month         = "JAN"
 
-      when(mockRepo.insertReport(any[MonthlyReport]))
+      when(mockReportRepository.insertReport(any[MonthlyReport]))
         .thenReturn(Future.successful(mock[UpdateResult]))
 
       val futureResults = service.generateAndStore(request, isaManagerRef, year, month)

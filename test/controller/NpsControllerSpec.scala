@@ -16,18 +16,40 @@
 
 package controller
 
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.when
 import play.api.Play.materializer
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.disareturnsstubs.controllers.NpsController
+import uk.gov.hmrc.disareturnsstubs.models.{IssueIdentifiedMessage, MonthlyReport, ReturnResult}
 import utils.BaseUnitSpec
+
+import scala.concurrent.Future
 
 class NpsControllerSpec extends BaseUnitSpec {
 
   val isaManagerReference = "Z1234"
   private val controller  = new NpsController(
     stubControllerComponents(),
-    stubAuthFilter
+    stubAuthFilter,
+    mockReportRepository
+  )
+
+  val sampleReport: MonthlyReport = MonthlyReport(
+    isaManagerReferenceNumber = isaManagerReference,
+    year = "2025-26",
+    month = "APR",
+    returnResults = Seq(
+      ReturnResult(
+        accountNumber = "100000001",
+        nino = "AB123457C",
+        issueIdentified = IssueIdentifiedMessage(
+          code = "UNABLE_TO_IDENTIFY_INVESTOR",
+          message = "Unable to identify investor"
+        )
+      )
+    )
   )
 
   "submitMonthlyReturn" should {
@@ -77,6 +99,45 @@ class NpsControllerSpec extends BaseUnitSpec {
       status(result)                                 shouldBe INTERNAL_SERVER_ERROR
       (contentAsJson(result) \ "code").as[String]    shouldBe "INTERNAL_SERVER_ERROR"
       (contentAsJson(result) \ "message").as[String] shouldBe "Internal issue, try again later"
+    }
+  }
+
+  "getMonthlyReport" should {
+
+    "return 200 OK with returnResults when report exists" in {
+      when(
+        mockReportRepository.getMonthlyReport(
+          any(),
+          any(),
+          any()
+        )
+      ).thenReturn(Future.successful(Some(sampleReport)))
+
+      val request = FakeRequest(GET, s"/nps/monthly/$isaManagerReference/2025-26/APR/results")
+      val result  = controller.getMonthlyReport(isaManagerReference, "2025-26", "APR")(request)
+
+      status(result) shouldBe OK
+      val jsonBody = contentAsJson(result)
+      (jsonBody \\ "accountNumber").map(_.as[String]) should contain("100000001")
+    }
+
+    "return 404 NotFound when no report exists" in {
+      when(mockReportRepository.getMonthlyReport(any(), any(), any())).thenReturn(Future.successful(None))
+
+      val request = FakeRequest(GET, s"/nps/monthly/$isaManagerReference/2025-26/APR/results")
+      val result  = controller.getMonthlyReport(isaManagerReference, "2025-26", "APR")(request)
+
+      status(result)                                 shouldBe NOT_FOUND
+      (contentAsJson(result) \ "code").asOpt[String] shouldBe Some("REPORT_NOT_FOUND")
+    }
+
+    "return 500 InternalServerError when isaReferenceNumber is Z1500" in {
+      val request = FakeRequest(GET, s"/nps/monthly/Z1500/2025-26/APR/results")
+      val result  = controller.getMonthlyReport("Z1500", "2025-26", "APR")(request)
+
+      status(result)                                    shouldBe INTERNAL_SERVER_ERROR
+      (contentAsJson(result) \ "code").asOpt[String]    shouldBe Some("INTERNAL_SERVER_ERROR")
+      (contentAsJson(result) \ "message").asOpt[String] shouldBe Some("Internal issue, try again later")
     }
   }
 }
