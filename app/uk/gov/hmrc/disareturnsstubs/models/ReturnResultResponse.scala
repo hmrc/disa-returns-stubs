@@ -19,8 +19,8 @@ package uk.gov.hmrc.disareturnsstubs.models
 import play.api.libs.json.{Json, OFormat}
 
 case class ReturnResultResponse(
-                                 totalRecords: Int,
-                                 returnResults: Seq[ReturnResult]
+  totalRecords: Int,
+  returnResults: Seq[ReturnResult]
 )
 
 object ReturnResultResponse {
