@@ -87,7 +87,7 @@ sbt scalafmt
 
 Endpoint:
 ```bash
-GET /:isaManagerReferenceNumber/:year/:month/reconciliation
+GET /monthly/:isaManagerReferenceNumber/:taxYear/:month/results
 ```
 
 This endpoint requires a report to be generated either via the stub test-only endpoint or disa-returns-test-support-api. 
