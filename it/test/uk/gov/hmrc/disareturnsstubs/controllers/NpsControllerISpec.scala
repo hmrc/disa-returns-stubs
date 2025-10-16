@@ -147,7 +147,7 @@ class NpsControllerISpec extends BaseISpec {
     "return 200 OK and the returnResults when a report exists" in {
       await(reportRepository.insertReport(report))
 
-      val request = FakeRequest(GET, s"/nps/$isaManagerReferenceNumber/$taxYear/$month/results")
+      val request = FakeRequest(GET, s"/monthly/$isaManagerReferenceNumber/$taxYear/$month/results")
       val result  = route(app, request).get
 
       status(result) mustBe OK
@@ -166,7 +166,7 @@ class NpsControllerISpec extends BaseISpec {
 
     "return 404 NotFound when no report exists for given identifiers" in {
       await(reportRepository.collection.drop.toFuture())
-      val request = FakeRequest(GET, s"/nps/$isaManagerReferenceNumber/$taxYear/$month/results")
+      val request = FakeRequest(GET, s"/monthly/$isaManagerReferenceNumber/$taxYear/$month/results")
       val result  = route(app, request).get
 
       status(result) mustBe NOT_FOUND
@@ -175,7 +175,7 @@ class NpsControllerISpec extends BaseISpec {
     }
 
     "return 500 InternalServerError when isaReferenceNumber is Z1500" in {
-      val request = FakeRequest(GET, s"/nps/Z1500/$taxYear/$month/results")
+      val request = FakeRequest(GET, s"/monthly/Z1500/$taxYear/$month/results")
       val result  = route(app, request).get
 
       status(result) mustBe INTERNAL_SERVER_ERROR
