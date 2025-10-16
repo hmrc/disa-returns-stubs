@@ -58,7 +58,7 @@ class NpsController @Inject() (
     isaReferenceNumber: String,
     taxYear: String,
     month: String
-  ): Action[AnyContent] = Action.async { implicit request =>
+  ): Action[AnyContent] = Action.async { _ =>
     if (isaReferenceNumber == "Z1500") {
       Future.successful(
         InternalServerError(Json.toJson(internalServerErr("Internal issue, try again later")))
