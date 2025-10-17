@@ -18,11 +18,14 @@ package uk.gov.hmrc.disareturnsstubs.models
 
 import play.api.libs.json.{Json, OFormat}
 
+import java.time.Instant
+
 case class MonthlyReport(
   isaManagerReferenceNumber: String,
   year: String,
   month: String,
-  returnResults: Seq[ReturnResult]
+  returnResults: Seq[ReturnResult],
+  updatedAt: Instant = Instant.now()
 )
 
 object MonthlyReport {

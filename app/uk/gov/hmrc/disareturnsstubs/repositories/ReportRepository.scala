@@ -23,6 +23,7 @@ import uk.gov.hmrc.disareturnsstubs.models.MonthlyReport
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
+import java.util.concurrent.TimeUnit
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -40,6 +41,12 @@ class ReportRepository @Inject() (mc: MongoComponent)(implicit ec: ExecutionCont
             Indexes.ascending("month")
           ),
           IndexOptions().unique(true)
+        ),
+        IndexModel(
+          Indexes.ascending("updatedAt"),
+          IndexOptions()
+            .name("updatedAt_ttl_index")
+            .expireAfter(30L, TimeUnit.DAYS)
         )
       )
     ) {
@@ -57,5 +64,21 @@ class ReportRepository @Inject() (mc: MongoComponent)(implicit ec: ExecutionCont
         options = new ReplaceOptions().upsert(true)
       )
       .toFuture()
+  }
+
+  def getMonthlyReport(
+    isaManagerReferenceNumber: String,
+    taxYear: String,
+    month: String
+  ): Future[Option[MonthlyReport]] = {
+    val filter = and(
+      equal("isaManagerReferenceNumber", isaManagerReferenceNumber),
+      equal("year", taxYear),
+      equal("month", month)
+    )
+
+    collection
+      .find(filter)
+      .headOption()
   }
 }

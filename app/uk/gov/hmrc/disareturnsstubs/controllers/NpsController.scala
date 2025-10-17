@@ -22,6 +22,8 @@ import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.disareturnsstubs.controllers.action.AuthorizationFilter
 import uk.gov.hmrc.disareturnsstubs.models.ErrorResponse._
+import uk.gov.hmrc.disareturnsstubs.models.ReturnResultResponse
+import uk.gov.hmrc.disareturnsstubs.repositories.ReportRepository
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.Inject
@@ -30,7 +32,8 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class NpsController @Inject() (
   cc: ControllerComponents,
-  authorizationFilter: AuthorizationFilter
+  authorizationFilter: AuthorizationFilter,
+  reportRepository: ReportRepository
 )(implicit ec: ExecutionContext)
     extends BackendController(cc)
     with Logging {
@@ -51,4 +54,31 @@ class NpsController @Inject() (
     }
   }
 
+  def getMonthlyReport(
+    isaReferenceNumber: String,
+    taxYear: String,
+    month: String
+  ): Action[AnyContent] = Action.async { _ =>
+    if (isaReferenceNumber == "Z1500") {
+      Future.successful(
+        InternalServerError(Json.toJson(internalServerErr("Internal issue, try again later")))
+      )
+    } else {
+      reportRepository
+        .getMonthlyReport(isaReferenceNumber, taxYear, month)
+        .map {
+          case Some(report) =>
+            Ok(
+              Json.toJson(
+                ReturnResultResponse(totalRecords = report.returnResults.size, returnResults = report.returnResults)
+              )
+            )
+          case None         =>
+            NotFound(Json.toJson(reportNotFoundError))
+        }
+        .recover { case ex =>
+          InternalServerError(Json.toJson(internalServerErr(s"Failed with exception: ${ex.getMessage}")))
+        }
+    }
+  }
 }

@@ -83,6 +83,22 @@ sbt scalafmt
 | Z1500 |  500   | INTERNAL SERVER ERROR |
 |  Any  |  204   |      NO CONTENT       |
 
+## ZREF-Based Responses for NPS GET Reconciliation Endpoint
+
+Endpoint:
+```bash
+GET /monthly/:isaManagerReferenceNumber/:taxYear/:month/results
+```
+
+This endpoint requires a report to be generated either via the stub test-only endpoint or disa-returns-test-support-api. 
+If no report is generated then any ZREF other than Z1500 will return 404 NOT_FOUND
+
+| ZREF  | Status  |         Type          |
+|:-----:|:-------:|:---------------------:|
+| Z1500 |   500   | INTERNAL SERVER ERROR |
+|  Any  | 200/404 | NO CONTENT/NOT FOUND  |
+
+
 ### Further documentation
 
 You can view further information regarding this service via our [service guide](#).
