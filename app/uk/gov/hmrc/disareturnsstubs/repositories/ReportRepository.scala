@@ -23,6 +23,7 @@ import uk.gov.hmrc.disareturnsstubs.models.MonthlyReport
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
+import java.util.concurrent.TimeUnit
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -40,6 +41,12 @@ class ReportRepository @Inject() (mc: MongoComponent)(implicit ec: ExecutionCont
             Indexes.ascending("month")
           ),
           IndexOptions().unique(true)
+        ),
+        IndexModel(
+          Indexes.ascending("updatedAt"),
+          IndexOptions()
+            .name("updatedAt_ttl_index")
+            .expireAfter(30L, TimeUnit.DAYS)
         )
       )
     ) {
