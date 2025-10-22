@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.disareturnsstubs.controllers
 
-import play.api.libs.json.{JsArray, JsObject, JsValue, Json}
+import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers._
 import play.api.test._
 import uk.gov.hmrc.disareturnsstubs.BaseISpec
