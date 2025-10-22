@@ -92,7 +92,7 @@ class NpsControllerSpec extends BaseUnitSpec {
     }
 
     "return 500 Internal Server Error for zRef Z5000" in {
-      val isaManagerReference = "Z5000"
+      val isaManagerReference = "Z1500"
       val request             = FakeRequest(POST, s"/nps/declaration/$isaManagerReference")
 
       val result = controller.send(isaManagerReference)(request)
