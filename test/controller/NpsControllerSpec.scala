@@ -61,7 +61,7 @@ class NpsControllerSpec extends BaseUnitSpec {
       status(result) shouldBe NO_CONTENT
     }
 
-    "return 400 Bad Request for zRef Z1400" in {
+    "return 400 Bad Request for ISA Manager Reference Z1400" in {
       val isaManagerReference = "Z1400"
       val request             = FakeRequest(POST, s"/nps/submit/$isaManagerReference")
 
@@ -71,7 +71,7 @@ class NpsControllerSpec extends BaseUnitSpec {
       (contentAsJson(result) \ "message").as[String] shouldBe "Bad request"
     }
 
-    "return 503 Service Unavailable for zRef Z1503" in {
+    "return 503 Service Unavailable for ISA Manager Reference Z1503" in {
       val isaManagerReference = "Z1503"
       val request             = FakeRequest(POST, s"/nps/submit/$isaManagerReference")
 
@@ -91,7 +91,7 @@ class NpsControllerSpec extends BaseUnitSpec {
       status(result) shouldBe NO_CONTENT
     }
 
-    "return 500 Internal Server Error for zRef Z1500" in {
+    "return 500 Internal Server Error for ISA Manager Reference Z1500" in {
       val isaManagerReference = "Z1500"
       val request             = FakeRequest(POST, s"/nps/declaration/$isaManagerReference")
 

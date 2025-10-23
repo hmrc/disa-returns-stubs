@@ -79,15 +79,15 @@ sbt scalafmt
 POST /nps/submit/:isaManagerReferenceNumber
 ```
 
-### ZREF-Based Responses:
+### ISA Manager Reference Based Responses:
 
-| ZREF  | Status |        Type         |
-|:-----:|:------:|:-------------------:|
-| Z1400 |  400   |     BAD REQUEST     |
-| Z1503 |  503   | SERVICE UNAVAILABLE |
-|  Any  |  204   |     NO CONTENT      |
+| ISA_MANAGER_REF | Status |        Type         |
+|:---------------:|:------:|:-------------------:|
+|      Z1400      |  400   |     BAD REQUEST     |
+|      Z1503      |  503   | SERVICE UNAVAILABLE |
+|       Any       |  204   |     NO CONTENT      |
 
-## NPS Submit Notify Obligation Status
+## NPS - Notify Obligation Status Update
 
 - This endpoint is used to notify NPS of the obligation status update.
 
@@ -95,9 +95,9 @@ POST /nps/submit/:isaManagerReferenceNumber
 ```bash
 POST /nps/declaration/:isaManagerReferenceNumber
 ```
-### ZREF-Based Responses:
+### ISA Manager Reference Based Responses:
 
-| ZREF  | Status |         Type          |
+| ISA_MANAGER_REF  | Status |         Type          |
 |:-----:|:------:|:---------------------:|
 | Z1500 |  500   | INTERNAL SERVER ERROR |
 |  Any  |  204   |      NO CONTENT       |
@@ -112,14 +112,14 @@ GET /monthly/:isaManagerReferenceNumber/:taxYear/:month/results
 ```
 
 - This endpoint requires a report to be generated either via the stub test-only endpoint or disa-returns-test-support-api. 
-- If no report is generated then any ZREF other than Z1500 will return 404 NOT_FOUND
+- If no report is generated then any ISA_MANAGER_REF other than Z1500 will return 404 NOT_FOUND
 
-### ZREF-Based Responses:
+### ISA Manager Reference Based Responses:
 
-| ZREF  | Status  |         Type          |
-|:-----:|:-------:|:---------------------:|
-| Z1500 |   500   | INTERNAL SERVER ERROR |
-|  Any  | 200/404 | NO CONTENT/NOT FOUND  |
+| ISA_MANAGER_REF  | Status  |         Type          |
+|:----------------:|:-------:|:---------------------:|
+|      Z1500       |   500   | INTERNAL SERVER ERROR |
+|       Any        | 200/404 | NO CONTENT/NOT FOUND  |
 
 
 ## ETMP Retrieve Obligation Status
@@ -137,7 +137,6 @@ GET /etmp/check-obligation-status/:isaManagerReferenceNumber
 |                         Scenario                         | Status |   Type    |
 |:--------------------------------------------------------:|:------:|:---------:|
 |          Successfully returns obligation status          |  200   |    OK     |
-
 
 ## ETMP Retrieve Reporting Window Status
 
@@ -169,7 +168,6 @@ POST /etmp/declaration/:isaManagerReferenceNumber
 |                   Scenario                   | Status |   Type    |
 |:--------------------------------------------:|:------:|:---------:|
 |         Successful         |  204   | NO CONTENT |
-
 
 # Test-Only Endpoints:
 
