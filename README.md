@@ -68,35 +68,180 @@ sbt scalafmtSbt
 # formats just the main source files (excludes test and configuration files)
 sbt scalafmt
 ```
-## ZREF Responses for NPS submit endpoint
+# Stubbed Endpoints:
 
-| ZREF  | Status |        Type         |
-|:-----:|:------:|:-------------------:|
-| Z1400 |  400   |     BAD REQUEST     |
-| Z1503 |  503   | SERVICE UNAVAILABLE |
-|  Any  |  204   |     NO CONTENT      |
+## NPS submit monthly return
 
-## ZREF Responses for NPS declaration endpoint
+- This endpoint is used to submit ISA monthly reporting data to NPS.
 
-| ZREF  | Status |         Type          |
+### Endpoint:
+```bash
+POST /nps/submit/:isaManagerReferenceNumber
+```
+
+### ISA Manager Reference Based Responses:
+
+| ISA_MANAGER_REF | Status |        Type         |
+|:---------------:|:------:|:-------------------:|
+|      Z1400      |  400   |     BAD REQUEST     |
+|      Z1503      |  503   | SERVICE UNAVAILABLE |
+|       Any       |  204   |     NO CONTENT      |
+
+## NPS - Notify Obligation Status Update
+
+- This endpoint is used to notify NPS of the obligation status update.
+
+### Endpoint:
+```bash
+POST /nps/declaration/:isaManagerReferenceNumber
+```
+### ISA Manager Reference Based Responses:
+
+| ISA_MANAGER_REF  | Status |         Type          |
 |:-----:|:------:|:---------------------:|
 | Z1500 |  500   | INTERNAL SERVER ERROR |
 |  Any  |  204   |      NO CONTENT       |
 
-## ZREF-Based Responses for NPS GET Reconciliation Endpoint
+## NPS Retrieve Reconciliation Report
 
-Endpoint:
+- This endpoint is used to retrieve reconciliation report from NPS.
+
+### Endpoint:
 ```bash
 GET /monthly/:isaManagerReferenceNumber/:taxYear/:month/results
 ```
 
-This endpoint requires a report to be generated either via the stub test-only endpoint or disa-returns-test-support-api. 
-If no report is generated then any ZREF other than Z1500 will return 404 NOT_FOUND
+- This endpoint requires a report to be generated either via the stub test-only endpoint or disa-returns-test-support-api. 
+- If no report is generated then any ISA_MANAGER_REF other than Z1500 will return 404 NOT_FOUND
 
-| ZREF  | Status  |         Type          |
-|:-----:|:-------:|:---------------------:|
-| Z1500 |   500   | INTERNAL SERVER ERROR |
-|  Any  | 200/404 | NO CONTENT/NOT FOUND  |
+### ISA Manager Reference Based Responses:
+
+| ISA_MANAGER_REF  | Status  |         Type          |
+|:----------------:|:-------:|:---------------------:|
+|      Z1500       |   500   | INTERNAL SERVER ERROR |
+|       Any        | 200/404 | NO CONTENT/NOT FOUND  |
+
+
+## ETMP Retrieve Obligation Status
+
+- This endpoint is used to check the obligation status in ETMP.
+- If the supplied isaManagerReferenceNumber is not found in mongo, then it will store the obligation as open.
+- If the supplied isaManagerReferenceNumber is found in mongo, the store obligation status will be returned.
+
+### Endpoint:
+```bash
+GET /etmp/check-obligation-status/:isaManagerReferenceNumber
+```
+### Responses:
+
+|                         Scenario                         | Status |   Type    |
+|:--------------------------------------------------------:|:------:|:---------:|
+|          Successfully returns obligation status          |  200   |    OK     |
+
+## ETMP Retrieve Reporting Window Status
+
+- This endpoint is used to check the reporting window status in ETMP.
+
+### Endpoint:
+```bash
+GET /etmp/check-reporting-window
+```
+
+### Responses:
+
+|                   Scenario                   | Status |    Type    |
+|:--------------------------------------------:|:------:|:----------:|
+| Successfully returns reporting window status |  204   | NO CONTENT |
+|          Reporting window not found          |  404   | NOT FOUND  |
+
+## ETMP Submit Updated Obligation Status
+
+- This endpoint is used to update the obligation status to closed/already met in ETMP.
+
+### Endpoint:
+```bash
+POST /etmp/declaration/:isaManagerReferenceNumber
+```
+
+### Responses:
+
+|                   Scenario                   | Status |   Type    |
+|:--------------------------------------------:|:------:|:---------:|
+|         Successful         |  204   | NO CONTENT |
+
+# Test-Only Endpoints:
+
+## ETMP Open Obligation Status
+
+- This test-only endpoint is used to open the obligation status for the supplied isaManagerReferenceNumber.
+
+### Endpoint:
+```bash
+POST /etmp/open-obligation-status/:isaManagerReferenceNumber
+```
+
+### Responses:
+
+|               Scenario                | Status | Type |
+|:-------------------------------------:|:------:|:----:|
+| Successfully opened obligation status |  200   |  OK  |
+
+
+## ETMP Set Reporting Window Status
+
+- This test-only endpoint is used to set the ETMP reporting window status.
+- Simulates both reporting window open and closed for the stubbed ETMP reporting window status endpoint.
+
+### Endpoint:
+```bash
+POST /etmp/reporting-window-state
+```
+
+### Responses:
+
+|             Scenario              | Status |    Type     |
+|:---------------------------------:|:------:|:-----------:|
+|  Missing or invalid request body  |  400   | BAD REQUEST |
+| Successfully set reporting window |  200   | NO CONTENT  |
+
+## ETMP Retrieve Reporting Window Status
+
+- This test-only endpoint is used to retrieve the ETMP reporting window status.
+
+### Endpoint:
+```bash
+GET /etmp/reporting-window-state
+```
+
+### Responses:
+
+|               Scenario                | Status |   Type    |
+|:-------------------------------------:|:------:|:---------:|
+|      Not found reporting window       |  404   | NOT FOUND |
+| Successfully returns reporting window |  200   |    OK     |
+
+## NPS Generate Reconciliation report
+
+- This test-only endpoint is used to generate an NPS reconciliation report for the supplied isaManagerReferenceNumber, taxYear & month. 
+- You can generate reports containing issues identified: traceAndMatch, oversubscribed & failedEligibility.
+- The number supplied for each field in the request body determines how many issues of that type will be generated in the report.
+
+### Endpoint:
+```bash
+POST /:isaManagerReferenceNumber/:year/:month/reconciliation
+```
+
+### Request Body Example:
+```bash 
+json { "oversubscribed": 100000, "traceAndMatch": 100000, "failedEligibility": 100000 } 
+```
+
+### Responses:
+
+|           Scenario            | Status |         Type          |
+|:-----------------------------:|:------:|:---------------------:|
+| Successfully generated report |  204   |    NO CONTENT         | 
+|            failed             |  500   | INTERNAL SERVER ERROR |
 
 
 ### Further documentation
