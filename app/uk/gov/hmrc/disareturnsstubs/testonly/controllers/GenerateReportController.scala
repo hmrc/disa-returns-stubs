@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.disareturnsstubs.testonly.controllers
 
+import play.api.Logging
 import play.api.libs.json._
 import play.api.mvc._
 import uk.gov.hmrc.disareturnsstubs.controllers.action.AuthorizationFilter
@@ -23,6 +24,7 @@ import uk.gov.hmrc.disareturnsstubs.models.GenerateReportRequest
 import uk.gov.hmrc.disareturnsstubs.services.GenerateReportsService
 import uk.gov.hmrc.play.bootstrap.controller.WithJsonBody
 import uk.gov.hmrc.disareturnsstubs.models.ErrorResponse._
+
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
@@ -33,15 +35,24 @@ class GenerateReportController @Inject() (
   cc: ControllerComponents
 )(implicit ec: ExecutionContext)
     extends AbstractController(cc)
-    with WithJsonBody {
+    with WithJsonBody
+    with Logging {
 
   def create(isaManagerReferenceNumber: String, year: String, month: String): Action[JsValue] =
     (Action andThen authorizationFilter).async(parse.json) { implicit request =>
       withJsonBody[GenerateReportRequest] { generateReport =>
         generateReportsService
           .generateAndStore(generateReport, isaManagerReferenceNumber, year, month)
-          .map(_ => NoContent)
+          .map { _ =>
+            logger.info(
+              s"[TestOnly] Generated and stored report for IM ref: [$isaManagerReferenceNumber] for [$month][$year]"
+            )
+            NoContent
+          }
           .recover { case ex =>
+            logger.error(
+              s"[TestOnly] Failed to generate and store report for IM ref: [$isaManagerReferenceNumber] for [$month][$year]"
+            )
             InternalServerError(Json.toJson(internalServerErr(ex.getMessage)))
           }
       }

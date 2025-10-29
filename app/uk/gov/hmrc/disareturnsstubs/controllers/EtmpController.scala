@@ -41,11 +41,14 @@ class EtmpController @Inject() (
         logger.info(s"ETMP Reporting Window isOpen: $open")
         Ok(Json.toJson(EtmpReportingWindow(reportingWindowOpen = open)))
       case None       =>
+        logger.warn(s"No reporting window state found")
         NotFound(Json.obj("error" -> "No reporting window state found"))
     }
   }
 
   def declare(isaManagerReference: String): Action[AnyContent] = Action.async {
+    logger.info(s"Declaration received for IM ref: [$isaManagerReference], closing obligation status")
+
     obligationStatusRepository
       .closeObligationStatus(isaManagerReference)
       .map(_ => NoContent)
@@ -56,8 +59,10 @@ class EtmpController @Inject() (
       .getObligationStatus(isaManagerReferenceNumber)
       .flatMap {
         case Some(status) =>
+          logger.info(s"Return obligation status for IM ref: [$status]")
           Future.successful(Ok(Json.toJson(EtmpObligations(obligationAlreadyMet = status))))
         case None         =>
+          logger.info(s"Return obligation status for IM ref: [false]")
           obligationStatusRepository
             .openObligationStatus(isaManagerReferenceNumber)
             .map(_ => Ok(Json.toJson(EtmpObligations(obligationAlreadyMet = false))))

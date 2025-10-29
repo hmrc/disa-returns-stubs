@@ -17,6 +17,7 @@
 package uk.gov.hmrc.disareturnsstubs.controllers.action
 
 import com.google.inject.Singleton
+import play.api.Logging
 import play.api.libs.json.Json
 import play.api.mvc.Results.Forbidden
 import play.api.mvc._
@@ -25,12 +26,15 @@ import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class AuthorizationFilter @Inject() (implicit val executionContext: ExecutionContext) extends ActionFilter[Request] {
+class AuthorizationFilter @Inject() (implicit val executionContext: ExecutionContext)
+    extends ActionFilter[Request]
+    with Logging {
 
   override def filter[A](request: Request[A]): Future[Option[Result]] =
     request.headers.get("Authorization") match {
       case Some(_) => Future.successful(None)
       case None    =>
+        logger.warn(s"Authorization failed due to absent token")
         Future.successful(
           Some(Forbidden(Json.obj("code" -> "FORBIDDEN", "message" -> "Missing required bearer token")))
         )
