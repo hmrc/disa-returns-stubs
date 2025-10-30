@@ -59,10 +59,10 @@ class EtmpController @Inject() (
       .getObligationStatus(isaManagerReferenceNumber)
       .flatMap {
         case Some(status) =>
-          logger.info(s"Return obligation status for IM ref: [$status]")
+          logger.info(s"Return obligation status for IM ref: [$isaManagerReferenceNumber] with status: [$status]")
           Future.successful(Ok(Json.toJson(EtmpObligations(obligationAlreadyMet = status))))
         case None         =>
-          logger.info(s"Return obligation status for IM ref: [false]")
+          logger.info(s"Return obligation status for IM ref: [$isaManagerReferenceNumber] with status: [false]")
           obligationStatusRepository
             .openObligationStatus(isaManagerReferenceNumber)
             .map(_ => Ok(Json.toJson(EtmpObligations(obligationAlreadyMet = false))))
