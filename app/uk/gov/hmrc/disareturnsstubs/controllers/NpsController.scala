@@ -43,14 +43,18 @@ class NpsController @Inject() (
       isaReferenceNumber match {
         case "Z1400" => Future.successful(BadRequest(Json.toJson(badRequestError)))
         case "Z1503" => Future.successful(ServiceUnavailable(Json.toJson(serviceUnavailableError)))
-        case _       => Future.successful(NoContent)
+        case _       =>
+          logger.info(s"Successfully submitted data for IM ref: [$isaReferenceNumber]")
+          Future.successful(NoContent)
       }
     }
 
   def send(isaReferenceNumber: String): Action[AnyContent] = Action {
     isaReferenceNumber match {
       case "Z1500" => InternalServerError(Json.toJson(internalServerErr("Internal issue, try again later")))
-      case _       => NoContent
+      case _       =>
+        logger.info(s"Successfully submitted declaration for IM Ref: [$isaReferenceNumber]")
+        NoContent
     }
   }
 
@@ -68,15 +72,22 @@ class NpsController @Inject() (
         .getMonthlyReport(isaReferenceNumber, taxYear, month)
         .map {
           case Some(report) =>
+            logger.info(
+              s"Successful retrieval of monthly report for IM ref: [$isaReferenceNumber] for [$month][$taxYear]"
+            )
             Ok(
               Json.toJson(
                 ReturnResultResponse(totalRecords = report.returnResults.size, returnResults = report.returnResults)
               )
             )
           case None         =>
+            logger.warn(s"No monthly report found for IM ref: [$isaReferenceNumber] for [$month][$taxYear]")
             NotFound(Json.toJson(reportNotFoundError))
         }
         .recover { case ex =>
+          logger.error(
+            s"Unexpected error retreiving monthly report for IM ref: [$isaReferenceNumber] for [$month][$taxYear] with: [${ex.getMessage}]"
+          )
           InternalServerError(Json.toJson(internalServerErr(s"Failed with exception: ${ex.getMessage}")))
         }
     }

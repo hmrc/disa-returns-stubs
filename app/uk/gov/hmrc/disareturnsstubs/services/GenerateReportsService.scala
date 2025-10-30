@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.disareturnsstubs.services
 
-import uk.gov.hmrc.disareturnsstubs.models.{GenerateReportRequest, IssueIdentifiedMessage, IssueIdentifiedOverSubscribed, MonthlyReport, ReturnResult}
+import uk.gov.hmrc.disareturnsstubs.models._
 import uk.gov.hmrc.disareturnsstubs.repositories.ReportRepository
 
 import javax.inject.{Inject, Singleton}

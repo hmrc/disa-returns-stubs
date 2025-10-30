@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.disareturnsstubs.testonly.controllers
 
+import play.api.Logging
 import play.api.libs.json._
 import play.api.mvc._
 import uk.gov.hmrc.disareturnsstubs.models.{EtmpObligations, EtmpReportingWindow}
@@ -30,27 +31,37 @@ class EtmpTestOnlyController @Inject() (
   reportingWindowRepository: ReportingWindowRepository,
   obligationStatusRepository: ObligationStatusRepository
 )(implicit ec: ExecutionContext)
-    extends AbstractController(cc) {
+    extends AbstractController(cc)
+    with Logging {
 
   def setReportingWindowState(): Action[JsValue] = Action.async(parse.json) { request =>
     request.body.validate[EtmpReportingWindow] match {
       case JsSuccess(value, _) =>
+        logger.info(s"[TestOnly] Setting reporting window state as: [${value.reportingWindowOpen}]")
         reportingWindowRepository.setReportingWindowState(value.reportingWindowOpen).map(_ => NoContent)
-      case JsError(_)          =>
+      case JsError(errors)     =>
+        logger.warn(s"[TestOnly] Failed to set reporting window state with errors: [$errors]")
         Future.successful(BadRequest(Json.obj("error" -> "Missing or invalid 'reportingWindowOpen' field")))
     }
   }
 
   def getReportingWindowState: Action[AnyContent] = Action.async {
     reportingWindowRepository.getReportingWindowState.map {
-      case Some(open) => Ok(Json.obj("reportingWindowOpen" -> open))
-      case None       => NotFound(Json.obj("error" -> "No reporting window state found"))
+      case Some(open) =>
+        logger.info(s"[TestOnly] Retreived reporting window state as: [$open]")
+        Ok(Json.obj("reportingWindowOpen" -> open))
+      case None       =>
+        logger.warn(s"[TestOnly] Reporting window state not found")
+        NotFound(Json.obj("error" -> "No reporting window state found"))
     }
   }
 
   def openObligationStatus(isaManagerReference: String): Action[AnyContent] = Action.async {
     obligationStatusRepository
       .openObligationStatus(isaManagerReference)
-      .map(_ => Ok(Json.toJson(EtmpObligations(obligationAlreadyMet = false))))
+      .map { _ =>
+        logger.info(s"[TestOnly] Created open obligation status for IM Ref: [$isaManagerReference]")
+        Ok(Json.toJson(EtmpObligations(obligationAlreadyMet = false)))
+      }
   }
 }

@@ -19,6 +19,7 @@ package uk.gov.hmrc.disareturnsstubs.repositories
 import org.mongodb.scala.model.Filters.{and, equal}
 import org.mongodb.scala.model.{IndexModel, IndexOptions, Indexes, ReplaceOptions}
 import org.mongodb.scala.result.UpdateResult
+import play.api.Logging
 import uk.gov.hmrc.disareturnsstubs.models.MonthlyReport
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
@@ -49,7 +50,8 @@ class ReportRepository @Inject() (mc: MongoComponent)(implicit ec: ExecutionCont
             .expireAfter(30L, TimeUnit.DAYS)
         )
       )
-    ) {
+    )
+    with Logging {
 
   def insertReport(monthlyReport: MonthlyReport): Future[UpdateResult] = {
     val filter = and(
@@ -57,6 +59,8 @@ class ReportRepository @Inject() (mc: MongoComponent)(implicit ec: ExecutionCont
       equal("year", monthlyReport.year),
       equal("isaManagerReferenceNumber", monthlyReport.isaManagerReferenceNumber)
     )
+    logger.debug(s"Inserting monthly report into db: [$monthlyReport]")
+
     collection
       .replaceOne(
         filter = filter,
@@ -76,6 +80,8 @@ class ReportRepository @Inject() (mc: MongoComponent)(implicit ec: ExecutionCont
       equal("year", taxYear),
       equal("month", month)
     )
+
+    logger.debug(s"Retrieving monthly report from db")
 
     collection
       .find(filter)

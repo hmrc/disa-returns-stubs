@@ -17,6 +17,7 @@
 package uk.gov.hmrc.disareturnsstubs.repositories
 
 import org.mongodb.scala.model.{Filters, ReplaceOptions}
+import play.api.Logging
 import uk.gov.hmrc.disareturnsstubs.models.ReportingWindowState
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
@@ -31,7 +32,8 @@ class ReportingWindowRepository @Inject() (mc: MongoComponent)(implicit ec: Exec
       collectionName = "reportingWindow",
       domainFormat = ReportingWindowState.format,
       indexes = Seq.empty
-    ) {
+    )
+    with Logging {
 
   def setReportingWindowState(open: Boolean): Future[Unit] = {
     val doc = ReportingWindowState(reportingWindowOpen = open)
@@ -42,7 +44,7 @@ class ReportingWindowRepository @Inject() (mc: MongoComponent)(implicit ec: Exec
         new ReplaceOptions().upsert(true)
       )
       .toFuture()
-      .map(_ => ())
+      .map(_ => logger.debug(s"Set reporting window state as: [$open]"))
   }
 
   def getReportingWindowState: Future[Option[Boolean]] =
@@ -50,5 +52,8 @@ class ReportingWindowRepository @Inject() (mc: MongoComponent)(implicit ec: Exec
       .find(Filters.eq("_id", "test-scenario"))
       .first()
       .toFutureOption()
-      .map(_.map(_.reportingWindowOpen))
+      .map(_.map { state =>
+        logger.debug(s"Retrieved reporting window state as: [$state]")
+        state.reportingWindowOpen
+      })
 }

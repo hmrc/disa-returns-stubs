@@ -17,6 +17,7 @@
 package uk.gov.hmrc.disareturnsstubs.repositories
 
 import org.mongodb.scala.model._
+import play.api.Logging
 import uk.gov.hmrc.disareturnsstubs.models.ObligationStatus
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
@@ -41,7 +42,8 @@ class ObligationStatusRepository @Inject() (mc: MongoComponent)(implicit ec: Exe
         ),
         IndexModel(Indexes.ascending("isaManagerReference"), IndexOptions().unique(true))
       )
-    ) {
+    )
+    with Logging {
 
   def closeObligationStatus(isaManagerReference: String): Future[Unit] =
     collection
@@ -55,7 +57,7 @@ class ObligationStatusRepository @Inject() (mc: MongoComponent)(implicit ec: Exe
         UpdateOptions().upsert(true)
       )
       .toFuture()
-      .map(_ => ())
+      .map(_ => logger.debug(s"Closed obligation status for IM Ref: [$isaManagerReference]"))
 
   def openObligationStatus(isaManagerReference: String): Future[Unit] =
     collection
@@ -69,14 +71,17 @@ class ObligationStatusRepository @Inject() (mc: MongoComponent)(implicit ec: Exe
         UpdateOptions().upsert(true)
       )
       .toFuture()
-      .map(_ => ())
+      .map(_ => logger.debug(s"Opened obligation status for IM Ref: [$isaManagerReference]"))
 
   def getObligationStatus(isaManagerReference: String): Future[Option[Boolean]] =
     collection
       .find(Filters.eq("isaManagerReference", isaManagerReference))
       .first()
       .toFutureOption()
-      .map(_.map(_.obligationAlreadyMet))
+      .map(_.map { status =>
+        logger.debug(s"Retrieved obligation status as: [${status.obligationAlreadyMet}]")
+        status.obligationAlreadyMet
+      })
 
   def dropCollection(): Future[Unit] =
     collection.drop().toFuture().map(_ => ())
