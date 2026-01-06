@@ -40,42 +40,43 @@ class ObligationStatusRepository @Inject() (mc: MongoComponent)(implicit ec: Exe
             .name("createdAtTtlIdx")
             .expireAfter(5, TimeUnit.DAYS)
         ),
-        IndexModel(Indexes.ascending("isaManagerReference"), IndexOptions().unique(true))
-      )
+        IndexModel(Indexes.ascending("zReference"), IndexOptions().unique(true))
+      ),
+      replaceIndexes = true
     )
     with Logging {
 
-  def closeObligationStatus(isaManagerReference: String): Future[Unit] =
+  def closeObligationStatus(zReference: String): Future[Unit] =
     collection
       .updateOne(
-        Filters.eq("isaManagerReference", isaManagerReference),
+        Filters.eq("zReference", zReference),
         Updates.combine(
           Updates.set("obligationAlreadyMet", true),
-          Updates.setOnInsert("isaManagerReference", isaManagerReference),
+          Updates.setOnInsert("zReference", zReference),
           Updates.setOnInsert("createdAt", Instant.now)
         ),
         UpdateOptions().upsert(true)
       )
       .toFuture()
-      .map(_ => logger.debug(s"Closed obligation status for IM Ref: [$isaManagerReference]"))
+      .map(_ => logger.debug(s"Closed obligation status for IM Ref: [$zReference]"))
 
-  def openObligationStatus(isaManagerReference: String): Future[Unit] =
+  def openObligationStatus(zReference: String): Future[Unit] =
     collection
       .updateOne(
-        Filters.eq("isaManagerReference", isaManagerReference),
+        Filters.eq("zReference", zReference),
         Updates.combine(
           Updates.set("obligationAlreadyMet", false),
-          Updates.setOnInsert("isaManagerReference", isaManagerReference),
+          Updates.setOnInsert("zReference", zReference),
           Updates.setOnInsert("createdAt", Instant.now)
         ),
         UpdateOptions().upsert(true)
       )
       .toFuture()
-      .map(_ => logger.debug(s"Opened obligation status for IM Ref: [$isaManagerReference]"))
+      .map(_ => logger.debug(s"Opened obligation status for IM Ref: [$zReference]"))
 
-  def getObligationStatus(isaManagerReference: String): Future[Option[Boolean]] =
+  def getObligationStatus(zReference: String): Future[Option[Boolean]] =
     collection
-      .find(Filters.eq("isaManagerReference", isaManagerReference))
+      .find(Filters.eq("zReference", zReference))
       .first()
       .toFutureOption()
       .map(_.map { status =>

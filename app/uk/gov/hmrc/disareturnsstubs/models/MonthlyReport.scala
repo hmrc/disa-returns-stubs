@@ -21,7 +21,7 @@ import play.api.libs.json.{Json, OFormat}
 import java.time.Instant
 
 case class MonthlyReport(
-  isaManagerReferenceNumber: String,
+  zReference: String,
   year: String,
   month: String,
   returnResults: Seq[ReturnResult],

@@ -29,7 +29,7 @@ class GenerateReportsService @Inject() (monthlyReportsRepository: ReportReposito
 
   def generateAndStore(
     generateReportRequest: GenerateReportRequest,
-    isaManagerReferenceNumber: String,
+    zReference: String,
     year: String,
     month: String
   ): Future[Seq[ReturnResult]] = {
@@ -37,7 +37,7 @@ class GenerateReportsService @Inject() (monthlyReportsRepository: ReportReposito
     val results: Seq[ReturnResult] = generateResults(generateReportRequest)
 
     val monthlyReport = MonthlyReport(
-      isaManagerReferenceNumber = isaManagerReferenceNumber,
+      zReference = zReference,
       year = year,
       month = month,
       returnResults = results

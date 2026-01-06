@@ -27,14 +27,13 @@ class EtmpControllerISpec extends BaseISpec {
 
   val obligationStatusEndpoint                                        = "/etmp/check-obligation-status"
   val reportingWindowEndpoint                                         = "/etmp/check-reporting-window"
-  val isaManagerReference                                             = "Z1111"
 
-  "EtmpController GET /etmp/check-obligation-status/:isaManagerReferenceNumber" should {
+  "EtmpController GET /etmp/check-obligation-status/:zReference" should {
 
     "return 200 with obligationAlreadyMet = true" in {
-      await(obligationStatusRepository.closeObligationStatus(isaManagerReference))
+      await(obligationStatusRepository.closeObligationStatus(validZReference))
       val request: FakeRequest[AnyContentAsJson] =
-        FakeRequest(GET, s"$obligationStatusEndpoint/$isaManagerReference").withJsonBody(Json.obj())
+        FakeRequest(GET, s"$obligationStatusEndpoint/$validZReference").withJsonBody(Json.obj())
       val result: Future[Result]                 = route(app, request).get
 
       status(result) mustBe OK
@@ -44,9 +43,9 @@ class EtmpControllerISpec extends BaseISpec {
     }
 
     "return 200 with obligationAlreadyMet = false" in {
-      await(obligationStatusRepository.openObligationStatus(isaManagerReference))
+      await(obligationStatusRepository.openObligationStatus(validZReference))
       val request: FakeRequest[AnyContentAsJson] =
-        FakeRequest(GET, s"$obligationStatusEndpoint/$isaManagerReference").withJsonBody(Json.obj())
+        FakeRequest(GET, s"$obligationStatusEndpoint/$validZReference").withJsonBody(Json.obj())
       val result: Future[Result]                 = route(app, request).get
 
       status(result) mustBe OK

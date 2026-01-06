@@ -34,9 +34,7 @@ class EtmpControllerSpec extends BaseUnitSpec {
   private val mockReportingWindowRepo  = mock[ReportingWindowRepository]
   private val mockObligationRepo       = mock[ObligationStatusRepository]
   private val cc: ControllerComponents = stubControllerComponents()
-  val isaManagerReference              = "Z1234"
-
-  private val controller =
+  private val controller               =
     new EtmpController(cc, mockReportingWindowRepo, mockObligationRepo)
 
   "checkReportingWindowStatus" should {
@@ -64,7 +62,7 @@ class EtmpControllerSpec extends BaseUnitSpec {
       when(mockObligationRepo.closeObligationStatus(any()))
         .thenReturn(Future.unit)
 
-      val result = controller.declare(isaManagerReference)(FakeRequest())
+      val result = controller.declare(validZReference)(FakeRequest())
       status(result) shouldBe NO_CONTENT
     }
   }
@@ -74,7 +72,7 @@ class EtmpControllerSpec extends BaseUnitSpec {
       when(mockObligationRepo.getObligationStatus(any()))
         .thenReturn(Future.successful(Some(true)))
 
-      val result = controller.checkReturnsObligationStatus(isaManagerReference)(FakeRequest())
+      val result = controller.checkReturnsObligationStatus(validZReference)(FakeRequest())
       status(result)        shouldBe OK
       contentAsJson(result) shouldBe Json.toJson(EtmpObligations(obligationAlreadyMet = true))
     }
@@ -83,7 +81,7 @@ class EtmpControllerSpec extends BaseUnitSpec {
       when(mockObligationRepo.getObligationStatus(any()))
         .thenReturn(Future.successful(Some(false)))
 
-      val result = controller.checkReturnsObligationStatus(isaManagerReference)(FakeRequest())
+      val result = controller.checkReturnsObligationStatus(validZReference)(FakeRequest())
       status(result)        shouldBe OK
       contentAsJson(result) shouldBe Json.toJson(EtmpObligations(obligationAlreadyMet = false))
     }
@@ -94,7 +92,7 @@ class EtmpControllerSpec extends BaseUnitSpec {
       when(mockObligationRepo.openObligationStatus(any()))
         .thenReturn(Future.successful())
 
-      val result = controller.checkReturnsObligationStatus(isaManagerReference)(FakeRequest())
+      val result = controller.checkReturnsObligationStatus(validZReference)(FakeRequest())
       status(result)        shouldBe OK
       contentAsJson(result) shouldBe Json.toJson(EtmpObligations(obligationAlreadyMet = false))
     }

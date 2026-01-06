@@ -18,7 +18,7 @@ package uk.gov.hmrc.disareturnsstubs.models
 
 import play.api.libs.json.{Json, OFormat}
 
-case class ObligationStatus(isaManagerReference: String, obligationAlreadyMet: Boolean)
+case class ObligationStatus(zReference: String, obligationAlreadyMet: Boolean)
 
 object ObligationStatus {
   implicit val format: OFormat[ObligationStatus] = Json.format[ObligationStatus]

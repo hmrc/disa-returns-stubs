@@ -38,49 +38,49 @@ class NpsController @Inject() (
     extends BackendController(cc)
     with Logging {
 
-  def submitMonthlyReturn(isaReferenceNumber: String): Action[AnyContent] =
+  def submitMonthlyReturn(zReference: String): Action[AnyContent] =
     (Action andThen authorizationFilter).async { _ =>
-      isaReferenceNumber match {
+      zReference match {
         case "Z1400" => Future.successful(BadRequest(Json.toJson(badRequestError)))
         case "Z1503" => Future.successful(ServiceUnavailable(Json.toJson(serviceUnavailableError)))
         case _       =>
-          logger.info(s"Successfully submitted data for IM ref: [$isaReferenceNumber]")
+          logger.info(s"Successfully submitted data for IM ref: [$zReference]")
           Future.successful(NoContent)
       }
     }
 
-  def send(isaReferenceNumber: String): Action[AnyContent] = Action {
-    isaReferenceNumber match {
+  def send(zReference: String): Action[AnyContent] = Action {
+    zReference match {
       case "Z1500" => InternalServerError(Json.toJson(internalServerErr("Internal issue, try again later")))
       case _       =>
-        logger.info(s"Successfully submitted declaration for IM Ref: [$isaReferenceNumber]")
+        logger.info(s"Successfully submitted declaration for IM Ref: [$zReference]")
         NoContent
     }
   }
 
   def getMonthlyReport(
-    isaReferenceNumber: String,
+    zReference: String,
     taxYear: String,
     month: String,
     pageIndex: Int,
     pageSize: Int
   ): Action[AnyContent] = Action.async { _ =>
-    if (isaReferenceNumber == "Z1500") {
+    if (zReference == "Z1500") {
       Future.successful(
         InternalServerError(Json.toJson(internalServerErr("Internal issue, try again later")))
       )
     } else {
       reportRepository
-        .getMonthlyReport(isaReferenceNumber, taxYear, month)
+        .getMonthlyReport(zReference, taxYear, month)
         .map {
           case Some(report) =>
             getReportPage(report, pageIndex, pageSize) match {
               case Left(error) =>
-                logger.warn(s"Page not found in report for IM ref: [$isaReferenceNumber] for [$month][$taxYear]")
+                logger.warn(s"Page not found in report for IM ref: [$zReference] for [$month][$taxYear]")
                 NotFound(Json.toJson(error))
               case Right(page) =>
                 logger.info(
-                  s"Successful retrieval of monthly report for IM ref: [$isaReferenceNumber] for [$month][$taxYear]"
+                  s"Successful retrieval of monthly report for IM ref: [$zReference] for [$month][$taxYear]"
                 )
                 Ok(
                   Json.toJson(
@@ -90,12 +90,12 @@ class NpsController @Inject() (
             }
 
           case None =>
-            logger.warn(s"No monthly report found for IM ref: [$isaReferenceNumber] for [$month][$taxYear]")
+            logger.warn(s"No monthly report found for IM ref: [$zReference] for [$month][$taxYear]")
             NotFound(Json.toJson(reportNotFoundError))
         }
         .recover { case ex =>
           logger.error(
-            s"Unexpected error retreiving monthly report for IM ref: [$isaReferenceNumber] for [$month][$taxYear] with: [${ex.getMessage}]"
+            s"Unexpected error retreiving monthly report for IM ref: [$zReference] for [$month][$taxYear] with: [${ex.getMessage}]"
           )
           InternalServerError(Json.toJson(internalServerErr(s"Failed with exception: ${ex.getMessage}")))
         }

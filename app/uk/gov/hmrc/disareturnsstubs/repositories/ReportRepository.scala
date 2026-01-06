@@ -37,7 +37,7 @@ class ReportRepository @Inject() (mc: MongoComponent)(implicit ec: ExecutionCont
       indexes = Seq(
         IndexModel(
           Indexes.compoundIndex(
-            Indexes.ascending("isaManagerReferenceNumber"),
+            Indexes.ascending("zReference"),
             Indexes.ascending("year"),
             Indexes.ascending("month")
           ),
@@ -57,7 +57,7 @@ class ReportRepository @Inject() (mc: MongoComponent)(implicit ec: ExecutionCont
     val filter = and(
       equal("month", monthlyReport.month),
       equal("year", monthlyReport.year),
-      equal("isaManagerReferenceNumber", monthlyReport.isaManagerReferenceNumber)
+      equal("zReference", monthlyReport.zReference)
     )
     logger.debug(s"Inserting monthly report into db: [$monthlyReport]")
 
@@ -71,12 +71,12 @@ class ReportRepository @Inject() (mc: MongoComponent)(implicit ec: ExecutionCont
   }
 
   def getMonthlyReport(
-    isaManagerReferenceNumber: String,
+    zReference: String,
     taxYear: String,
     month: String
   ): Future[Option[MonthlyReport]] = {
     val filter = and(
-      equal("isaManagerReferenceNumber", isaManagerReferenceNumber),
+      equal("zReference", zReference),
       equal("year", taxYear),
       equal("month", month)
     )

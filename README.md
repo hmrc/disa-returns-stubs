@@ -76,16 +76,16 @@ sbt scalafmt
 
 ### Endpoint:
 ```bash
-POST /nps/submit/:isaManagerReferenceNumber
+POST /nps/submit/:zReference
 ```
 
-### ISA Manager Reference Based Responses:
+### Z Reference Based Responses:
 
-| ISA_MANAGER_REF | Status |        Type         |
-|:---------------:|:------:|:-------------------:|
-|      Z1400      |  400   |     BAD REQUEST     |
-|      Z1503      |  503   | SERVICE UNAVAILABLE |
-|       Any       |  204   |     NO CONTENT      |
+| Z_REF | Status |        Type         |
+|:-----:|:------:|:-------------------:|
+| Z1400 |  400   |     BAD REQUEST     |
+| Z1503 |  503   | SERVICE UNAVAILABLE |
+|  Any  |  204   |     NO CONTENT      |
 
 ## NPS - Notify Obligation Status Update
 
@@ -93,9 +93,9 @@ POST /nps/submit/:isaManagerReferenceNumber
 
 ### Endpoint:
 ```bash
-POST /nps/declaration/:isaManagerReferenceNumber
+POST /nps/declaration/:zReference
 ```
-### ISA Manager Reference Based Responses:
+### Z Reference Based Responses:
 
 | ISA_MANAGER_REF  | Status |         Type          |
 |:-----:|:------:|:---------------------:|
@@ -108,29 +108,29 @@ POST /nps/declaration/:isaManagerReferenceNumber
 
 ### Endpoint:
 ```bash
-GET /monthly/:isaManagerReferenceNumber/:taxYear/:month/results
+GET /monthly/:zReference/:taxYear/:month/results
 ```
 
 - This endpoint requires a report to be generated either via the stub test-only endpoint or disa-returns-test-support-api. 
-- If no report is generated then any ISA_MANAGER_REF other than Z1500 will return 404 NOT_FOUND
+- If no report is generated then any Z_REF other than Z1500 will return 404 NOT_FOUND
 
-### ISA Manager Reference Based Responses:
+### Z Reference Based Responses:
 
-| ISA_MANAGER_REF  | Status  |         Type          |
-|:----------------:|:-------:|:---------------------:|
-|      Z1500       |   500   | INTERNAL SERVER ERROR |
-|       Any        | 200/404 | NO CONTENT/NOT FOUND  |
+| Z_REF | Status  |         Type          |
+|:-----:|:-------:|:---------------------:|
+| Z1500 |   500   | INTERNAL SERVER ERROR |
+|  Any  | 200/404 | NO CONTENT/NOT FOUND  |
 
 
 ## ETMP Retrieve Obligation Status
 
 - This endpoint is used to check the obligation status in ETMP.
-- If the supplied isaManagerReferenceNumber is not found in mongo, then it will store the obligation as open.
-- If the supplied isaManagerReferenceNumber is found in mongo, the store obligation status will be returned.
+- If the supplied zReference is not found in mongo, then it will store the obligation as open.
+- If the supplied zReference is found in mongo, the store obligation status will be returned.
 
 ### Endpoint:
 ```bash
-GET /etmp/check-obligation-status/:isaManagerReferenceNumber
+GET /etmp/check-obligation-status/:zReference
 ```
 ### Responses:
 
@@ -160,7 +160,7 @@ GET /etmp/check-reporting-window
 
 ### Endpoint:
 ```bash
-POST /etmp/declaration/:isaManagerReferenceNumber
+POST /etmp/declaration/:zReference
 ```
 
 ### Responses:
@@ -173,11 +173,11 @@ POST /etmp/declaration/:isaManagerReferenceNumber
 
 ## ETMP Open Obligation Status
 
-- This test-only endpoint is used to open the obligation status for the supplied isaManagerReferenceNumber.
+- This test-only endpoint is used to open the obligation status for the supplied zReference.
 
 ### Endpoint:
 ```bash
-POST /etmp/open-obligation-status/:isaManagerReferenceNumber
+POST /etmp/open-obligation-status/:zReference
 ```
 
 ### Responses:
@@ -222,13 +222,13 @@ GET /etmp/reporting-window-state
 
 ## NPS Generate Reconciliation report
 
-- This test-only endpoint is used to generate an NPS reconciliation report for the supplied isaManagerReferenceNumber, taxYear & month. 
+- This test-only endpoint is used to generate an NPS reconciliation report for the supplied zReference, taxYear & month. 
 - You can generate reports containing issues identified: traceAndMatch, oversubscribed & failedEligibility.
 - The number supplied for each field in the request body determines how many issues of that type will be generated in the report.
 
 ### Endpoint:
 ```bash
-POST /:isaManagerReferenceNumber/:year/:month/reconciliation
+POST /:zReference/:year/:month/reconciliation
 ```
 
 ### Request Body Example:

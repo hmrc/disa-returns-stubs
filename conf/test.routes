@@ -2,6 +2,6 @@ POST    /etmp/reporting-window-state                                  uk.gov.hmr
 
 GET     /etmp/reporting-window-state                                  uk.gov.hmrc.disareturnsstubs.testonly.controllers.EtmpTestOnlyController.getReportingWindowState
 
-POST    /etmp/open-obligation-status/:isaManagerReferenceNumber       uk.gov.hmrc.disareturnsstubs.testonly.controllers.EtmpTestOnlyController.openObligationStatus(isaManagerReferenceNumber: String)
+POST    /etmp/open-obligation-status/:zReference       uk.gov.hmrc.disareturnsstubs.testonly.controllers.EtmpTestOnlyController.openObligationStatus(zReference: String)
 
-POST    /:isaManagerReferenceNumber/:year/:month/reconciliation       uk.gov.hmrc.disareturnsstubs.testonly.controllers.GenerateReportController.create(isaManagerReferenceNumber: String, year: String, month: String)
+POST    /:zReference/:year/:month/reconciliation       uk.gov.hmrc.disareturnsstubs.testonly.controllers.GenerateReportController.create(zReference: String, year: String, month: String)

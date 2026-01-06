@@ -17,6 +17,7 @@
 package utils
 
 import org.mockito.Mockito
+import org.scalacheck.Gen
 import org.scalatest._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
@@ -58,5 +59,10 @@ abstract class BaseUnitSpec
   class StubAuthorizationFilter(result: Option[Result])(implicit ec: ExecutionContext) extends AuthorizationFilter {
     override def filter[A](request: Request[A]): Future[Option[Result]] = Future.successful(result)
   }
+
+  val zReferenceGen: Gen[String] =
+    Gen.listOfN(4, Gen.numChar).map(digits => s"Z${digits.mkString}")
+
+  val validZReference: String = zReferenceGen.sample.get
 
 }

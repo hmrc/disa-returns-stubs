@@ -56,11 +56,11 @@ class EtmpTestOnlyController @Inject() (
     }
   }
 
-  def openObligationStatus(isaManagerReference: String): Action[AnyContent] = Action.async {
+  def openObligationStatus(zReference: String): Action[AnyContent] = Action.async {
     obligationStatusRepository
-      .openObligationStatus(isaManagerReference)
+      .openObligationStatus(zReference)
       .map { _ =>
-        logger.info(s"[TestOnly] Created open obligation status for IM Ref: [$isaManagerReference]")
+        logger.info(s"[TestOnly] Created open obligation status for IM Ref: [$zReference]")
         Ok(Json.toJson(EtmpObligations(obligationAlreadyMet = false)))
       }
   }

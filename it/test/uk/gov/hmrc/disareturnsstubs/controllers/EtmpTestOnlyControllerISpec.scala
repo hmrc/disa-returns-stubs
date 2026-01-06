@@ -75,7 +75,7 @@ class EtmpTestOnlyControllerISpec extends BaseISpec {
 
   "openObligationStatus" should {
     "return 200 with obligationAlreadyMet = false" in {
-      val request = FakeRequest(POST, s"/etmp/open-obligation-status/$isaManagerReferenceNumber")
+      val request = FakeRequest(POST, s"/etmp/open-obligation-status/$validZReference")
       val result = route(app, request).get
       status(result) mustBe OK
       contentAsJson(result) mustBe Json.obj("obligationAlreadyMet" -> false)

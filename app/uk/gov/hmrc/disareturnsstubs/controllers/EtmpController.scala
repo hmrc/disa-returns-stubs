@@ -46,27 +46,26 @@ class EtmpController @Inject() (
     }
   }
 
-  def declare(isaManagerReference: String): Action[AnyContent] = Action.async {
-    logger.info(s"Declaration received for IM ref: [$isaManagerReference], closing obligation status")
+  def declare(zReference: String): Action[AnyContent] = Action.async {
+    logger.info(s"Declaration received for IM ref: [$zReference], closing obligation status")
 
     obligationStatusRepository
-      .closeObligationStatus(isaManagerReference)
+      .closeObligationStatus(zReference)
       .map(_ => NoContent)
   }
 
-  def checkReturnsObligationStatus(isaManagerReferenceNumber: String): Action[AnyContent] = Action.async {
+  def checkReturnsObligationStatus(zReference: String): Action[AnyContent] = Action.async {
     obligationStatusRepository
-      .getObligationStatus(isaManagerReferenceNumber)
+      .getObligationStatus(zReference)
       .flatMap {
         case Some(status) =>
-          logger.info(s"Return obligation status for IM ref: [$isaManagerReferenceNumber] with status: [$status]")
+          logger.info(s"Return obligation status for IM ref: [$zReference] with status: [$status]")
           Future.successful(Ok(Json.toJson(EtmpObligations(obligationAlreadyMet = status))))
         case None         =>
-          logger.info(s"Return obligation status for IM ref: [$isaManagerReferenceNumber] with status: [false]")
+          logger.info(s"Return obligation status for IM ref: [$zReference] with status: [false]")
           obligationStatusRepository
-            .openObligationStatus(isaManagerReferenceNumber)
+            .openObligationStatus(zReference)
             .map(_ => Ok(Json.toJson(EtmpObligations(obligationAlreadyMet = false))))
       }
   }
-
 }
