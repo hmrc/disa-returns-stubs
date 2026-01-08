@@ -180,7 +180,7 @@ class NpsControllerSpec extends BaseUnitSpec {
       (contentAsJson(result) \ "code").asOpt[String] shouldBe Some("REPORT_NOT_FOUND")
     }
 
-    "return 500 InternalServerError when isaReferenceNumber is Z1500" in {
+    "return 500 InternalServerError when zReference is Z1500" in {
       val request = FakeRequest(GET, s"/nps/monthly/Z1500/2025-26/APR/results")
       val result  = controller.getMonthlyReport("Z1500", "2025-26", "APR", pageIndex, pageSize)(request)
 

@@ -83,7 +83,7 @@ class NpsControllerISpec extends BaseISpec {
   |  }
   |]""".stripMargin)
 
-  "POST /nps/submit/:isaReferenceNumber" should {
+  "POST /nps/submit/:zReference" should {
 
     "return 204 NoContent for any non-error ISA ref" in {
       val request = FakeRequest(POST, s"$submitMonthlyReturnEndpoint/$validZReference")
@@ -124,7 +124,7 @@ class NpsControllerISpec extends BaseISpec {
     }
   }
 
-  "POST /nps/declaration/:isaReferenceNumber" should {
+  "POST /nps/declaration/:zReference" should {
 
     "return 204 NoContent for any non-error ISA ref" in {
       val request = FakeRequest(POST, s"$npsDeclarationEndpoint/$validZReference")
@@ -142,7 +142,7 @@ class NpsControllerISpec extends BaseISpec {
     }
   }
 
-  "GET /reports/:isaReferenceNumber/:taxYear/:month" should {
+  "GET /reports/:zReference/:taxYear/:month" should {
 
     val pageIndex = 0
 
@@ -189,7 +189,7 @@ class NpsControllerISpec extends BaseISpec {
       (contentAsJson(result) \ "message").asOpt[String] mustBe Some("Report not found")
     }
 
-    "return 500 InternalServerError when isaReferenceNumber is Z1500" in {
+    "return 500 InternalServerError when zReference is Z1500" in {
       val request = FakeRequest(GET, s"/monthly/Z1500/$taxYear/$month/results?pageIndex=$pageIndex&pageSize=10")
       val result  = route(app, request).get
 
