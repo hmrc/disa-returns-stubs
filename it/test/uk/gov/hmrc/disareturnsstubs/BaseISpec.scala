@@ -17,11 +17,12 @@
 package uk.gov.hmrc.disareturnsstubs
 
 import org.apache.pekko.stream.Materializer
+import org.scalacheck.Gen
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.test.{DefaultAwaitTimeout, FakeRequest}
-import uk.gov.hmrc.disareturnsstubs.repositories.{ReportRepository, ObligationStatusRepository, ReportingWindowRepository}
+import uk.gov.hmrc.disareturnsstubs.repositories.{ObligationStatusRepository, ReportRepository, ReportingWindowRepository}
 
 abstract class BaseISpec
   extends PlaySpec
@@ -40,7 +41,11 @@ abstract class BaseISpec
   lazy val reportRepository: ReportRepository =
   app.injector.instanceOf[ReportRepository]
 
-  val isaManagerReferenceNumber = "Z1234"
+  val zReferenceGen: Gen[String] =
+    Gen.listOfN(4, Gen.numChar).map(digits => s"Z${digits.mkString}")
+
+  val validZReference: String = zReferenceGen.sample.get
+
   val returnId = "b4aba7b8-0d34-4936-923c-d9ef2747c099"
 
   protected def fakeRequest = FakeRequest()

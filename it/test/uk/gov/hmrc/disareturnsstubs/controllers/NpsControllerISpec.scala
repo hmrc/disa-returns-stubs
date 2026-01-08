@@ -31,7 +31,7 @@ class NpsControllerISpec extends BaseISpec {
   val taxYear                         = "2025-26"
 
   val report: MonthlyReport = MonthlyReport(
-    isaManagerReferenceNumber = isaManagerReferenceNumber,
+    zReference = validZReference,
     year = taxYear,
     month = month,
     returnResults = Seq(
@@ -83,10 +83,10 @@ class NpsControllerISpec extends BaseISpec {
   |  }
   |]""".stripMargin)
 
-  "POST /nps/submit/:isaReferenceNumber" should {
+  "POST /nps/submit/:zReference" should {
 
     "return 204 NoContent for any non-error ISA ref" in {
-      val request = FakeRequest(POST, s"$submitMonthlyReturnEndpoint/$isaManagerReferenceNumber")
+      val request = FakeRequest(POST, s"$submitMonthlyReturnEndpoint/$validZReference")
         .withHeaders("Authorization" -> "Bearer token")
         .withJsonBody(validPayload)
 
@@ -115,7 +115,7 @@ class NpsControllerISpec extends BaseISpec {
     }
 
     "return 403 Forbidden when Authorization header is missing" in {
-      val request = FakeRequest(POST, s"$submitMonthlyReturnEndpoint/$isaManagerReferenceNumber")
+      val request = FakeRequest(POST, s"$submitMonthlyReturnEndpoint/$validZReference")
         .withJsonBody(validPayload)
 
       val result = route(app, request).get
@@ -124,10 +124,10 @@ class NpsControllerISpec extends BaseISpec {
     }
   }
 
-  "POST /nps/declaration/:isaReferenceNumber" should {
+  "POST /nps/declaration/:zReference" should {
 
     "return 204 NoContent for any non-error ISA ref" in {
-      val request = FakeRequest(POST, s"$npsDeclarationEndpoint/$isaManagerReferenceNumber")
+      val request = FakeRequest(POST, s"$npsDeclarationEndpoint/$validZReference")
       val result = route(app, request).get
       status(result) mustBe NO_CONTENT
     }
@@ -142,14 +142,14 @@ class NpsControllerISpec extends BaseISpec {
     }
   }
 
-  "GET /reports/:isaReferenceNumber/:taxYear/:month" should {
+  "GET /reports/:zReference/:taxYear/:month" should {
 
     val pageIndex = 0
 
     "return 200 OK and the returnResults when a report exists" in {
       await(reportRepository.insertReport(report))
 
-      val request = FakeRequest(GET, s"/monthly/$isaManagerReferenceNumber/$taxYear/$month/results?pageIndex=$pageIndex&pageSize=10")
+      val request = FakeRequest(GET, s"/monthly/$validZReference/$taxYear/$month/results?pageIndex=$pageIndex&pageSize=10")
       val result  = route(app, request).get
 
       status(result) mustBe OK
@@ -171,7 +171,7 @@ class NpsControllerISpec extends BaseISpec {
       await(reportRepository.insertReport(report))
 
       val pageIndex = 1
-      val request = FakeRequest(GET, s"/monthly/$isaManagerReferenceNumber/$taxYear/$month/results?pageIndex=$pageIndex&pageSize=10")
+      val request = FakeRequest(GET, s"/monthly/$validZReference/$taxYear/$month/results?pageIndex=$pageIndex&pageSize=10")
       val result  = route(app, request).get
 
       status(result) mustBe NOT_FOUND
@@ -181,7 +181,7 @@ class NpsControllerISpec extends BaseISpec {
 
     "return 404 NotFound when no report exists for given identifiers" in {
       await(reportRepository.collection.drop.toFuture())
-      val request = FakeRequest(GET, s"/monthly/$isaManagerReferenceNumber/$taxYear/$month/results?pageIndex=$pageIndex&pageSize=10")
+      val request = FakeRequest(GET, s"/monthly/$validZReference/$taxYear/$month/results?pageIndex=$pageIndex&pageSize=10")
       val result  = route(app, request).get
 
       status(result) mustBe NOT_FOUND
@@ -189,7 +189,7 @@ class NpsControllerISpec extends BaseISpec {
       (contentAsJson(result) \ "message").asOpt[String] mustBe Some("Report not found")
     }
 
-    "return 500 InternalServerError when isaReferenceNumber is Z1500" in {
+    "return 500 InternalServerError when zReference is Z1500" in {
       val request = FakeRequest(GET, s"/monthly/Z1500/$taxYear/$month/results?pageIndex=$pageIndex&pageSize=10")
       val result  = route(app, request).get
 

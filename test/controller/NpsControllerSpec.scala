@@ -29,15 +29,14 @@ import scala.concurrent.Future
 
 class NpsControllerSpec extends BaseUnitSpec {
 
-  val isaManagerReference = "Z1234"
-  private val controller  = new NpsController(
+  private val controller = new NpsController(
     stubControllerComponents(),
     stubAuthFilter,
     mockReportRepository
   )
 
   val sampleReport: MonthlyReport = MonthlyReport(
-    isaManagerReferenceNumber = isaManagerReference,
+    zReference = validZReference,
     year = "2025-26",
     month = "APR",
     returnResults = Seq(
@@ -71,27 +70,27 @@ class NpsControllerSpec extends BaseUnitSpec {
   "submitMonthlyReturn" should {
     "return 204 no content for successful submission" in {
       val request =
-        FakeRequest(POST, s"/nps/submit/$isaManagerReference")
+        FakeRequest(POST, s"/nps/submit/$validZReference")
 
-      val result = controller.submitMonthlyReturn(isaManagerReference)(request)
+      val result = controller.submitMonthlyReturn(validZReference)(request)
       status(result) shouldBe NO_CONTENT
     }
 
     "return 400 Bad Request for ISA Manager Reference Z1400" in {
-      val isaManagerReference = "Z1400"
-      val request             = FakeRequest(POST, s"/nps/submit/$isaManagerReference")
+      val zReference = "Z1400"
+      val request    = FakeRequest(POST, s"/nps/submit/$zReference")
 
-      val result = controller.submitMonthlyReturn(isaManagerReference)(request)
+      val result = controller.submitMonthlyReturn(zReference)(request)
       status(result)                                 shouldBe BAD_REQUEST
       (contentAsJson(result) \ "code").as[String]    shouldBe "BAD_REQUEST"
       (contentAsJson(result) \ "message").as[String] shouldBe "Bad request"
     }
 
     "return 503 Service Unavailable for ISA Manager Reference Z1503" in {
-      val isaManagerReference = "Z1503"
-      val request             = FakeRequest(POST, s"/nps/submit/$isaManagerReference")
+      val zReference = "Z1503"
+      val request    = FakeRequest(POST, s"/nps/submit/$zReference")
 
-      val result = controller.submitMonthlyReturn(isaManagerReference)(request)
+      val result = controller.submitMonthlyReturn(zReference)(request)
       status(result)                                 shouldBe SERVICE_UNAVAILABLE
       (contentAsJson(result) \ "code").as[String]    shouldBe "SERVICE_UNAVAILABLE"
       (contentAsJson(result) \ "message").as[String] shouldBe "Service unavailable"
@@ -101,17 +100,17 @@ class NpsControllerSpec extends BaseUnitSpec {
   "send" should {
     "return 204 no content when a declaration has been sent successfully" in {
       val request =
-        FakeRequest(POST, s"/nps/declaration/$isaManagerReference")
+        FakeRequest(POST, s"/nps/declaration/$validZReference")
 
-      val result = controller.send(isaManagerReference)(request)
+      val result = controller.send(validZReference)(request)
       status(result) shouldBe NO_CONTENT
     }
 
     "return 500 Internal Server Error for ISA Manager Reference Z1500" in {
-      val isaManagerReference = "Z1500"
-      val request             = FakeRequest(POST, s"/nps/declaration/$isaManagerReference")
+      val zReference = "Z1500"
+      val request    = FakeRequest(POST, s"/nps/declaration/$zReference")
 
-      val result = controller.send(isaManagerReference)(request)
+      val result = controller.send(zReference)(request)
       status(result)                                 shouldBe INTERNAL_SERVER_ERROR
       (contentAsJson(result) \ "code").as[String]    shouldBe "INTERNAL_SERVER_ERROR"
       (contentAsJson(result) \ "message").as[String] shouldBe "Internal issue, try again later"
@@ -132,8 +131,8 @@ class NpsControllerSpec extends BaseUnitSpec {
         )
       ).thenReturn(Future.successful(Some(sampleReport)))
 
-      val request = FakeRequest(GET, s"/nps/monthly/$isaManagerReference/2025-26/APR/results")
-      val result  = controller.getMonthlyReport(isaManagerReference, "2025-26", "APR", pageIndex, pageSize)(request)
+      val request = FakeRequest(GET, s"/nps/monthly/$validZReference/2025-26/APR/results")
+      val result  = controller.getMonthlyReport(validZReference, "2025-26", "APR", pageIndex, pageSize)(request)
 
       status(result) shouldBe OK
       val jsonBody = contentAsJson(result)
@@ -149,10 +148,10 @@ class NpsControllerSpec extends BaseUnitSpec {
         )
       ).thenReturn(Future.successful(Some(sampleReport)))
 
-      val request = FakeRequest(GET, s"/nps/monthly/$isaManagerReference/2025-26/APR/results")
+      val request = FakeRequest(GET, s"/nps/monthly/$validZReference/2025-26/APR/results")
 
-      val resultForPage0 = controller.getMonthlyReport(isaManagerReference, "2025-26", "APR", 0, 2)(request)
-      val resultForPage1 = controller.getMonthlyReport(isaManagerReference, "2025-26", "APR", 1, 2)(request)
+      val resultForPage0 = controller.getMonthlyReport(validZReference, "2025-26", "APR", 0, 2)(request)
+      val resultForPage1 = controller.getMonthlyReport(validZReference, "2025-26", "APR", 1, 2)(request)
 
       val jsonBodyPage0 = contentAsJson(resultForPage0)
       val jsonBodyPage1 = contentAsJson(resultForPage1)
@@ -164,8 +163,8 @@ class NpsControllerSpec extends BaseUnitSpec {
     "return 404 PageNotFound when page does not exist" in {
       when(mockReportRepository.getMonthlyReport(any(), any(), any())).thenReturn(Future.successful(Some(sampleReport)))
 
-      val request = FakeRequest(GET, s"/nps/monthly/$isaManagerReference/2025-26/APR/results")
-      val result  = controller.getMonthlyReport(isaManagerReference, "2025-26", "APR", 1, pageSize)(request)
+      val request = FakeRequest(GET, s"/nps/monthly/$validZReference/2025-26/APR/results")
+      val result  = controller.getMonthlyReport(validZReference, "2025-26", "APR", 1, pageSize)(request)
 
       status(result)                                 shouldBe NOT_FOUND
       (contentAsJson(result) \ "code").asOpt[String] shouldBe Some("PAGE_NOT_FOUND")
@@ -174,14 +173,14 @@ class NpsControllerSpec extends BaseUnitSpec {
     "return 404 NotFound when no report exists" in {
       when(mockReportRepository.getMonthlyReport(any(), any(), any())).thenReturn(Future.successful(None))
 
-      val request = FakeRequest(GET, s"/nps/monthly/$isaManagerReference/2025-26/APR/results")
-      val result  = controller.getMonthlyReport(isaManagerReference, "2025-26", "APR", pageIndex, pageSize)(request)
+      val request = FakeRequest(GET, s"/nps/monthly/$validZReference/2025-26/APR/results")
+      val result  = controller.getMonthlyReport(validZReference, "2025-26", "APR", pageIndex, pageSize)(request)
 
       status(result)                                 shouldBe NOT_FOUND
       (contentAsJson(result) \ "code").asOpt[String] shouldBe Some("REPORT_NOT_FOUND")
     }
 
-    "return 500 InternalServerError when isaReferenceNumber is Z1500" in {
+    "return 500 InternalServerError when zReference is Z1500" in {
       val request = FakeRequest(GET, s"/nps/monthly/Z1500/2025-26/APR/results")
       val result  = controller.getMonthlyReport("Z1500", "2025-26", "APR", pageIndex, pageSize)(request)
 

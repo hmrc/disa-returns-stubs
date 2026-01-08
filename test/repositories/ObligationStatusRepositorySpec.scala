@@ -25,7 +25,6 @@ import utils.BaseUnitSpec
 class ObligationStatusRepositorySpec extends BaseUnitSpec {
 
   protected val databaseName                           = "disa-returns-test"
-  val isaManagerReference                              = "Z1110"
   protected val mongoUri: String                       = s"mongodb://127.0.0.1:27017/$databaseName"
   lazy val mongoComponentForTest: MongoComponent       = MongoComponent(mongoUri)
   protected val repository: ObligationStatusRepository =
@@ -33,59 +32,59 @@ class ObligationStatusRepositorySpec extends BaseUnitSpec {
 
   "closeObligationStatus" should {
     "insert a new document with obligationAlreadyMet = true if none exists" in new TestSetup {
-      await(repository.closeObligationStatus(isaManagerReference))
+      await(repository.closeObligationStatus(validZReference))
 
       val stored: Option[ObligationStatus] =
         await(repository.collection.find().toFuture()).headOption
-      stored shouldBe Some(ObligationStatus(isaManagerReference, obligationAlreadyMet = true))
+      stored shouldBe Some(ObligationStatus(validZReference, obligationAlreadyMet = true))
     }
 
     "update an existing document to obligationAlreadyMet = true" in new TestSetup {
-      await(repository.openObligationStatus(isaManagerReference))
-      await(repository.closeObligationStatus(isaManagerReference))
+      await(repository.openObligationStatus(validZReference))
+      await(repository.closeObligationStatus(validZReference))
 
       val stored: Option[ObligationStatus] =
         await(repository.collection.find().toFuture()).headOption
-      stored shouldBe Some(ObligationStatus(isaManagerReference, obligationAlreadyMet = true))
+      stored shouldBe Some(ObligationStatus(validZReference, obligationAlreadyMet = true))
     }
   }
 
   "openObligationStatus" should {
     "insert a new document with obligationAlreadyMet = false if none exists" in new TestSetup {
-      await(repository.openObligationStatus(isaManagerReference))
+      await(repository.openObligationStatus(validZReference))
 
       val stored: Option[ObligationStatus] =
         await(repository.collection.find().toFuture()).headOption
-      stored shouldBe Some(ObligationStatus(isaManagerReference, obligationAlreadyMet = false))
+      stored shouldBe Some(ObligationStatus(validZReference, obligationAlreadyMet = false))
     }
 
     "update an existing document to obligationAlreadyMet = false" in new TestSetup {
-      await(repository.closeObligationStatus(isaManagerReference))
-      await(repository.openObligationStatus(isaManagerReference))
+      await(repository.closeObligationStatus(validZReference))
+      await(repository.openObligationStatus(validZReference))
 
       val stored: Option[ObligationStatus] =
         await(repository.collection.find().toFuture()).headOption
-      stored shouldBe Some(ObligationStatus(isaManagerReference, obligationAlreadyMet = false))
+      stored shouldBe Some(ObligationStatus(validZReference, obligationAlreadyMet = false))
     }
   }
 
   "getObligationStatus" should {
     "return Some(true) when obligationAlreadyMet is true" in new TestSetup {
-      await(repository.closeObligationStatus(isaManagerReference))
+      await(repository.closeObligationStatus(validZReference))
 
-      val result: Option[Boolean] = await(repository.getObligationStatus(isaManagerReference))
+      val result: Option[Boolean] = await(repository.getObligationStatus(validZReference))
       result shouldBe Some(true)
     }
 
     "return Some(false) when obligationAlreadyMet is false" in new TestSetup {
-      await(repository.openObligationStatus(isaManagerReference))
+      await(repository.openObligationStatus(validZReference))
 
-      val result: Option[Boolean] = await(repository.getObligationStatus(isaManagerReference))
+      val result: Option[Boolean] = await(repository.getObligationStatus(validZReference))
       result shouldBe Some(false)
     }
 
     "return None when no record exists" in new TestSetup {
-      val result: Option[Boolean] = await(repository.getObligationStatus(isaManagerReference))
+      val result: Option[Boolean] = await(repository.getObligationStatus(validZReference))
       result shouldBe None
     }
   }

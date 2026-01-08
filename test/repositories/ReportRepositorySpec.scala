@@ -32,7 +32,7 @@ class ReportRepositorySpec extends BaseUnitSpec {
   lazy val repo                           = new ReportRepository(mongoComponent)
 
   val report1: MonthlyReport = MonthlyReport(
-    isaManagerReferenceNumber = "Z123",
+    zReference = validZReference,
     year = "2025-26",
     month = "JAN",
     returnResults = Seq(
@@ -71,7 +71,7 @@ class ReportRepositorySpec extends BaseUnitSpec {
     stored shouldBe Some(report1)
   }
 
-  "update the document if it already exists with same month + isaManagerReferenceNumber" in {
+  "update the document if it already exists with same month + zReference" in {
     await(repo.insertReport(report1))
     val result: UpdateResult = await(repo.insertReport(report2))
 
@@ -83,8 +83,8 @@ class ReportRepositorySpec extends BaseUnitSpec {
     stored shouldBe Some(report2)
   }
 
-  "allow inserting multiple documents for different months or managers" in {
-    val otherReport = report1.copy(month = "JAN", isaManagerReferenceNumber = "Z456")
+  "allow inserting multiple documents for different months but same Z Reference" in {
+    val otherReport = report1.copy(month = "FEB", zReference = validZReference)
 
     await(repo.insertReport(report1))
     await(repo.insertReport(otherReport))
@@ -93,30 +93,30 @@ class ReportRepositorySpec extends BaseUnitSpec {
     results should contain theSameElementsAs Seq(report1, otherReport)
   }
 
-  "retrieve a monthly report by isaManagerReferenceNumber, year and month" in {
+  "retrieve a monthly report by zReference, year and month" in {
     await(repo.collection.drop().toFuture())
     await(repo.insertReport(report1))
 
-    val result = await(repo.getMonthlyReport("Z123", "2025-26", "JAN"))
+    val result = await(repo.getMonthlyReport(validZReference, "2025-26", "JAN"))
     result shouldBe Some(report1)
   }
 
-  "return None if no report exists for given isaManagerReferenceNumber, year and month" in {
+  "return None if no report exists for given zReference, year and month" in {
     await(repo.collection.drop().toFuture())
 
-    val result = await(repo.getMonthlyReport("Z999", "2025-26", "JAN"))
+    val result = await(repo.getMonthlyReport(validZReference, "2025-26", "JAN"))
     result shouldBe None
   }
 
-  "return the correct report if multiple reports exist for same isaManagerReferenceNumber & taxYear but different month" in {
+  "return the correct report if multiple reports exist for same zReference & taxYear but different month" in {
     await(repo.collection.drop().toFuture())
     val reportA = report1
-    val reportB = report1.copy(month = "FEB", isaManagerReferenceNumber = "Z123")
+    val reportB = report1.copy(month = "FEB", zReference = validZReference)
     await(repo.insertReport(reportA))
     await(repo.insertReport(reportB))
 
-    val resultJan = await(repo.getMonthlyReport("Z123", "2025-26", "JAN"))
-    val resultFeb = await(repo.getMonthlyReport("Z123", "2025-26", "FEB"))
+    val resultJan = await(repo.getMonthlyReport(validZReference, "2025-26", "JAN"))
+    val resultFeb = await(repo.getMonthlyReport(validZReference, "2025-26", "FEB"))
 
     resultJan shouldBe Some(reportA)
     resultFeb shouldBe Some(reportB)

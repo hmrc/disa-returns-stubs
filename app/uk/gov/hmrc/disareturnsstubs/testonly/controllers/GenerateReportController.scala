@@ -38,20 +38,20 @@ class GenerateReportController @Inject() (
     with WithJsonBody
     with Logging {
 
-  def create(isaManagerReferenceNumber: String, year: String, month: String): Action[JsValue] =
+  def create(zReference: String, year: String, month: String): Action[JsValue] =
     (Action andThen authorizationFilter).async(parse.json) { implicit request =>
       withJsonBody[GenerateReportRequest] { generateReport =>
         generateReportsService
-          .generateAndStore(generateReport, isaManagerReferenceNumber, year, month)
+          .generateAndStore(generateReport, zReference, year, month)
           .map { _ =>
             logger.info(
-              s"[TestOnly] Generated and stored report for IM ref: [$isaManagerReferenceNumber] for [$month][$year]"
+              s"[TestOnly] Generated and stored report for IM ref: [$zReference] for [$month][$year]"
             )
             NoContent
           }
           .recover { case ex =>
             logger.error(
-              s"[TestOnly] Failed to generate and store report for IM ref: [$isaManagerReferenceNumber] for [$month][$year]"
+              s"[TestOnly] Failed to generate and store report for IM ref: [$zReference] for [$month][$year]"
             )
             InternalServerError(Json.toJson(internalServerErr(ex.getMessage)))
           }

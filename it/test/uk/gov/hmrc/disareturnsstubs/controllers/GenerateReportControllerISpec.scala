@@ -26,7 +26,7 @@ import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers._
 import play.api.test._
 import uk.gov.hmrc.disareturnsstubs.BaseISpec
-import uk.gov.hmrc.disareturnsstubs.models.GenerateReportRequest
+import uk.gov.hmrc.disareturnsstubs.models.{GenerateReportRequest, MonthlyReport}
 import uk.gov.hmrc.disareturnsstubs.services.GenerateReportsService
 
 import scala.concurrent.Future
@@ -40,7 +40,7 @@ class GenerateReportControllerISpec extends BaseISpec {
 
   val year = "2025-26"
   val month = "JAN"
-  val createReportEndpoint = s"/$isaManagerReferenceNumber/$year/$month/reconciliation"
+  val createReportEndpoint = s"/$validZReference/$year/$month/reconciliation"
   val mockGenerateReportsService: GenerateReportsService = mock[GenerateReportsService]
 
   val validPayload: JsValue = Json.parse(
@@ -58,7 +58,7 @@ class GenerateReportControllerISpec extends BaseISpec {
       |}""".stripMargin
   )
 
-  "POST /:isaManagerReferenceNumber/:year/:month/reconciliation" should {
+  "POST /:zReference/:year/:month/reconciliation" should {
 
     "return 204 NoContent for a valid request" in {
       val request = FakeRequest(POST, createReportEndpoint)
@@ -70,10 +70,10 @@ class GenerateReportControllerISpec extends BaseISpec {
 
       status(result) mustBe NO_CONTENT
 
-      val report = await(reportRepository.collection.find().toFuture())
+      val report: Seq[MonthlyReport] = await(reportRepository.collection.find().toFuture())
 
       report.exists(report =>
-        report.isaManagerReferenceNumber == isaManagerReferenceNumber &&
+        report.zReference == validZReference &&
           report.month == month &&
           report.year == year) shouldBe true
     }
