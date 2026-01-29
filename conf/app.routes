@@ -12,3 +12,7 @@ POST    /nps/submit/:zReference                             uk.gov.hmrc.disaretu
 POST    /nps/declaration/:zReference                        uk.gov.hmrc.disareturnsstubs.controllers.NpsController.send(zReference: String)
 
 GET     /monthly/:zReference/:taxYear/:month/results        uk.gov.hmrc.disareturnsstubs.controllers.NpsController.getMonthlyReport(zReference: String, taxYear: String, month: String, pageIndex: Int, pageSize: Int)
+
+## Registration
+
+POST    /etmp/enrolment/submission                          uk.gov.hmrc.disareturnsstubs.controllers.EtmpController.submitEnrolment()

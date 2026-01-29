@@ -17,12 +17,14 @@
 package uk.gov.hmrc.disareturnsstubs.controllers
 
 import play.api.Logging
-import play.api.libs.json.Json
+import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import uk.gov.hmrc.disareturnsstubs.models.journeyData.JourneyData
 import uk.gov.hmrc.disareturnsstubs.models.{EtmpObligations, EtmpReportingWindow}
 import uk.gov.hmrc.disareturnsstubs.repositories.{ObligationStatusRepository, ReportingWindowRepository}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
+import java.util.UUID
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -67,5 +69,24 @@ class EtmpController @Inject() (
             .openObligationStatus(zReference)
             .map(_ => Ok(Json.toJson(EtmpObligations(obligationAlreadyMet = false))))
       }
+  }
+
+  def submitEnrolment(): Action[JsValue] = Action(parse.json) { implicit request =>
+    request.body.validate[JourneyData] match {
+      case JsSuccess(journeyData, _) =>
+        val p2pPlatformOpt = journeyData.isaProducts.flatMap(_.p2pPlatform)
+
+        p2pPlatformOpt match {
+          case Some("submit failure") =>
+            BadGateway(Json.obj("error" -> "Downstream error from ETMP stub"))
+
+          case _ =>
+            Ok(UUID.randomUUID().toString)
+        }
+
+      case JsError(errors) =>
+        logger.warn(s"Parsing request for submission failed: ${JsError.toJson(errors)}")
+        BadRequest(Json.obj("error" -> "Invalid request payload"))
+    }
   }
 }
