@@ -19,7 +19,6 @@ package uk.gov.hmrc.disareturnsstubs.controllers
 import jakarta.inject.Singleton
 import play.api.Logging
 import play.api.libs.json.Json
-import play.api.mvc.BodyParsers.utils.ignore
 import play.api.mvc.{Action, AnyContent, ControllerComponents, RawBuffer}
 import uk.gov.hmrc.disareturnsstubs.controllers.action.AuthorizationFilter
 import uk.gov.hmrc.disareturnsstubs.models.ErrorResponse._
