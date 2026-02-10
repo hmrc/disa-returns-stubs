@@ -122,6 +122,20 @@ class NpsControllerISpec extends BaseISpec {
       status(result) mustBe FORBIDDEN
       (contentAsJson(result) \ "message").asOpt[String] mustBe Some("Missing required bearer token")
     }
+
+    "return 413 Payload Too Large when request exceeds 10MB" in {
+      val oversizedBody = "a" * (10 * 1024 * 1024 + 1)
+
+      val request =
+        FakeRequest(POST, s"$submitMonthlyReturnEndpoint/$validZReference")
+          .withHeaders(
+            "Authorization" -> "Bearer token")
+          .withBody(oversizedBody)
+
+      val result = route(app, request).get
+
+      status(result) mustBe REQUEST_ENTITY_TOO_LARGE
+    }
   }
 
   "POST /nps/declaration/:zReference" should {
