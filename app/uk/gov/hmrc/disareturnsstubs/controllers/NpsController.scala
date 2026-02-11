@@ -19,7 +19,7 @@ package uk.gov.hmrc.disareturnsstubs.controllers
 import jakarta.inject.Singleton
 import play.api.Logging
 import play.api.libs.json.Json
-import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import play.api.mvc.{Action, AnyContent, ControllerComponents, RawBuffer}
 import uk.gov.hmrc.disareturnsstubs.controllers.action.AuthorizationFilter
 import uk.gov.hmrc.disareturnsstubs.models.ErrorResponse._
 import uk.gov.hmrc.disareturnsstubs.models.{ErrorResponse, MonthlyReport, ReturnResultResponse}
@@ -38,8 +38,8 @@ class NpsController @Inject() (
     extends BackendController(cc)
     with Logging {
 
-  def submitMonthlyReturn(zReference: String): Action[AnyContent] =
-    (Action andThen authorizationFilter).async { _ =>
+  def submitMonthlyReturn(zReference: String): Action[RawBuffer] =
+    (Action(parse.raw) andThen authorizationFilter).async { _ =>
       zReference match {
         case "Z1400" => Future.successful(BadRequest(Json.toJson(badRequestError)))
         case "Z1503" => Future.successful(ServiceUnavailable(Json.toJson(serviceUnavailableError)))
