@@ -22,8 +22,7 @@ import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents, RawBuffer}
 import uk.gov.hmrc.disareturnsstubs.controllers.action.AuthorizationFilter
 import uk.gov.hmrc.disareturnsstubs.models.ErrorResponse._
-import uk.gov.hmrc.disareturnsstubs.models.{ErrorResponse, MonthlyReport, ReturnResultResponse}
-import uk.gov.hmrc.disareturnsstubs.repositories.ReportRepository
+import uk.gov.hmrc.disareturnsstubs.services.RetrieveReportService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.Inject
@@ -33,7 +32,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class NpsController @Inject() (
   cc: ControllerComponents,
   authorizationFilter: AuthorizationFilter,
-  reportRepository: ReportRepository
+  retrieveReportService: RetrieveReportService
 )(implicit ec: ExecutionContext)
     extends BackendController(cc)
     with Logging {
@@ -70,48 +69,28 @@ class NpsController @Inject() (
         InternalServerError(Json.toJson(internalServerErr("Internal issue, try again later")))
       )
     } else {
-      reportRepository
-        .getMonthlyReport(zReference, taxYear, month)
+      retrieveReportService
+        .getMonthlyReport(zReference, taxYear, month, pageIndex, pageSize)
         .map {
-          case Some(report) =>
-            getReportPage(report, pageIndex, pageSize) match {
-              case Left(error) =>
-                logger.warn(s"Page not found in report for IM ref: [$zReference] for [$month][$taxYear]")
-                NotFound(Json.toJson(error))
-              case Right(page) =>
-                logger.info(
-                  s"Successful retrieval of monthly report for IM ref: [$zReference] for [$month][$taxYear]"
-                )
-                Ok(
-                  Json.toJson(
-                    ReturnResultResponse(totalRecords = report.returnResults.size, returnResults = page.returnResults)
-                  )
-                )
-            }
-
-          case None =>
-            logger.warn(s"No monthly report found for IM ref: [$zReference] for [$month][$taxYear]")
-            NotFound(Json.toJson(reportNotFoundError))
+          case Right(response) =>
+            logger.info(
+              s"Successful retrieval of monthly report for IM ref: [$zReference] for [$month][$taxYear]"
+            )
+            Ok(Json.toJson(response))
+          case Left(error)     =>
+            logger.warn(
+              s"${error.code} for IM ref: [$zReference] for [$month][$taxYear]: ${error.message}"
+            )
+            NotFound(Json.toJson(error))
         }
         .recover { case ex =>
           logger.error(
-            s"Unexpected error retreiving monthly report for IM ref: [$zReference] for [$month][$taxYear] with: [${ex.getMessage}]"
+            s"Unexpected error retrieving monthly report for IM ref: [$zReference] for [$month][$taxYear] with: [${ex.getMessage}]"
           )
-          InternalServerError(Json.toJson(internalServerErr(s"Failed with exception: ${ex.getMessage}")))
+          InternalServerError(
+            Json.toJson(internalServerErr(s"Failed with exception: ${ex.getMessage}"))
+          )
         }
     }
-  }
-
-  private def getReportPage(
-    fullReport: MonthlyReport,
-    pageIndex: Int,
-    pageSize: Int
-  ): Either[ErrorResponse, MonthlyReport] = {
-    val startOfPage  = pageIndex * pageSize
-    val totalRecords = fullReport.returnResults.size
-    val endOfPage    = (startOfPage + pageSize).min(totalRecords)
-
-    if (startOfPage >= totalRecords) Left(pageNotFoundError(pageIndex))
-    else Right(fullReport.copy(returnResults = fullReport.returnResults.slice(startOfPage, endOfPage)))
   }
 }

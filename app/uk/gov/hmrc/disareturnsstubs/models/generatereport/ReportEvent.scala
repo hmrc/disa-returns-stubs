@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 HM Revenue & Customs
+ * Copyright 2026 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,12 +14,20 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.disareturnsstubs.models
+package uk.gov.hmrc.disareturnsstubs.models.generatereport
 
 import play.api.libs.json.{Json, OFormat}
 
-case class GenerateReportRequest(oversubscribed: Int, traceAndMatch: Int, failedEligibility: Int)
+import java.time.Instant
 
-object GenerateReportRequest {
-  implicit val format: OFormat[GenerateReportRequest] = Json.format[GenerateReportRequest]
+case class ReportEvent(
+                        reportId: String,
+                        zReference: String,
+                        year: String,
+                        month: String,
+                        createdAt: Instant = Instant.now()
+                      )
+
+object ReportEvent {
+  implicit val format: OFormat[ReportEvent] = Json.format[ReportEvent]
 }

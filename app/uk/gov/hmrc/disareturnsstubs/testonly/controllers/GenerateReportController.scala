@@ -20,17 +20,17 @@ import play.api.Logging
 import play.api.libs.json._
 import play.api.mvc._
 import uk.gov.hmrc.disareturnsstubs.controllers.action.AuthorizationFilter
-import uk.gov.hmrc.disareturnsstubs.models.GenerateReportRequest
-import uk.gov.hmrc.disareturnsstubs.services.GenerateReportsService
-import uk.gov.hmrc.play.bootstrap.controller.WithJsonBody
 import uk.gov.hmrc.disareturnsstubs.models.ErrorResponse._
+import uk.gov.hmrc.disareturnsstubs.models.generatereport.GenerateReportRequest
+import uk.gov.hmrc.disareturnsstubs.services.GenerateAndStoreReportService
+import uk.gov.hmrc.play.bootstrap.controller.WithJsonBody
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
 class GenerateReportController @Inject() (
-  generateReportsService: GenerateReportsService,
+  generateAndStoreReportService: GenerateAndStoreReportService,
   authorizationFilter: AuthorizationFilter,
   cc: ControllerComponents
 )(implicit ec: ExecutionContext)
@@ -41,7 +41,7 @@ class GenerateReportController @Inject() (
   def create(zReference: String, year: String, month: String): Action[JsValue] =
     (Action andThen authorizationFilter).async(parse.json) { implicit request =>
       withJsonBody[GenerateReportRequest] { generateReport =>
-        generateReportsService
+        generateAndStoreReportService
           .generateAndStore(generateReport, zReference, year, month)
           .map { _ =>
             logger.info(
@@ -49,11 +49,17 @@ class GenerateReportController @Inject() (
             )
             NoContent
           }
-          .recover { case ex =>
-            logger.error(
-              s"[TestOnly] Failed to generate and store report for IM ref: [$zReference] for [$month][$year]"
-            )
-            InternalServerError(Json.toJson(internalServerErr(ex.getMessage)))
+          .recover {
+            case _: IllegalArgumentException =>
+              logger.info(
+                s"[TestOnly] ISSUE_LIMIT_EXCEEDED - Failed to generate and stored report for IM ref: [$zReference] for [$month][$year]"
+              )
+              BadRequest(Json.toJson(issueLimitExceeded))
+            case ex                          =>
+              logger.error(
+                s"[TestOnly] Failed to generate and store report for IM ref: [$zReference] for [$month][$year]"
+              )
+              InternalServerError(Json.toJson(internalServerErr(ex.getMessage)))
           }
       }
     }

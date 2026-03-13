@@ -16,53 +16,53 @@
 
 package controller
 
+import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
 import play.api.Play.materializer
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.disareturnsstubs.controllers.NpsController
-import uk.gov.hmrc.disareturnsstubs.models.{IssueIdentifiedMessage, MonthlyReport, ReturnResult}
+import uk.gov.hmrc.disareturnsstubs.models.ErrorResponse.{pageNotFoundError, reportNotFoundError}
+import uk.gov.hmrc.disareturnsstubs.models.{ErrorResponse, IssueIdentifiedMessage, ReturnResult, ReturnResultResponse}
+import uk.gov.hmrc.disareturnsstubs.services.RetrieveReportService
 import utils.BaseUnitSpec
 
 import scala.concurrent.Future
 
 class NpsControllerSpec extends BaseUnitSpec {
 
+  val mockRetrieveReportService: RetrieveReportService = mock[RetrieveReportService]
+
   private val controller = new NpsController(
     stubControllerComponents(),
     stubAuthFilter,
-    mockReportRepository
+    mockRetrieveReportService
   )
 
-  val sampleReport: MonthlyReport = MonthlyReport(
-    zReference = validZReference,
-    year = "2025-26",
-    month = "APR",
-    returnResults = Seq(
-      ReturnResult(
-        accountNumber = "100000001",
-        nino = "AB123457C",
-        issueIdentified = IssueIdentifiedMessage(
-          code = "UNABLE_TO_IDENTIFY_INVESTOR",
-          message = "Unable to identify investor"
-        )
-      ),
-      ReturnResult(
-        accountNumber = "100000002",
-        nino = "AB123457C",
-        issueIdentified = IssueIdentifiedMessage(
-          code = "UNABLE_TO_IDENTIFY_INVESTOR",
-          message = "Unable to identify investor"
-        )
-      ),
-      ReturnResult(
-        accountNumber = "100000003",
-        nino = "AB123457C",
-        issueIdentified = IssueIdentifiedMessage(
-          code = "UNABLE_TO_IDENTIFY_INVESTOR",
-          message = "Unable to identify investor"
-        )
+  val sampleReturnResult: Seq[ReturnResult] = Seq(
+    ReturnResult(
+      accountNumber = "100000001",
+      nino = "AB123457C",
+      issueIdentified = IssueIdentifiedMessage(
+        code = "UNABLE_TO_IDENTIFY_INVESTOR",
+        message = "Unable to identify investor"
+      )
+    ),
+    ReturnResult(
+      accountNumber = "100000002",
+      nino = "AB123457C",
+      issueIdentified = IssueIdentifiedMessage(
+        code = "UNABLE_TO_IDENTIFY_INVESTOR",
+        message = "Unable to identify investor"
+      )
+    ),
+    ReturnResult(
+      accountNumber = "100000003",
+      nino = "AB123457C",
+      issueIdentified = IssueIdentifiedMessage(
+        code = "UNABLE_TO_IDENTIFY_INVESTOR",
+        message = "Unable to identify investor"
       )
     )
   )
@@ -124,12 +124,8 @@ class NpsControllerSpec extends BaseUnitSpec {
 
     "return 200 OK with returnResults when report exists" in {
       when(
-        mockReportRepository.getMonthlyReport(
-          any(),
-          any(),
-          any()
-        )
-      ).thenReturn(Future.successful(Some(sampleReport)))
+        mockRetrieveReportService.getMonthlyReport(any(), any(), any(), any(), any())
+      ).thenReturn(Future.successful(Right(ReturnResultResponse(totalRecords = 3, returnResults = sampleReturnResult))))
 
       val request = FakeRequest(GET, s"/nps/monthly/$validZReference/2025-26/APR/results")
       val result  = controller.getMonthlyReport(validZReference, "2025-26", "APR", pageIndex, pageSize)(request)
@@ -141,13 +137,18 @@ class NpsControllerSpec extends BaseUnitSpec {
 
     "return 200 OK with correct pages across multiple pages" in {
       when(
-        mockReportRepository.getMonthlyReport(
-          any(),
-          any(),
-          any()
+        mockRetrieveReportService.getMonthlyReport(any(), any(), any(), ArgumentMatchers.eq(0), ArgumentMatchers.eq(2))
+      )
+        .thenReturn(
+          Future.successful(Right(ReturnResultResponse(totalRecords = 3, returnResults = sampleReturnResult.take(2))))
         )
-      ).thenReturn(Future.successful(Some(sampleReport)))
 
+      when(
+        mockRetrieveReportService.getMonthlyReport(any(), any(), any(), ArgumentMatchers.eq(1), ArgumentMatchers.eq(2))
+      )
+        .thenReturn(
+          Future.successful(Right(ReturnResultResponse(totalRecords = 3, returnResults = sampleReturnResult.drop(2))))
+        )
       val request = FakeRequest(GET, s"/nps/monthly/$validZReference/2025-26/APR/results")
 
       val resultForPage0 = controller.getMonthlyReport(validZReference, "2025-26", "APR", 0, 2)(request)
@@ -161,17 +162,21 @@ class NpsControllerSpec extends BaseUnitSpec {
     }
 
     "return 404 PageNotFound when page does not exist" in {
-      when(mockReportRepository.getMonthlyReport(any(), any(), any())).thenReturn(Future.successful(Some(sampleReport)))
+      when(
+        mockRetrieveReportService.getMonthlyReport(any(), any(), any(), any(), any())
+      ).thenReturn(Future.successful(Left(pageNotFoundError(10))))
 
       val request = FakeRequest(GET, s"/nps/monthly/$validZReference/2025-26/APR/results")
-      val result  = controller.getMonthlyReport(validZReference, "2025-26", "APR", 1, pageSize)(request)
+      val result  = controller.getMonthlyReport(validZReference, "2025-26", "APR", 10, pageSize)(request)
 
       status(result)                                 shouldBe NOT_FOUND
       (contentAsJson(result) \ "code").asOpt[String] shouldBe Some("PAGE_NOT_FOUND")
     }
 
     "return 404 NotFound when no report exists" in {
-      when(mockReportRepository.getMonthlyReport(any(), any(), any())).thenReturn(Future.successful(None))
+      when(
+        mockRetrieveReportService.getMonthlyReport(any(), any(), any(), any(), any())
+      ).thenReturn(Future.successful(Left(reportNotFoundError)))
 
       val request = FakeRequest(GET, s"/nps/monthly/$validZReference/2025-26/APR/results")
       val result  = controller.getMonthlyReport(validZReference, "2025-26", "APR", pageIndex, pageSize)(request)
@@ -187,6 +192,28 @@ class NpsControllerSpec extends BaseUnitSpec {
       status(result)                                    shouldBe INTERNAL_SERVER_ERROR
       (contentAsJson(result) \ "code").asOpt[String]    shouldBe Some("INTERNAL_SERVER_ERROR")
       (contentAsJson(result) \ "message").asOpt[String] shouldBe Some("Internal issue, try again later")
+    }
+
+    "return 404 PageNotFound when requested page exceeds available records" in {
+      val pageIndexOutOfRange = 10
+      val pageSize            = 2
+
+      when(
+        mockRetrieveReportService.getMonthlyReport(any(), any(), any(), any(), any())
+      ).thenReturn(
+        Future.successful(
+          Left(ErrorResponse.pageNotFoundError(pageIndexOutOfRange))
+        )
+      )
+
+      val request = FakeRequest(GET, s"/nps/monthly/$validZReference/2025-26/APR/results")
+      val result  =
+        controller.getMonthlyReport(validZReference, "2025-26", "APR", pageIndexOutOfRange, pageSize)(request)
+
+      status(result) shouldBe NOT_FOUND
+      val jsonBody = contentAsJson(result)
+      (jsonBody \ "code").as[String]    shouldBe "PAGE_NOT_FOUND"
+      (jsonBody \ "message").as[String] shouldBe "No page 10 found"
     }
   }
 }

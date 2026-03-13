@@ -17,38 +17,16 @@
 package uk.gov.hmrc.disareturnsstubs.services
 
 import uk.gov.hmrc.disareturnsstubs.models._
-import uk.gov.hmrc.disareturnsstubs.repositories.ReportRepository
+import uk.gov.hmrc.disareturnsstubs.models.generatereport.GenerateReportRequest
 
-import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
+import javax.inject.Singleton
 import scala.math.BigDecimal.RoundingMode
 import scala.util.Random
 
 @Singleton
-class GenerateReportsService @Inject() (monthlyReportsRepository: ReportRepository)(implicit ec: ExecutionContext) {
+class GenerateReportIssuesService {
 
-  def generateAndStore(
-    generateReportRequest: GenerateReportRequest,
-    zReference: String,
-    year: String,
-    month: String
-  ): Future[Seq[ReturnResult]] = {
-
-    val results: Seq[ReturnResult] = generateResults(generateReportRequest)
-
-    val monthlyReport = MonthlyReport(
-      zReference = zReference,
-      year = year,
-      month = month,
-      returnResults = results
-    )
-
-    monthlyReportsRepository
-      .insertReport(monthlyReport)
-      .map(_ => results)
-  }
-
-  private def generateResults(generateReportRequest: GenerateReportRequest): Seq[ReturnResult] = {
+  def generateResults(generateReportRequest: GenerateReportRequest): Seq[ReturnResult] = {
 
     val oversubscribedResults =
       (0 until generateReportRequest.oversubscribed).map { _ =>
