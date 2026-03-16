@@ -29,9 +29,9 @@ import java.time.Instant
 
 class ReportEventRepositorySpec extends BaseUnitSpec {
 
-  override lazy val app: Application = new GuiceApplicationBuilder().build()
+  override lazy val app: Application      = new GuiceApplicationBuilder().build()
   lazy val mongoComponent: MongoComponent = app.injector.instanceOf[MongoComponent]
-  lazy val repo = new ReportEventRepository(mongoComponent)
+  lazy val repo                           = new ReportEventRepository(mongoComponent)
 
   val event1: ReportEvent =
     ReportEvent(
@@ -53,7 +53,7 @@ class ReportEventRepositorySpec extends BaseUnitSpec {
       val result: UpdateResult = await(repo.upsert(event1))
 
       result.wasAcknowledged() shouldBe true
-      result.getUpsertedId should not be null
+      result.getUpsertedId       should not be null
 
       val stored = await(repo.collection.find().headOption())
       stored shouldBe Some(event1)
@@ -67,8 +67,8 @@ class ReportEventRepositorySpec extends BaseUnitSpec {
       val result: UpdateResult = await(repo.upsert(event2))
 
       result.wasAcknowledged() shouldBe true
-      result.getUpsertedId shouldBe null
-      result.getModifiedCount should be > 0L
+      result.getUpsertedId     shouldBe null
+      result.getModifiedCount    should be > 0L
 
       val stored = await(repo.collection.find().headOption())
       stored shouldBe Some(event2)

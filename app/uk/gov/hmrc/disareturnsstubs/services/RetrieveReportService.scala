@@ -24,18 +24,18 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class RetrieveReportService @Inject()(
-                                       reportEventRepository: ReportEventRepository,
-                                       reportIssueRepository: ReportIssueRepository
-                                     )(implicit ec: ExecutionContext) {
+class RetrieveReportService @Inject() (
+  reportEventRepository: ReportEventRepository,
+  reportIssueRepository: ReportIssueRepository
+)(implicit ec: ExecutionContext) {
 
   def getMonthlyReport(
-                        zReference: String,
-                        year: String,
-                        month: String,
-                        pageIndex: Int,
-                        pageSize: Int
-                      ): Future[Either[ErrorResponse, ReturnResultResponse]] = {
+    zReference: String,
+    year: String,
+    month: String,
+    pageIndex: Int,
+    pageSize: Int
+  ): Future[Either[ErrorResponse, ReturnResultResponse]] = {
 
     val skip  = pageIndex * pageSize
     val limit = pageSize
@@ -48,8 +48,7 @@ class RetrieveReportService @Inject()(
         for {
           total  <- reportIssueRepository.countByReportId(event.reportId)
           issues <- reportIssueRepository.findByReportId(event.reportId, skip, limit)
-        } yield {
-
+        } yield
           if (skip >= total) {
             Left(pageNotFoundError(pageIndex))
           } else {
@@ -61,12 +60,13 @@ class RetrieveReportService @Inject()(
               )
             }
 
-            Right(ReturnResultResponse(
-              totalRecords = total.toInt,
-              returnResults = results
-            ))
+            Right(
+              ReturnResultResponse(
+                totalRecords = total.toInt,
+                returnResults = results
+              )
+            )
           }
-        }
     }
   }
 }

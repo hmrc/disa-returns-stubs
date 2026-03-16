@@ -29,10 +29,9 @@ import java.time.Instant
 
 class ReportIssueRepositorySpec extends BaseUnitSpec {
 
-override lazy val app: Application = new GuiceApplicationBuilder().build()
-lazy val mongoComponent: MongoComponent = app.injector.instanceOf[MongoComponent]
-lazy val repo = new ReportIssueRepository(mongoComponent)
-
+  override lazy val app: Application      = new GuiceApplicationBuilder().build()
+  lazy val mongoComponent: MongoComponent = app.injector.instanceOf[MongoComponent]
+  lazy val repo                           = new ReportIssueRepository(mongoComponent)
 
   val issue1: ReportIssueDocument =
     ReportIssueDocument(

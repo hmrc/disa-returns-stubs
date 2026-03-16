@@ -21,12 +21,12 @@ import play.api.libs.json.{Json, OFormat}
 import java.time.Instant
 
 case class ReportEvent(
-                        reportId: String,
-                        zReference: String,
-                        year: String,
-                        month: String,
-                        createdAt: Instant = Instant.now()
-                      )
+  reportId: String,
+  zReference: String,
+  year: String,
+  month: String,
+  createdAt: Instant = Instant.now()
+)
 
 object ReportEvent {
   implicit val format: OFormat[ReportEvent] = Json.format[ReportEvent]

@@ -37,7 +37,7 @@ class GenerateReportControllerSpec extends BaseUnitSpec {
     stubControllerComponents()
   )
 
-  private val year = "2025-26"
+  private val year  = "2025-26"
   private val month = "JAN"
 
   private val validPayload: JsValue = Json.parse(
@@ -67,7 +67,7 @@ class GenerateReportControllerSpec extends BaseUnitSpec {
 
       val result = controller.create(validZReference, year, month)(jsonPostRequest(validPayload))
 
-      status(result) shouldBe NO_CONTENT
+      status(result)          shouldBe NO_CONTENT
       contentAsString(result) shouldBe ""
     }
 
@@ -77,7 +77,7 @@ class GenerateReportControllerSpec extends BaseUnitSpec {
 
       val result = controller.create(validZReference, year, month)(jsonPostRequest(validPayload))
 
-      status(result) shouldBe INTERNAL_SERVER_ERROR
+      status(result)                               shouldBe INTERNAL_SERVER_ERROR
       (contentAsJson(result) \ "message").as[String] should include("Mongo failure")
     }
 

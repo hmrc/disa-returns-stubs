@@ -25,20 +25,20 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class GenerateAndStoreReportService @Inject()(
-                                               reportEventRepository: ReportEventRepository,
-                                               reportResultRepository: ReportIssueRepository,
-                                               reportGenerator: GenerateReportIssuesService
-                                             )(implicit ec: ExecutionContext) {
+class GenerateAndStoreReportService @Inject() (
+  reportEventRepository: ReportEventRepository,
+  reportResultRepository: ReportIssueRepository,
+  reportGenerator: GenerateReportIssuesService
+)(implicit ec: ExecutionContext) {
 
   private val MaxRecords = 2000
 
   def generateAndStore(
-                        generateReportRequest: GenerateReportRequest,
-                        zReference: String,
-                        year: String,
-                        month: String
-                      ): Future[Unit] = {
+    generateReportRequest: GenerateReportRequest,
+    zReference: String,
+    year: String,
+    month: String
+  ): Future[Unit] = {
 
     val totalRequested =
       generateReportRequest.oversubscribed +

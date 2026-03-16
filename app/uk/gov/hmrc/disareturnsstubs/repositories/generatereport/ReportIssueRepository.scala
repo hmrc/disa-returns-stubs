@@ -28,26 +28,26 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ReportIssueRepository @Inject()(mc: MongoComponent)(implicit ec: ExecutionContext)
-  extends PlayMongoRepository[ReportIssueDocument](
-    mongoComponent = mc,
-    collectionName = "reportResults",
-    domainFormat = ReportIssueDocument.format,
-    indexes = Seq(
-      IndexModel(
-        Indexes.compoundIndex(
-          Indexes.ascending("reportId"),
-          Indexes.ascending("_id")
+class ReportIssueRepository @Inject() (mc: MongoComponent)(implicit ec: ExecutionContext)
+    extends PlayMongoRepository[ReportIssueDocument](
+      mongoComponent = mc,
+      collectionName = "reportResults",
+      domainFormat = ReportIssueDocument.format,
+      indexes = Seq(
+        IndexModel(
+          Indexes.compoundIndex(
+            Indexes.ascending("reportId"),
+            Indexes.ascending("_id")
+          )
+        ),
+        IndexModel(
+          Indexes.ascending("createdAt"),
+          IndexOptions()
+            .name("createdAt_ttl_index")
+            .expireAfter(3L, TimeUnit.DAYS)
         )
-      ),
-      IndexModel(
-        Indexes.ascending("createdAt"),
-        IndexOptions()
-          .name("createdAt_ttl_index")
-          .expireAfter(3L, TimeUnit.DAYS)
       )
     )
-  )
     with Logging {
 
   def insertMany(results: Seq[ReportIssueDocument]): Future[Unit] = {
@@ -57,18 +57,16 @@ class ReportIssueRepository @Inject()(mc: MongoComponent)(implicit ec: Execution
   }
 
   def findByReportId(
-                      reportId: String,
-                      skip: Int,
-                      limit: Int
-                    ): Future[Seq[ReportIssueDocument]] = {
-
+    reportId: String,
+    skip: Int,
+    limit: Int
+  ): Future[Seq[ReportIssueDocument]] =
     collection
       .find(equal("reportId", reportId))
       .sort(Sorts.ascending("_id"))
       .skip(skip)
       .limit(limit)
       .toFuture()
-  }
 
   def countByReportId(reportId: String): Future[Long] =
     collection

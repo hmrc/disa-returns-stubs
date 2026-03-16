@@ -22,12 +22,12 @@ import uk.gov.hmrc.disareturnsstubs.models.IssueIdentified
 import java.time.Instant
 
 case class ReportIssueDocument(
-                                 reportId: String,
-                                 accountNumber: String,
-                                 nino: String,
-                                 issueIdentified: IssueIdentified,
-                                 createdAt: Instant = Instant.now()
-                               )
+  reportId: String,
+  accountNumber: String,
+  nino: String,
+  issueIdentified: IssueIdentified,
+  createdAt: Instant = Instant.now()
+)
 
 object ReportIssueDocument {
   implicit val format: OFormat[ReportIssueDocument] = Json.format[ReportIssueDocument]

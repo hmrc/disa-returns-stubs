@@ -29,30 +29,29 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ReportEventRepository @Inject()(mc: MongoComponent)(implicit ec: ExecutionContext)
-  extends PlayMongoRepository[ReportEvent](
-    mongoComponent = mc,
-    collectionName = "reportEvents",
-    domainFormat = ReportEvent.format,
-    indexes = Seq(
-      IndexModel(
-        Indexes.compoundIndex(
-          Indexes.ascending("zReference"),
-          Indexes.ascending("year"),
-          Indexes.ascending("month")
+class ReportEventRepository @Inject() (mc: MongoComponent)(implicit ec: ExecutionContext)
+    extends PlayMongoRepository[ReportEvent](
+      mongoComponent = mc,
+      collectionName = "reportEvents",
+      domainFormat = ReportEvent.format,
+      indexes = Seq(
+        IndexModel(
+          Indexes.compoundIndex(
+            Indexes.ascending("zReference"),
+            Indexes.ascending("year"),
+            Indexes.ascending("month")
+          ),
+          IndexOptions().unique(true)
         ),
-        IndexOptions().unique(true)
-      ),
-      IndexModel(
-        Indexes.ascending("createdAt"),
-        IndexOptions()
-          .name("createdAt_ttl_index")
-          .expireAfter(3L, TimeUnit.DAYS)
+        IndexModel(
+          Indexes.ascending("createdAt"),
+          IndexOptions()
+            .name("createdAt_ttl_index")
+            .expireAfter(3L, TimeUnit.DAYS)
+        )
       )
     )
-  )
     with Logging {
-
 
   def upsert(event: ReportEvent): Future[UpdateResult] = {
 
@@ -76,10 +75,10 @@ class ReportEventRepository @Inject()(mc: MongoComponent)(implicit ec: Execution
   }
 
   def find(
-                  zReference: String,
-                  year: String,
-                  month: String
-                ): Future[Option[ReportEvent]] = {
+    zReference: String,
+    year: String,
+    month: String
+  ): Future[Option[ReportEvent]] = {
 
     val filter = and(
       equal("zReference", zReference),
