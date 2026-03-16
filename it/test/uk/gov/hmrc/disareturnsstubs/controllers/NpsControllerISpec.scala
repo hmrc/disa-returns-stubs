@@ -164,7 +164,6 @@ class NpsControllerISpec extends BaseISpec {
   val pageIndex0 = 0
   val pageIndex1 = 1
 
-  // Helpers for test data
   val reportEventDocument: ReportEvent = ReportEvent(
     reportId   = "RPT_TEST",
     zReference = validZReference,

@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.disareturnsstubs.services
 
+import uk.gov.hmrc.disareturnsstubs.config.AppConfig
 import uk.gov.hmrc.disareturnsstubs.models._
 import uk.gov.hmrc.disareturnsstubs.models.generatereport.{GenerateReportRequest, ReportEvent, ReportIssueDocument}
 import uk.gov.hmrc.disareturnsstubs.repositories.generatereport.{ReportEventRepository, ReportIssueRepository}
@@ -28,10 +29,9 @@ import scala.concurrent.{ExecutionContext, Future}
 class GenerateAndStoreReportService @Inject() (
   reportEventRepository: ReportEventRepository,
   reportResultRepository: ReportIssueRepository,
-  reportGenerator: GenerateReportIssuesService
+  reportGenerator: GenerateReportIssuesService,
+  appConfig: AppConfig
 )(implicit ec: ExecutionContext) {
-
-  private val MaxRecords = 2000
 
   def generateAndStore(
     generateReportRequest: GenerateReportRequest,
@@ -45,10 +45,10 @@ class GenerateAndStoreReportService @Inject() (
         generateReportRequest.traceAndMatch +
         generateReportRequest.failedEligibility
 
-    if (totalRequested > MaxRecords) {
+    if (totalRequested > appConfig.reportIssueLimit) {
       Future.failed(
         new IllegalArgumentException(
-          s"Requested $totalRequested records which exceeds the maximum allowed of $MaxRecords"
+          s"Requested $totalRequested records which exceeds the maximum allowed of ${appConfig.reportIssueLimit}"
         )
       )
     } else {

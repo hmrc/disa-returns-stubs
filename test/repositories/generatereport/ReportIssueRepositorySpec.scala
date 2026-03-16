@@ -19,6 +19,7 @@ package repositories.generatereport
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.await
+import uk.gov.hmrc.disareturnsstubs.config.AppConfig
 import uk.gov.hmrc.disareturnsstubs.models.IssueIdentifiedMessage
 import uk.gov.hmrc.disareturnsstubs.models.generatereport.ReportIssueDocument
 import uk.gov.hmrc.disareturnsstubs.repositories.generatereport.ReportIssueRepository
@@ -31,7 +32,8 @@ class ReportIssueRepositorySpec extends BaseUnitSpec {
 
   override lazy val app: Application      = new GuiceApplicationBuilder().build()
   lazy val mongoComponent: MongoComponent = app.injector.instanceOf[MongoComponent]
-  lazy val repo                           = new ReportIssueRepository(mongoComponent)
+  lazy val appConfig: AppConfig           = app.injector.instanceOf[AppConfig]
+  lazy val repo                           = new ReportIssueRepository(mongoComponent, appConfig)
 
   val issue1: ReportIssueDocument =
     ReportIssueDocument(

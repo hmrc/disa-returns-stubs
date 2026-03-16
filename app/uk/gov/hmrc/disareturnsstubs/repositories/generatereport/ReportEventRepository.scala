@@ -20,6 +20,7 @@ import org.mongodb.scala.model.Filters.{and, equal}
 import org.mongodb.scala.model.{IndexModel, IndexOptions, Indexes, ReplaceOptions}
 import org.mongodb.scala.result.UpdateResult
 import play.api.Logging
+import uk.gov.hmrc.disareturnsstubs.config.AppConfig
 import uk.gov.hmrc.disareturnsstubs.models.generatereport.ReportEvent
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
@@ -29,7 +30,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ReportEventRepository @Inject() (mc: MongoComponent)(implicit ec: ExecutionContext)
+class ReportEventRepository @Inject() (mc: MongoComponent, appConfig: AppConfig)(implicit ec: ExecutionContext)
     extends PlayMongoRepository[ReportEvent](
       mongoComponent = mc,
       collectionName = "reportEvents",
@@ -47,7 +48,7 @@ class ReportEventRepository @Inject() (mc: MongoComponent)(implicit ec: Executio
           Indexes.ascending("createdAt"),
           IndexOptions()
             .name("createdAt_ttl_index")
-            .expireAfter(3L, TimeUnit.DAYS)
+            .expireAfter(appConfig.reportTtl, TimeUnit.DAYS)
         )
       )
     )

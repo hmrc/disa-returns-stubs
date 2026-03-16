@@ -20,6 +20,7 @@ import org.mongodb.scala.result.UpdateResult
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.await
+import uk.gov.hmrc.disareturnsstubs.config.AppConfig
 import uk.gov.hmrc.disareturnsstubs.models.generatereport.ReportEvent
 import uk.gov.hmrc.disareturnsstubs.repositories.generatereport.ReportEventRepository
 import uk.gov.hmrc.mongo.MongoComponent
@@ -31,7 +32,8 @@ class ReportEventRepositorySpec extends BaseUnitSpec {
 
   override lazy val app: Application      = new GuiceApplicationBuilder().build()
   lazy val mongoComponent: MongoComponent = app.injector.instanceOf[MongoComponent]
-  lazy val repo                           = new ReportEventRepository(mongoComponent)
+  lazy val appConfig: AppConfig           = app.injector.instanceOf[AppConfig]
+  lazy val repo                           = new ReportEventRepository(mongoComponent, appConfig)
 
   val event1: ReportEvent =
     ReportEvent(

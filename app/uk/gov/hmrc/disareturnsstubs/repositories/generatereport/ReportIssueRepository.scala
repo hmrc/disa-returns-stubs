@@ -19,6 +19,7 @@ package uk.gov.hmrc.disareturnsstubs.repositories.generatereport
 import org.mongodb.scala.model.Filters.equal
 import org.mongodb.scala.model.{IndexModel, IndexOptions, Indexes, Sorts}
 import play.api.Logging
+import uk.gov.hmrc.disareturnsstubs.config.AppConfig
 import uk.gov.hmrc.disareturnsstubs.models.generatereport.ReportIssueDocument
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
@@ -28,7 +29,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ReportIssueRepository @Inject() (mc: MongoComponent)(implicit ec: ExecutionContext)
+class ReportIssueRepository @Inject() (mc: MongoComponent, appConfig: AppConfig)(implicit ec: ExecutionContext)
     extends PlayMongoRepository[ReportIssueDocument](
       mongoComponent = mc,
       collectionName = "reportResults",
@@ -44,7 +45,7 @@ class ReportIssueRepository @Inject() (mc: MongoComponent)(implicit ec: Executio
           Indexes.ascending("createdAt"),
           IndexOptions()
             .name("createdAt_ttl_index")
-            .expireAfter(3L, TimeUnit.DAYS)
+            .expireAfter(appConfig.reportTtl, TimeUnit.DAYS)
         )
       )
     )

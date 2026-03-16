@@ -16,11 +16,14 @@
 
 package uk.gov.hmrc.disareturnsstubs.config
 
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+
 import javax.inject.{Inject, Singleton}
-import play.api.Configuration
 
 @Singleton
-class AppConfig @Inject() (config: Configuration) {
+class AppConfig @Inject() (config: ServicesConfig) {
 
-  val appName: String = config.get[String]("appName")
+  val appName: String       = config.getString("appName")
+  val reportIssueLimit: Int = config.getInt("reportIssueLimit")
+  val reportTtl: Int        = config.getInt("reportTtl")
 }
