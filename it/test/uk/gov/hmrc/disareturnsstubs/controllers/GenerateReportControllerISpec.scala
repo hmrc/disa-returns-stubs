@@ -105,6 +105,25 @@ class GenerateReportControllerISpec extends BaseISpec {
       status(result) mustBe BAD_REQUEST
     }
 
+    "return 400 BadRequest when the payload exceeds the issues limit for a given report" in {
+      val validPayload: JsValue = Json.parse(
+        """{
+          |  "oversubscribed": 2000,
+          |  "traceAndMatch": 0,
+          |  "failedEligibility": 1
+          |}""".stripMargin
+      )
+      val request = FakeRequest(POST, createReportEndpoint)
+        .withHeaders("Authorization" -> "Bearer token")
+        .withJsonBody(validPayload)
+
+      val result = route(app, request).get
+
+      status(result) mustBe BAD_REQUEST
+      (contentAsJson(result) \ "code").as[String] shouldBe "ISSUE_LIMIT_EXCEEDED"
+      (contentAsJson(result) \ "message").as[String] shouldBe s"The maximum number of records that can be generated in a single request is ${appConfig.reportIssueLimit}. Please reduce the number of requested records and try again."
+    }
+
     "return 403 Forbidden when Authorization header is missing" in {
 
       val request = FakeRequest(POST, createReportEndpoint)

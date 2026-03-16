@@ -22,6 +22,7 @@ import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.test.{DefaultAwaitTimeout, FakeRequest}
+import uk.gov.hmrc.disareturnsstubs.config.AppConfig
 import uk.gov.hmrc.disareturnsstubs.repositories.generatereport.{ReportEventRepository, ReportIssueRepository}
 import uk.gov.hmrc.disareturnsstubs.repositories.{ObligationStatusRepository, ReportingWindowRepository}
 
@@ -47,6 +48,8 @@ abstract class BaseISpec
 
   val zReferenceGen: Gen[String] =
     Gen.listOfN(4, Gen.numChar).map(digits => s"Z${digits.mkString}")
+
+  lazy val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
 
   val validZReference: String = zReferenceGen.sample.get
 

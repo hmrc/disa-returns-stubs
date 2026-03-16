@@ -21,6 +21,7 @@ import org.mockito.Mockito.when
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import uk.gov.hmrc.disareturnsstubs.config.AppConfig
 import uk.gov.hmrc.disareturnsstubs.services.GenerateAndStoreReportService
 import uk.gov.hmrc.disareturnsstubs.testonly.controllers.GenerateReportController
 import utils.BaseUnitSpec
@@ -30,11 +31,13 @@ import scala.concurrent.Future
 class GenerateReportControllerSpec extends BaseUnitSpec {
 
   private val mockGenerateAndStoreReportService = mock[GenerateAndStoreReportService]
+  private val mockAppConfig                     = mock[AppConfig]
 
   private val controller = new GenerateReportController(
     mockGenerateAndStoreReportService,
     stubAuthFilter,
-    stubControllerComponents()
+    stubControllerComponents(),
+    mockAppConfig
   )
 
   private val year  = "2025-26"

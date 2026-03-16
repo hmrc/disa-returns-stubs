@@ -25,5 +25,5 @@ class AppConfig @Inject() (config: ServicesConfig) {
 
   val appName: String       = config.getString("appName")
   val reportIssueLimit: Int = config.getInt("reportIssueLimit")
-  val reportTtl: Int        = config.getInt("reportTtl")
+  val reportTtlDays: Int    = config.getInt("reportTtlDays")
 }

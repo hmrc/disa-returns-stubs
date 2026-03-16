@@ -45,7 +45,7 @@ class ReportIssueRepository @Inject() (mc: MongoComponent, appConfig: AppConfig)
           Indexes.ascending("createdAt"),
           IndexOptions()
             .name("createdAt_ttl_index")
-            .expireAfter(appConfig.reportTtl, TimeUnit.DAYS)
+            .expireAfter(appConfig.reportTtlDays, TimeUnit.DAYS)
         )
       )
     )

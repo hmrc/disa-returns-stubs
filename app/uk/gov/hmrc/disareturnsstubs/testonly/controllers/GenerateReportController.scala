@@ -19,6 +19,7 @@ package uk.gov.hmrc.disareturnsstubs.testonly.controllers
 import play.api.Logging
 import play.api.libs.json._
 import play.api.mvc._
+import uk.gov.hmrc.disareturnsstubs.config.AppConfig
 import uk.gov.hmrc.disareturnsstubs.controllers.action.AuthorizationFilter
 import uk.gov.hmrc.disareturnsstubs.models.ErrorResponse._
 import uk.gov.hmrc.disareturnsstubs.models.generatereport.GenerateReportRequest
@@ -32,7 +33,8 @@ import scala.concurrent.ExecutionContext
 class GenerateReportController @Inject() (
   generateAndStoreReportService: GenerateAndStoreReportService,
   authorizationFilter: AuthorizationFilter,
-  cc: ControllerComponents
+  cc: ControllerComponents,
+  appConfig: AppConfig
 )(implicit ec: ExecutionContext)
     extends AbstractController(cc)
     with WithJsonBody
@@ -54,7 +56,7 @@ class GenerateReportController @Inject() (
               logger.info(
                 s"[TestOnly] ISSUE_LIMIT_EXCEEDED - Failed to generate and stored report for IM ref: [$zReference] for [$month][$year]"
               )
-              BadRequest(Json.toJson(issueLimitExceeded))
+              BadRequest(Json.toJson(issueLimitExceeded(appConfig.reportIssueLimit)))
             case ex                          =>
               logger.error(
                 s"[TestOnly] Failed to generate and store report for IM ref: [$zReference] for [$month][$year]"
