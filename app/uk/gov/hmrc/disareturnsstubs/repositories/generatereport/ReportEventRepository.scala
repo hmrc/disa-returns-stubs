@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 HM Revenue & Customs
+ * Copyright 2026 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.disareturnsstubs.repositories
+package uk.gov.hmrc.disareturnsstubs.repositories.generatereport
 
 import org.mongodb.scala.model.Filters.{and, equal}
 import org.mongodb.scala.model.{IndexModel, IndexOptions, Indexes, ReplaceOptions}
 import org.mongodb.scala.result.UpdateResult
 import play.api.Logging
-import uk.gov.hmrc.disareturnsstubs.models.MonthlyReport
+import uk.gov.hmrc.disareturnsstubs.config.AppConfig
+import uk.gov.hmrc.disareturnsstubs.models.generatereport.ReportEvent
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
@@ -29,11 +30,11 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ReportRepository @Inject() (mc: MongoComponent)(implicit ec: ExecutionContext)
-    extends PlayMongoRepository[MonthlyReport](
+class ReportEventRepository @Inject() (mc: MongoComponent, appConfig: AppConfig)(implicit ec: ExecutionContext)
+    extends PlayMongoRepository[ReportEvent](
       mongoComponent = mc,
-      collectionName = "monthlyReport",
-      domainFormat = MonthlyReport.format,
+      collectionName = "reportEvents",
+      domainFormat = ReportEvent.format,
       indexes = Seq(
         IndexModel(
           Indexes.compoundIndex(
@@ -44,44 +45,47 @@ class ReportRepository @Inject() (mc: MongoComponent)(implicit ec: ExecutionCont
           IndexOptions().unique(true)
         ),
         IndexModel(
-          Indexes.ascending("updatedAt"),
+          Indexes.ascending("createdAt"),
           IndexOptions()
-            .name("updatedAt_ttl_index")
-            .expireAfter(30L, TimeUnit.DAYS)
+            .name("createdAt_ttl_index")
+            .expireAfter(appConfig.reportTtlDays, TimeUnit.DAYS)
         )
       )
     )
     with Logging {
 
-  def insertReport(monthlyReport: MonthlyReport): Future[UpdateResult] = {
+  def upsert(event: ReportEvent): Future[UpdateResult] = {
+
     val filter = and(
-      equal("month", monthlyReport.month),
-      equal("year", monthlyReport.year),
-      equal("zReference", monthlyReport.zReference)
+      equal("zReference", event.zReference),
+      equal("year", event.year),
+      equal("month", event.month)
     )
-    logger.debug(s"Inserting monthly report into db: [$monthlyReport]")
+
+    logger.debug(
+      s"Upserting report event for zRef=${event.zReference}, year=${event.year}, month=${event.month}"
+    )
 
     collection
       .replaceOne(
         filter = filter,
-        replacement = monthlyReport,
-        options = new ReplaceOptions().upsert(true)
+        replacement = event,
+        options = ReplaceOptions().upsert(true)
       )
       .toFuture()
   }
 
-  def getMonthlyReport(
+  def find(
     zReference: String,
-    taxYear: String,
+    year: String,
     month: String
-  ): Future[Option[MonthlyReport]] = {
+  ): Future[Option[ReportEvent]] = {
+
     val filter = and(
       equal("zReference", zReference),
-      equal("year", taxYear),
+      equal("year", year),
       equal("month", month)
     )
-
-    logger.debug(s"Retrieving monthly report from db")
 
     collection
       .find(filter)

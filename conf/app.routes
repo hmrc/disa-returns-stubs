@@ -3,7 +3,7 @@
 
 GET     /etmp/check-obligation-status/:zReference           uk.gov.hmrc.disareturnsstubs.controllers.EtmpController.checkReturnsObligationStatus(zReference: String)
 
-GET     /etmp/check-reporting-window                                       uk.gov.hmrc.disareturnsstubs.controllers.EtmpController.checkReportingWindowStatus()
+GET     /etmp/check-reporting-window                        uk.gov.hmrc.disareturnsstubs.controllers.EtmpController.checkReportingWindowStatus()
 
 POST    /etmp/declaration/:zReference                       uk.gov.hmrc.disareturnsstubs.controllers.EtmpController.declare(zReference: String)
 

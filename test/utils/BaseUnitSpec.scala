@@ -29,10 +29,10 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.mvc.{Request, Result}
 import play.api.test.DefaultAwaitTimeout
 import uk.gov.hmrc.disareturnsstubs.controllers.action.AuthorizationFilter
-import uk.gov.hmrc.disareturnsstubs.repositories.ReportRepository
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Random
 
 abstract class BaseUnitSpec
     extends AnyWordSpec
@@ -49,8 +49,6 @@ abstract class BaseUnitSpec
   implicit val hc: HeaderCarrier    = HeaderCarrier()
   val stubAuthFilter                = new StubAuthorizationFilter(None)
 
-  val mockReportRepository: ReportRepository = mock[ReportRepository]
-
   override def beforeEach(): Unit = Mockito.reset()
 
   override def fakeApplication(): Application = GuiceApplicationBuilder()
@@ -64,5 +62,9 @@ abstract class BaseUnitSpec
     Gen.listOfN(4, Gen.numChar).map(digits => s"Z${digits.mkString}")
 
   val validZReference: String = zReferenceGen.sample.get
+
+  def randomSixDigit: Int = 100000 + Random.nextInt(899999)
+
+  def randomNino: String = s"AB${randomSixDigit}C"
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 HM Revenue & Customs
+ * Copyright 2026 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,16 +14,21 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.disareturnsstubs.config
+package uk.gov.hmrc.disareturnsstubs.models.generatereport
 
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.disareturnsstubs.models.IssueIdentified
 
-import javax.inject.{Inject, Singleton}
+import java.time.Instant
 
-@Singleton
-class AppConfig @Inject() (config: ServicesConfig) {
+case class ReportIssueDocument(
+  reportId: String,
+  accountNumber: String,
+  nino: String,
+  issueIdentified: IssueIdentified,
+  createdAt: Instant = Instant.now()
+)
 
-  val appName: String       = config.getString("appName")
-  val reportIssueLimit: Int = config.getInt("reportIssueLimit")
-  val reportTtlDays: Int    = config.getInt("reportTtlDays")
+object ReportIssueDocument {
+  implicit val format: OFormat[ReportIssueDocument] = Json.format[ReportIssueDocument]
 }

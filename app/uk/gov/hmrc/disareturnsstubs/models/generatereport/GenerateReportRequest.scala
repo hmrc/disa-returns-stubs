@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.disareturnsstubs.models
+package uk.gov.hmrc.disareturnsstubs.models.generatereport
 
 import play.api.libs.json.{Json, OFormat}
 
