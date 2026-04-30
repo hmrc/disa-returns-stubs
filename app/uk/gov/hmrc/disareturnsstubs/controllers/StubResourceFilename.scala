@@ -19,7 +19,6 @@ package uk.gov.hmrc.disareturnsstubs.controllers
 object StubResourceFilename {
 
   private val sizeMappings: Seq[(String, String)] = Seq(
-    "-3xl" -> "4500000",
     "-2xl" -> "1000000",
     "-xl"  -> "100000",
     "-l"   -> "10000",
