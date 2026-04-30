@@ -12,6 +12,9 @@ lazy val microservice = Project("disa-returns-stubs", file("."))
   )
   .settings(CodeCoverageSettings.settings *)
   .settings(PlayKeys.playDefaultPort := 1204)
+  .settings(
+    Compile / unmanagedResourceDirectories += baseDirectory.value / "config/resources"
+  )
 
 addCommandAlias("prePrChecks", "scalafmtCheckAll;scalafmtSbtCheck")
 
