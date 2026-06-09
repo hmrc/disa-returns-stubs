@@ -23,7 +23,9 @@ import javax.inject.{Inject, Singleton}
 @Singleton
 class AppConfig @Inject() (config: ServicesConfig) {
 
-  val appName: String       = config.getString("appName")
-  val reportIssueLimit: Int = config.getInt("reportIssueLimit")
-  val reportTtlDays: Int    = config.getInt("reportTtlDays")
+  val appName: String             = config.getString("appName")
+  val reportIssueLimit: Int       = config.getInt("reportIssueLimit")
+  val reportTtlDays: Int          = config.getInt("reportTtlDays")
+  lazy val upscanStubBase: String = config.baseUrl("upscan-stub")
+
 }
