@@ -46,10 +46,10 @@ class UpscanControllerSpec extends BaseUnitSpec {
     def multipartBody(filename: Option[String]): MultipartFormData[Files.TemporaryFile] = {
       val files = filename.toSeq.map { name =>
         MultipartFormData.FilePart[Files.TemporaryFile](
-          key         = "file",
-          filename    = name,
+          key = "file",
+          filename = name,
           contentType = Some("text/plain"),
-          ref         = SingletonTemporaryFileCreator.create("test", ".tmp")
+          ref = SingletonTemporaryFileCreator.create("test", ".tmp")
         )
       }
       MultipartFormData(dataParts = defaultDataParts, files = files, badParts = Nil)
@@ -68,13 +68,15 @@ class UpscanControllerSpec extends BaseUnitSpec {
 
     "rewrite uploadRequest.href to the stub upload URL and preserve other fields" in new TestSetup {
 
-      val responseBody = Json.obj(
-        "reference"     -> "ref-123",
-        "uploadRequest" -> Json.obj(
-          "href"   -> "http://upscan-stub:9570/upscan/upload",
-          "fields" -> Json.obj("x-amz-key" -> "some-key")
+      val responseBody = Json
+        .obj(
+          "reference"     -> "ref-123",
+          "uploadRequest" -> Json.obj(
+            "href"   -> "http://upscan-stub:9570/upscan/upload",
+            "fields" -> Json.obj("x-amz-key" -> "some-key")
+          )
         )
-      ).toString()
+        .toString()
 
       val mockResponse = wsResponse(200, responseBody)
       when(mockConnector.initiate(any()))
@@ -141,8 +143,11 @@ class UpscanControllerSpec extends BaseUnitSpec {
 
       val body = MultipartFormData[Files.TemporaryFile](
         dataParts = Map.empty,
-        files     = Seq(MultipartFormData.FilePart("file", "empty.csv", Some("text/plain"), SingletonTemporaryFileCreator.create("t", ".csv"))),
-        badParts  = Nil
+        files = Seq(
+          MultipartFormData
+            .FilePart("file", "empty.csv", Some("text/plain"), SingletonTemporaryFileCreator.create("t", ".csv"))
+        ),
+        badParts = Nil
       )
 
       status(controller.upload()(FakeRequest("POST", "/upscan/upload").withBody(body))) shouldBe BAD_REQUEST
@@ -152,8 +157,8 @@ class UpscanControllerSpec extends BaseUnitSpec {
 
       val body = MultipartFormData[Files.TemporaryFile](
         dataParts = Map.empty,
-        files     = Seq.empty,
-        badParts  = Nil
+        files = Seq.empty,
+        badParts = Nil
       )
 
       status(controller.upload()(FakeRequest("POST", "/upscan/upload").withBody(body))) shouldBe BAD_REQUEST
@@ -168,7 +173,8 @@ class UpscanControllerSpec extends BaseUnitSpec {
       when(mockConnector.upload(any(), any()))
         .thenReturn(Future.successful(mockResponse))
 
-      val result = controller.upload()(FakeRequest("POST", "/upscan/upload").withBody(multipartBody(Some("valid-return.csv"))))
+      val result =
+        controller.upload()(FakeRequest("POST", "/upscan/upload").withBody(multipartBody(Some("valid-return.csv"))))
 
       status(result)           shouldBe SEE_OTHER
       redirectLocation(result) shouldBe Some(successUrl)
@@ -182,7 +188,8 @@ class UpscanControllerSpec extends BaseUnitSpec {
       when(mockConnector.upload(any(), any()))
         .thenReturn(Future.successful(mockResponse))
 
-      val result = controller.upload()(FakeRequest("POST", "/upscan/upload").withBody(multipartBody(Some("valid-return.csv"))))
+      val result =
+        controller.upload()(FakeRequest("POST", "/upscan/upload").withBody(multipartBody(Some("valid-return.csv"))))
 
       status(result)          shouldBe OK
       contentAsString(result) shouldBe "upload accepted"

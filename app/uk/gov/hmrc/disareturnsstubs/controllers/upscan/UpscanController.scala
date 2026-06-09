@@ -28,23 +28,24 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class UpscanController @Inject()(
-                                  cc: ControllerComponents,
-                                  upscanProxyConnector: UpscanProxyConnector
-                                )(implicit ec: ExecutionContext)
-  extends BackendController(cc) {
+class UpscanController @Inject() (
+  cc: ControllerComponents,
+  upscanProxyConnector: UpscanProxyConnector
+)(implicit ec: ExecutionContext)
+    extends BackendController(cc) {
 
   def initiate(): Action[JsValue] =
     Action.async(parse.json) { implicit request =>
       upscanProxyConnector.initiate(request.body).map { response =>
-
         val json = Json.parse(response.body)
 
-        val updatedJson = json.transform(
-          (__ \ "uploadRequest" \ "href").json.update(
-            Reads.pure(JsString(routes.UpscanController.upload.absoluteURL()))
+        val updatedJson = json
+          .transform(
+            (__ \ "uploadRequest" \ "href").json.update(
+              Reads.pure(JsString(routes.UpscanController.upload.absoluteURL()))
+            )
           )
-        ).getOrElse(json)
+          .getOrElse(json)
 
         Status(response.status)(updatedJson)
       }
@@ -54,10 +55,14 @@ class UpscanController @Inject()(
     Action.async(parse.multipartFormData) { implicit request =>
       request.body.file("file") match {
         case Some(file) if file.filename.toLowerCase.contains("empty") =>
-          Future.successful(errorRedirect("EntityTooSmall", "Your proposed upload is smaller than the minimum allowed size"))
+          Future.successful(
+            errorRedirect("EntityTooSmall", "Your proposed upload is smaller than the minimum allowed size")
+          )
 
         case None =>
-          Future.successful(errorRedirect("EntityTooSmall", "Your proposed upload is smaller than the minimum allowed size"))
+          Future.successful(
+            errorRedirect("EntityTooSmall", "Your proposed upload is smaller than the minimum allowed size")
+          )
 
         case maybeFile =>
           upscanProxyConnector.upload(maybeFile, request.body.dataParts).map(toResult)
@@ -66,21 +71,24 @@ class UpscanController @Inject()(
 
   private def toResult(response: WSResponse): Result =
     if (response.status >= 300 && response.status < 400) {
-      val location = response.header("Location")
+      val location = response
+        .header("Location")
         .getOrElse(throw new RuntimeException("Missing Location header from Upscan stub"))
       Result(
         header = ResponseHeader(response.status, Map("Location" -> location)),
-        body   = HttpEntity.NoEntity
+        body = HttpEntity.NoEntity
       )
     } else {
       val headers = response.headers.toSeq.flatMap { case (k, vs) => vs.map(v => k -> v) }.toMap
       Result(
         header = ResponseHeader(response.status, headers),
-        body   = HttpEntity.Strict(ByteString(response.body), response.header("Content-Type").orElse(Some("text/plain")))
+        body = HttpEntity.Strict(ByteString(response.body), response.header("Content-Type").orElse(Some("text/plain")))
       )
     }
 
-  private def errorRedirect(code: String, message: String)(implicit request: Request[MultipartFormData[Files.TemporaryFile]]): Result = {
+  private def errorRedirect(code: String, message: String)(implicit
+    request: Request[MultipartFormData[Files.TemporaryFile]]
+  ): Result = {
     val errorRedirectUrl = request.body.dataParts
       .get("error_action_redirect")
       .flatMap(_.headOption)

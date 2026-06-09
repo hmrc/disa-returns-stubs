@@ -34,10 +34,10 @@ class UpscanProxyConnectorSpec extends BaseUnitSpec {
 
   trait TestSetup {
 
-    val mockWsClient:  WSClient   = mock[WSClient]
-    val mockRequest:   WSRequest  = mock[WSRequest]
-    val mockResponse:  WSResponse = mock[WSResponse]
-    val mockAppConfig: AppConfig  = mock[AppConfig]
+    val mockWsClient: WSClient   = mock[WSClient]
+    val mockRequest: WSRequest   = mock[WSRequest]
+    val mockResponse: WSResponse = mock[WSResponse]
+    val mockAppConfig: AppConfig = mock[AppConfig]
 
     val baseUrl = "http://localhost:9570"
 
@@ -77,10 +77,10 @@ class UpscanProxyConnectorSpec extends BaseUnitSpec {
     "POST a multipart request with the file to upscan-stub" in new TestSetup {
 
       val filePart = MultipartFormData.FilePart[Files.TemporaryFile](
-        key         = "file",
-        filename    = "test.txt",
+        key = "file",
+        filename = "test.txt",
         contentType = Some("text/plain"),
-        ref         = SingletonTemporaryFileCreator.create("test", ".txt")
+        ref = SingletonTemporaryFileCreator.create("test", ".txt")
       )
 
       when(mockRequest.post(any[Source[MultipartFormData.Part[Source[ByteString, _]], _]]()))
@@ -97,7 +97,9 @@ class UpscanProxyConnectorSpec extends BaseUnitSpec {
       when(mockRequest.post(any[Source[MultipartFormData.Part[Source[ByteString, _]], _]]()))
         .thenReturn(Future.successful(mockResponse))
 
-      connector.upload(None, Map("error_action_redirect" -> Seq("http://localhost:1205/error"))).futureValue shouldBe mockResponse
+      connector
+        .upload(None, Map("error_action_redirect" -> Seq("http://localhost:1205/error")))
+        .futureValue shouldBe mockResponse
 
       verify(mockWsClient).url(s"$baseUrl/upscan/upload")
       verify(mockRequest).withFollowRedirects(false)

@@ -29,25 +29,22 @@ import uk.gov.hmrc.disareturnsstubs.config.AppConfig
 import java.nio.file.{Files => NioFiles}
 import scala.concurrent.{ExecutionContext, Future}
 
-
-class UpscanProxyConnector @Inject()(
-                                      ws: WSClient,
-                                      appConfig: AppConfig
-                                    )(implicit ec: ExecutionContext) {
+class UpscanProxyConnector @Inject() (
+  ws: WSClient,
+  appConfig: AppConfig
+)(implicit ec: ExecutionContext) {
 
   private val baseUrl = appConfig.upscanStubBase
-
 
   def initiate(body: JsValue): Future[WSResponse] =
     ws.url(s"$baseUrl/upscan/v2/initiate")
       .addHttpHeaders("Content-Type" -> "application/json")
       .post(body)
 
-
   def upload(
-              file: Option[MultipartFormData.FilePart[Files.TemporaryFile]],
-              dataParts: Map[String, Seq[String]]
-            ): Future[WSResponse] = {
+    file: Option[MultipartFormData.FilePart[Files.TemporaryFile]],
+    dataParts: Map[String, Seq[String]]
+  ): Future[WSResponse] = {
 
     val formFields: Seq[MultipartFormData.Part[Source[ByteString, _]]] =
       dataParts.toSeq.flatMap { case (k, values) =>
@@ -57,10 +54,10 @@ class UpscanProxyConnector @Inject()(
     val filePart: Seq[MultipartFormData.Part[Source[ByteString, _]]] =
       file.toSeq.map { f =>
         MultipartFormData.FilePart(
-          key         = "file",
-          filename    = f.filename,
+          key = "file",
+          filename = f.filename,
           contentType = f.contentType,
-          ref         = Source.single(ByteString(NioFiles.readAllBytes(f.ref.path)))
+          ref = Source.single(ByteString(NioFiles.readAllBytes(f.ref.path)))
         )
       }
 
