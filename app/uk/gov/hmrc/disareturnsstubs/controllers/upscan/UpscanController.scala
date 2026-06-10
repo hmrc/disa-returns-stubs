@@ -70,7 +70,7 @@ class UpscanController @Inject() (
     }
 
   private def toResult(response: WSResponse): Result =
-    if (response.status >= 300 && response.status < 400) {
+    if (response.status >= MULTIPLE_CHOICES && response.status < BAD_REQUEST) {
       val location = response
         .header("Location")
         .getOrElse(throw new RuntimeException("Missing Location header from Upscan stub"))

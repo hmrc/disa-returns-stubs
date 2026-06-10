@@ -78,7 +78,7 @@ class UpscanControllerSpec extends BaseUnitSpec {
         )
         .toString()
 
-      val mockResponse = wsResponse(200, responseBody)
+      val mockResponse = wsResponse(OK, responseBody)
       when(mockConnector.initiate(any()))
         .thenReturn(Future.successful(mockResponse))
 
@@ -98,7 +98,7 @@ class UpscanControllerSpec extends BaseUnitSpec {
 
     "return the same status code as the connector response" in new TestSetup {
 
-      val mockResponse = wsResponse(400, """{"error":"bad"}""")
+      val mockResponse = wsResponse(BAD_REQUEST, """{"error":"bad"}""")
       when(mockConnector.initiate(any()))
         .thenReturn(Future.successful(mockResponse))
 
@@ -167,7 +167,7 @@ class UpscanControllerSpec extends BaseUnitSpec {
     "proxy a normal file and pass through a redirect response from the connector" in new TestSetup {
 
       val successUrl   = "http://localhost:1205/obligations/returns/isa/upscan/success?key=abc123"
-      val mockResponse = wsResponse(303, headers = Map("Location" -> Seq(successUrl)))
+      val mockResponse = wsResponse(SEE_OTHER, headers = Map("Location" -> Seq(successUrl)))
       when(mockResponse.header("Location")).thenReturn(Some(successUrl))
 
       when(mockConnector.upload(any(), any()))
@@ -182,7 +182,7 @@ class UpscanControllerSpec extends BaseUnitSpec {
 
     "proxy a normal file and pass through a non-redirect response from the connector" in new TestSetup {
 
-      val mockResponse = wsResponse(200, "upload accepted", Map("Content-Type" -> Seq("text/plain")))
+      val mockResponse = wsResponse(OK, "upload accepted", Map("Content-Type" -> Seq("text/plain")))
       when(mockResponse.header("Content-Type")).thenReturn(Some("text/plain"))
 
       when(mockConnector.upload(any(), any()))
