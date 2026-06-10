@@ -169,6 +169,46 @@ POST /etmp/declaration/:zReference
 |:--------------------------------------------:|:------:|:---------:|
 |         Successful         |  204   | NO CONTENT |
 
+## Upscan Initiate
+
+- This endpoint proxies the upscan `v2/initiate` request to `upscan-stub`, rewriting the returned `uploadRequest.href` so that the subsequent upload is routed back through this stub's `/upscan/upload` endpoint.
+
+### Endpoint:
+```bash
+POST /upscan/v2/initiate
+```
+
+### Responses:
+
+|                                  Scenario                                   | Status | Type |
+|:----------------------------------------------------------------------------:|:------:|:----:|
+| Returns the upscan-stub response, with `uploadRequest.href` rewritten to this stub |  200   |  OK  |
+
+## Upscan Upload
+
+- This endpoint proxies file uploads to `upscan-stub`, allowing `disa-returns-frontend` to test its upscan integration locally.
+- Most uploads are forwarded to `upscan-stub` unchanged, and the resulting redirect (`success_action_redirect`/`error_action_redirect`) is passed back to the browser.
+- Certain scenarios that `upscan-stub` does not support are intercepted by this stub directly. Other scenarios are simulated by `upscan-stub` based on the **uploaded filename**, allowing different upscan error and processing outcomes to be triggered locally.
+
+### Endpoint:
+```bash
+POST /upscan/upload
+```
+
+### Filename Based Scenarios:
+
+|                Scenario                | Filename Convention                                       |             Example             | Behaviour                                                                                                |
+|:----------------------------------------:|:------------------------------------------------------------|:----------------------------------:|:------------------------------------------------------------------------------------------------------------|
+|     No file selected / empty file       | filename contains `empty`, or no `file` part is provided    |          `empty-return.csv`         | Intercepted by this stub and the request is redirected to `error_action_redirect` with `errorCode=EntityTooSmall` |
+| Reject with a specific S3 error code    | `reject.<S3_ERROR_CODE>.<EXT>`                               |   `reject.UnexpectedContent.png`    | Forwarded to upscan-stub, which redirects to `error_action_redirect` with `errorCode=<S3_ERROR_CODE>`     |
+|         File flagged as infected        | `infected.<VIRUS_NAME>.<EXT>`                                |        `infected.MyDoom.jpeg`       | Forwarded to upscan-stub, which processes the upload normally but reports the file as quarantined with the given virus name in the callback notification |
+|         File rejected by upscan         | `invalid.<REASON>.<EXT>`                                     |       `invalid.ZipInDisguise.txt`   | Forwarded to upscan-stub, which processes the upload normally but reports the file as rejected with the given reason in the callback notification |
+|    File fails for an unknown reason     | `unknown.<REASON>.<EXT>`                                     |        `unknown.SpookyCookie.pdf`   | Forwarded to upscan-stub, which processes the upload normally but reports the file as failed with the given reason in the callback notification |
+|               Any other file            | -                                                             |          `valid-return.csv`         | Forwarded to upscan-stub and processed normally                                                          |
+
+- For the full list of valid `S3_ERROR_CODE` values for the `reject.*` scenario, see the [AWS S3 ErrorCodeList](https://docs.aws.amazon.com/AmazonS3/latest/API/ErrorResponses.html#ErrorCodeList).
+- The `reject`, `infected`, `invalid` and `unknown` scenarios are simulated by `upscan-stub` itself - see its [`UploadController`](https://github.com/hmrc/upscan-stub/blob/main/app/uk/gov/hmrc/upscanstub/controller/UploadController.scala) for implementation details.
+
 # Test-Only Endpoints:
 
 ## ETMP Open Obligation Status
