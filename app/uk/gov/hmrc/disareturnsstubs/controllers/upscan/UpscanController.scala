@@ -17,6 +17,7 @@
 package uk.gov.hmrc.disareturnsstubs.controllers.upscan
 
 import org.apache.pekko.util.ByteString
+import play.api.Logging
 import play.api.http.HttpEntity
 import play.api.libs.Files
 import play.api.libs.json._
@@ -27,12 +28,21 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success}
 
 class UpscanController @Inject() (
   cc: ControllerComponents,
   upscanProxyConnector: UpscanProxyConnector
 )(implicit ec: ExecutionContext)
-    extends BackendController(cc) {
+    extends BackendController(cc)
+    with Logging {
+
+  // MIME types accepted for an ISA monthly return upload - anything else is rejected by upscan post-upload
+  private val allowedContentTypes: Set[String] = Set(
+    "text/csv",
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+  )
 
   def initiate(): Action[JsValue] =
     Action.async(parse.json) { implicit request =>
@@ -63,6 +73,9 @@ class UpscanController @Inject() (
           Future.successful(
             errorRedirect("EntityTooSmall", "Your proposed upload is smaller than the minimum allowed size")
           )
+
+        case Some(file) if !file.contentType.exists(allowedContentTypes.contains) =>
+          Future.successful(rejectInvalidMimeType(file))
 
         case maybeFile =>
           upscanProxyConnector.upload(maybeFile, request.body.dataParts).map(toResult)
@@ -95,5 +108,49 @@ class UpscanController @Inject() (
     errorRedirectUrl.fold(BadRequest("Missing error_action_redirect"))(url =>
       Redirect(url, Map("errorCode" -> Seq(code), "errorMessage" -> Seq(message)), SEE_OTHER)
     )
+  }
+
+  // Mimics real upscan: a file with a disallowed MIME type is accepted on upload (success_action_redirect),
+  // then asynchronously REJECTED via a callback to the consuming service's callback URL
+  private def rejectInvalidMimeType(
+    file: MultipartFormData.FilePart[Files.TemporaryFile]
+  )(implicit request: Request[MultipartFormData[Files.TemporaryFile]]): Result = {
+    val dataParts = request.body.dataParts
+
+    for {
+      callbackUrl <- dataParts.get("x-amz-meta-callback-url").flatMap(_.headOption)
+      reference   <- dataParts.get("key").flatMap(_.headOption)
+    } yield {
+      val consumingService = dataParts.get("x-amz-meta-consuming-service").flatMap(_.headOption).getOrElse("unknown")
+      val contentType      = file.contentType.getOrElse("application/octet-stream")
+
+      val callbackBody = Json.obj(
+        "reference"      -> reference,
+        "fileStatus"     -> "FAILED",
+        "failureDetails" -> Json.obj(
+          "failureReason" -> "REJECTED",
+          "message"       -> s"MIME type [$contentType] is not allowed for service: [$consumingService]"
+        )
+      )
+
+      upscanProxyConnector.sendCallback(callbackUrl, callbackBody).onComplete {
+        case Success(response)  =>
+          logger.info(s"Sent REJECTED upscan callback to [$callbackUrl], received status [${response.status}]")
+        case Failure(exception) =>
+          logger.warn(s"Failed to send REJECTED upscan callback to [$callbackUrl]", exception)
+      }
+    }
+
+    successRedirect(dataParts)
+  }
+
+  private def successRedirect(dataParts: Map[String, Seq[String]]): Result = {
+    val successUrl = dataParts.get("success_action_redirect").flatMap(_.headOption)
+    val key        = dataParts.get("key").flatMap(_.headOption)
+
+    successUrl.fold(BadRequest("Missing success_action_redirect")) { url =>
+      val params = key.fold(Map.empty[String, Seq[String]])(k => Map("key" -> Seq(k)))
+      Redirect(url, params, SEE_OTHER)
+    }
   }
 }
