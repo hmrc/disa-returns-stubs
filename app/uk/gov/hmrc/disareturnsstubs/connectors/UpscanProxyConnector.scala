@@ -65,4 +65,9 @@ class UpscanProxyConnector @Inject() (
       .withFollowRedirects(false)
       .post(Source(formFields ++ filePart))
   }
+
+  def sendCallback(callbackUrl: String, body: JsValue): Future[WSResponse] =
+    ws.url(callbackUrl)
+      .addHttpHeaders("Content-Type" -> "application/json")
+      .post(body)
 }

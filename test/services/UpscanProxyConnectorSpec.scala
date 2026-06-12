@@ -113,4 +113,30 @@ class UpscanProxyConnectorSpec extends BaseUnitSpec {
       connector.upload(None, Map.empty).failed.futureValue.getMessage should include("upstream error")
     }
   }
+
+  "sendCallback" should {
+
+    "POST the JSON body to the supplied callback URL" in new TestSetup {
+
+      val callbackUrl = "http://localhost:6063/disa-returns-backend/upscan-callback"
+      val body        = Json.obj("reference" -> "ref-123", "fileStatus" -> "FAILED")
+
+      when(mockRequest.addHttpHeaders(any())).thenReturn(mockRequest)
+      when(mockRequest.post(any[JsValue]())(any())).thenReturn(Future.successful(mockResponse))
+
+      connector.sendCallback(callbackUrl, body).futureValue shouldBe mockResponse
+
+      verify(mockWsClient).url(callbackUrl)
+    }
+
+    "propagate failures from the WS client" in new TestSetup {
+
+      when(mockRequest.addHttpHeaders(any())).thenReturn(mockRequest)
+      when(mockRequest.post(any[JsValue]())(any()))
+        .thenReturn(Future.failed(new RuntimeException("callback failure")))
+
+      connector.sendCallback("http://localhost:6063/callback", Json.obj()).failed.futureValue.getMessage should
+        include("callback failure")
+    }
+  }
 }

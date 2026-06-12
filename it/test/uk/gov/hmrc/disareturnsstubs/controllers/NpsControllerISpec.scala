@@ -197,7 +197,6 @@ class NpsControllerISpec extends BaseISpec {
   "GET /reports/:zReference/:taxYear/:month" should {
 
     "return 200 OK and the returnResults when a report exists" in {
-      println(Json.toJson(reportIssueDocumentOverSubscribed))
       val reportEvent = reportEventDocument.copy(reportId = "RPT1")
       await(reportEventRepository.upsert(reportEvent))
 
