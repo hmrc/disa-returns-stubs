@@ -37,7 +37,6 @@ class UpscanController @Inject() (
     extends BackendController(cc)
     with Logging {
 
-  // MIME types accepted for an ISA monthly return upload - anything else is rejected by upscan post-upload
   private val allowedContentTypes: Set[String] = Set(
     "text/csv",
     "application/vnd.ms-excel",
