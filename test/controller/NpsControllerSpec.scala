@@ -25,7 +25,7 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.disareturnsstubs.controllers.NpsController
 import uk.gov.hmrc.disareturnsstubs.models.ErrorResponse.{pageNotFoundError, reportNotFoundError}
 import uk.gov.hmrc.disareturnsstubs.models.{ErrorResponse, IssueIdentifiedMessage, ReturnResult, ReturnResultResponse}
-import uk.gov.hmrc.disareturnsstubs.services.RetrieveReportService
+import uk.gov.hmrc.disareturnsstubs.services.{GenerateReportIssuesService, RetrieveReportService}
 import utils.BaseUnitSpec
 
 import scala.concurrent.Future
@@ -37,7 +37,9 @@ class NpsControllerSpec extends BaseUnitSpec {
   private val controller = new NpsController(
     stubControllerComponents(),
     stubAuthFilter,
-    mockRetrieveReportService
+    mockRetrieveReportService,
+    new GenerateReportIssuesService(),
+    mockAuthConnector
   )
 
   val sampleReturnResult: Seq[ReturnResult] = Seq(
@@ -214,6 +216,49 @@ class NpsControllerSpec extends BaseUnitSpec {
       val jsonBody = contentAsJson(result)
       (jsonBody \ "code").as[String]    shouldBe "PAGE_NOT_FOUND"
       (jsonBody \ "message").as[String] shouldBe "No page 10 found"
+    }
+
+    "return a generated report without calling RetrieveReportService when authorised with a perf-test credId" in {
+      authorisedUser(Some(s"disa-returns-perf-test-$validZReference"))
+
+      val request = FakeRequest(GET, s"/nps/monthly/$validZReference/2025-26/APR/results")
+      val result  = controller.getMonthlyReport(validZReference, "2025-26", "APR", pageIndex, pageSize)(request)
+
+      status(result) shouldBe OK
+      val jsonBody = contentAsJson(result)
+      (jsonBody \ "totalRecords").as[Int] shouldBe 1000
+      val returnResultsSize = (jsonBody \ "returnResults").as[Seq[ReturnResult]].size
+      returnResultsSize should (be > 0 and be <= pageSize)
+    }
+
+    "fall back to Mongo-backed lookup when auth fails to resolve credentials" in {
+      when(
+        mockAuthConnector.authorise(any(), any())(any(), any())
+      ).thenReturn(Future.failed(uk.gov.hmrc.auth.core.MissingBearerToken()))
+
+      when(
+        mockRetrieveReportService.getMonthlyReport(any(), any(), any(), any(), any())
+      ).thenReturn(Future.successful(Right(ReturnResultResponse(totalRecords = 3, returnResults = sampleReturnResult))))
+
+      val request = FakeRequest(GET, s"/nps/monthly/$validZReference/2025-26/APR/results")
+      val result  = controller.getMonthlyReport(validZReference, "2025-26", "APR", pageIndex, pageSize)(request)
+
+      status(result) shouldBe OK
+      val jsonBody = contentAsJson(result)
+      (jsonBody \\ "accountNumber").map(_.as[String]) should contain("100000001")
+    }
+
+    "return 500 InternalServerError when RetrieveReportService fails unexpectedly" in {
+      when(
+        mockRetrieveReportService.getMonthlyReport(any(), any(), any(), any(), any())
+      ).thenReturn(Future.failed(new RuntimeException("Mongo unavailable")))
+
+      val request = FakeRequest(GET, s"/nps/monthly/$validZReference/2025-26/APR/results")
+      val result  = controller.getMonthlyReport(validZReference, "2025-26", "APR", pageIndex, pageSize)(request)
+
+      status(result)                                    shouldBe INTERNAL_SERVER_ERROR
+      (contentAsJson(result) \ "code").asOpt[String]    shouldBe Some("INTERNAL_SERVER_ERROR")
+      (contentAsJson(result) \ "message").asOpt[String] shouldBe Some("Failed with exception: Mongo unavailable")
     }
   }
 }

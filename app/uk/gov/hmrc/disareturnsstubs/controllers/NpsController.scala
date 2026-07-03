@@ -19,23 +19,38 @@ package uk.gov.hmrc.disareturnsstubs.controllers
 import jakarta.inject.Singleton
 import play.api.Logging
 import play.api.libs.json.Json
-import play.api.mvc.{Action, AnyContent, ControllerComponents, RawBuffer}
+import play.api.mvc.{Action, AnyContent, ControllerComponents, RawBuffer, Result}
+import uk.gov.hmrc.auth.core.retrieve.Credentials
+import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.credentials
+import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
 import uk.gov.hmrc.disareturnsstubs.controllers.action.AuthorizationFilter
 import uk.gov.hmrc.disareturnsstubs.models.ErrorResponse._
-import uk.gov.hmrc.disareturnsstubs.services.RetrieveReportService
+import uk.gov.hmrc.disareturnsstubs.models.ReturnResultResponse
+import uk.gov.hmrc.disareturnsstubs.models.generatereport.GenerateReportRequest
+import uk.gov.hmrc.disareturnsstubs.services.{GenerateReportIssuesService, RetrieveReportService}
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
+import uk.gov.hmrc.play.http.HeaderCarrierConverter
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Random
+import scala.util.control.NonFatal
 
 @Singleton
 class NpsController @Inject() (
   cc: ControllerComponents,
   authorizationFilter: AuthorizationFilter,
-  retrieveReportService: RetrieveReportService
+  retrieveReportService: RetrieveReportService,
+  reportIssuesService: GenerateReportIssuesService,
+  val authConnector: AuthConnector
 )(implicit ec: ExecutionContext)
     extends BackendController(cc)
+    with AuthorisedFunctions
     with Logging {
+
+  private val perfTestCredIdPrefix: String = "disa-returns-perf-test"
+  private val perfTestTotalRecords: Int    = 1000
 
   def submitMonthlyReturn(zReference: String): Action[RawBuffer] =
     (Action(parse.raw) andThen authorizationFilter).async { _ =>
@@ -63,7 +78,28 @@ class NpsController @Inject() (
     month: String,
     pageIndex: Int,
     pageSize: Int
-  ): Action[AnyContent] = Action.async { _ =>
+  ): Action[AnyContent] = Action.async { implicit request =>
+    implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
+    authorised()
+      .retrieve(credentials) {
+        case Some(Credentials(credId, _)) if credId.startsWith(perfTestCredIdPrefix) =>
+          logger.info(s"[PerfTest] Returning generated report for IM ref: [$zReference], skipping Mongo")
+          Future.successful(perfTestMonthlyReport(pageSize))
+        case _                                                                       =>
+          nonPerfTestReport(zReference, taxYear, month, pageIndex, pageSize)
+      }
+      .recoverWith { case NonFatal(_) =>
+        nonPerfTestReport(zReference, taxYear, month, pageIndex, pageSize)
+      }
+  }
+
+  private def nonPerfTestReport(
+    zReference: String,
+    taxYear: String,
+    month: String,
+    pageIndex: Int,
+    pageSize: Int
+  ): Future[Result] =
     if (zReference == "Z1500") {
       Future.successful(
         InternalServerError(Json.toJson(internalServerErr("Internal issue, try again later")))
@@ -92,5 +128,10 @@ class NpsController @Inject() (
           )
         }
     }
+
+  private def perfTestMonthlyReport(pageSize: Int): Result = {
+    val recordCount = Random.nextInt(pageSize) + 1
+    val results     = reportIssuesService.generateResults(GenerateReportRequest(recordCount, 0, 0))
+    Ok(Json.toJson(ReturnResultResponse(totalRecords = perfTestTotalRecords, returnResults = results)))
   }
 }
