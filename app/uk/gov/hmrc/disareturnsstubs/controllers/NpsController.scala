@@ -24,7 +24,7 @@ import uk.gov.hmrc.auth.core.retrieve.Credentials
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.credentials
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
 import uk.gov.hmrc.disareturnsstubs.controllers.action.AuthorizationFilter
-import uk.gov.hmrc.disareturnsstubs.models.ErrorResponse._
+import uk.gov.hmrc.disareturnsstubs.mappers.ErrorMapper._
 import uk.gov.hmrc.disareturnsstubs.models.ReturnResultResponse
 import uk.gov.hmrc.disareturnsstubs.models.generatereport.GenerateReportRequest
 import uk.gov.hmrc.disareturnsstubs.services.{GenerateReportIssuesService, RetrieveReportService}
