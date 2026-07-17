@@ -18,12 +18,13 @@ package uk.gov.hmrc.disareturnsstubs.controllers
 
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
-import org.scalatest.matchers.should.Matchers._
+import org.mongodb.scala.SingleObservableFuture
+import org.scalatest.matchers.should.Matchers.*
 import org.scalatestplus.mockito.MockitoSugar.mock
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsValue, Json}
-import play.api.test.Helpers._
-import play.api.test._
+import play.api.test.Helpers.*
+import play.api.test.*
 import play.api.{Application, inject}
 import uk.gov.hmrc.disareturnsstubs.BaseISpec
 import uk.gov.hmrc.disareturnsstubs.models.generatereport.GenerateReportRequest

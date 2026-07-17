@@ -17,11 +17,12 @@
 package uk.gov.hmrc.disareturnsstubs.controllers
 
 
+import org.mongodb.scala.SingleObservableFuture
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
-import play.api.test.Helpers._
-import play.api.test._
+import play.api.test.Helpers.*
+import play.api.test.*
 import uk.gov.hmrc.disareturnsstubs.BaseISpec
 
 class EtmpTestOnlyControllerISpec extends BaseISpec {

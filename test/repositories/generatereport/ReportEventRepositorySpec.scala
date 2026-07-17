@@ -16,6 +16,7 @@
 
 package repositories.generatereport
 
+import org.mongodb.scala.{ObservableFuture, SingleObservableFuture}
 import org.mongodb.scala.result.UpdateResult
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder

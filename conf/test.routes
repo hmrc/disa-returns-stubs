@@ -1,6 +1,6 @@
-POST    /etmp/reporting-window-state                                  uk.gov.hmrc.disareturnsstubs.testonly.controllers.EtmpTestOnlyController.setReportingWindowState
+POST    /etmp/reporting-window-state                                  uk.gov.hmrc.disareturnsstubs.testonly.controllers.EtmpTestOnlyController.setReportingWindowState()
 
-GET     /etmp/reporting-window-state                                  uk.gov.hmrc.disareturnsstubs.testonly.controllers.EtmpTestOnlyController.getReportingWindowState
+GET     /etmp/reporting-window-state                                  uk.gov.hmrc.disareturnsstubs.testonly.controllers.EtmpTestOnlyController.getReportingWindowState()
 
 POST    /etmp/open-obligation-status/:zReference       uk.gov.hmrc.disareturnsstubs.testonly.controllers.EtmpTestOnlyController.openObligationStatus(zReference: String)
 

@@ -16,6 +16,7 @@
 
 package repositories
 
+import org.mongodb.scala.ObservableFuture
 import play.api.test.Helpers.await
 import uk.gov.hmrc.disareturnsstubs.models.ObligationStatus
 import uk.gov.hmrc.disareturnsstubs.repositories.ObligationStatusRepository

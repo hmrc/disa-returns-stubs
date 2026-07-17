@@ -16,6 +16,7 @@
 
 package repositories
 
+import org.mongodb.scala.SingleObservableFuture
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.await

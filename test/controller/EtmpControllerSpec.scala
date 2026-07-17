@@ -90,7 +90,7 @@ class EtmpControllerSpec extends BaseUnitSpec {
       when(mockObligationRepo.getObligationStatus(any()))
         .thenReturn(Future.successful(None))
       when(mockObligationRepo.openObligationStatus(any()))
-        .thenReturn(Future.successful())
+        .thenReturn(Future.unit)
 
       val result = controller.checkReturnsObligationStatus(validZReference)(FakeRequest())
       status(result)        shouldBe OK
