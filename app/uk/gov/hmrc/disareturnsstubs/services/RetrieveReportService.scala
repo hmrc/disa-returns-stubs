@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.disareturnsstubs.services
 
-import uk.gov.hmrc.disareturnsstubs.models.ErrorResponse.{pageNotFoundError, reportNotFoundError}
+import uk.gov.hmrc.disareturnsstubs.mappers.ErrorMapper.{pageNotFoundError, reportNotFoundError}
 import uk.gov.hmrc.disareturnsstubs.models.{ErrorResponse, ReturnResult, ReturnResultResponse}
 import uk.gov.hmrc.disareturnsstubs.repositories.generatereport.{ReportEventRepository, ReportIssueRepository}
 

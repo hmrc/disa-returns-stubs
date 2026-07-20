@@ -50,7 +50,7 @@ class UpscanController @Inject() (
         val updatedJson = json
           .transform(
             (__ \ "uploadRequest" \ "href").json.update(
-              Reads.pure(JsString(routes.UpscanController.upload.absoluteURL()))
+              Reads.pure(JsString(routes.UpscanController.upload().absoluteURL()))
             )
           )
           .getOrElse(json)

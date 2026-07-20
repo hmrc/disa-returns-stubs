@@ -27,12 +27,12 @@ import play.api.mvc.MultipartFormData
 import uk.gov.hmrc.disareturnsstubs.config.AppConfig
 
 import java.nio.file.{Files => NioFiles}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 class UpscanProxyConnector @Inject() (
   ws: WSClient,
   appConfig: AppConfig
-)(implicit ec: ExecutionContext) {
+) {
 
   private val baseUrl = appConfig.upscanStubBase
 

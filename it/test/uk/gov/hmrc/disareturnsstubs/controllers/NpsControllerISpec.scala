@@ -16,12 +16,13 @@
 
 package uk.gov.hmrc.disareturnsstubs.controllers
 
+import org.mongodb.scala.SingleObservableFuture
 import play.api.libs.json.{JsValue, Json}
-import play.api.test.Helpers._
-import play.api.test._
+import play.api.test.Helpers.*
+import play.api.test.*
 import uk.gov.hmrc.disareturnsstubs.BaseISpec
 import uk.gov.hmrc.disareturnsstubs.models.generatereport.{ReportEvent, ReportIssueDocument}
-import uk.gov.hmrc.disareturnsstubs.models._
+import uk.gov.hmrc.disareturnsstubs.models.*
 
 import java.time.Instant
 

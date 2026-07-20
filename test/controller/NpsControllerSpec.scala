@@ -23,8 +23,8 @@ import play.api.Play.materializer
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.disareturnsstubs.controllers.NpsController
-import uk.gov.hmrc.disareturnsstubs.models.ErrorResponse.{pageNotFoundError, reportNotFoundError}
-import uk.gov.hmrc.disareturnsstubs.models.{ErrorResponse, IssueIdentifiedMessage, ReturnResult, ReturnResultResponse}
+import uk.gov.hmrc.disareturnsstubs.mappers.ErrorMapper.{pageNotFoundError, reportNotFoundError}
+import uk.gov.hmrc.disareturnsstubs.models.{IssueIdentifiedMessage, ReturnResult, ReturnResultResponse}
 import uk.gov.hmrc.disareturnsstubs.services.{GenerateReportIssuesService, RetrieveReportService}
 import utils.BaseUnitSpec
 
@@ -204,7 +204,7 @@ class NpsControllerSpec extends BaseUnitSpec {
         mockRetrieveReportService.getMonthlyReport(any(), any(), any(), any(), any())
       ).thenReturn(
         Future.successful(
-          Left(ErrorResponse.pageNotFoundError(pageIndexOutOfRange))
+          Left(pageNotFoundError(pageIndexOutOfRange))
         )
       )
 

@@ -17,11 +17,11 @@
 package uk.gov.hmrc.disareturnsstubs.testonly.controllers
 
 import play.api.Logging
-import play.api.libs.json._
-import play.api.mvc._
+import play.api.libs.json.*
+import play.api.mvc.*
 import uk.gov.hmrc.disareturnsstubs.config.AppConfig
 import uk.gov.hmrc.disareturnsstubs.controllers.action.AuthorizationFilter
-import uk.gov.hmrc.disareturnsstubs.models.ErrorResponse._
+import uk.gov.hmrc.disareturnsstubs.mappers.ErrorMapper.{internalServerErr, issueLimitExceeded}
 import uk.gov.hmrc.disareturnsstubs.models.generatereport.GenerateReportRequest
 import uk.gov.hmrc.disareturnsstubs.services.GenerateAndStoreReportService
 import uk.gov.hmrc.play.bootstrap.controller.WithJsonBody

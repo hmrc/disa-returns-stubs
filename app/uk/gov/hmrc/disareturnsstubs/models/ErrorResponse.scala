@@ -21,17 +21,6 @@ import play.api.libs.json.{Json, OFormat}
 case class ErrorResponse(code: String, message: String)
 
 object ErrorResponse {
-  implicit val format: OFormat[ErrorResponse]       = Json.format[ErrorResponse]
-  val badRequestError: ErrorResponse                = ErrorResponse("BAD_REQUEST", "Bad request")
-  val serviceUnavailableError: ErrorResponse        = ErrorResponse("SERVICE_UNAVAILABLE", "Service unavailable")
-  val reportNotFoundError: ErrorResponse            = ErrorResponse("REPORT_NOT_FOUND", "Report not found")
-  def issueLimitExceeded(limit: Int): ErrorResponse =
-    ErrorResponse(
-      code = "ISSUE_LIMIT_EXCEEDED",
-      message =
-        s"The maximum number of records that can be generated in a single request is $limit. Please reduce the number of requested records and try again."
-    )
+  implicit val format: OFormat[ErrorResponse] = Json.format[ErrorResponse]
 
-  def pageNotFoundError(pageIndex: Int): ErrorResponse  = ErrorResponse("PAGE_NOT_FOUND", s"No page $pageIndex found")
-  def internalServerErr(message: String): ErrorResponse = ErrorResponse("INTERNAL_SERVER_ERROR", message)
 }

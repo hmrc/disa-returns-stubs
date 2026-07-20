@@ -15,4 +15,4 @@ GET     /monthly/:zReference/:taxYear/:month/results        uk.gov.hmrc.disaretu
 
 POST    /upscan/v2/initiate                                 uk.gov.hmrc.disareturnsstubs.controllers.upscan.UpscanController.initiate()
 
-POST    /upscan/upload                                      uk.gov.hmrc.disareturnsstubs.controllers.upscan.UpscanController.upload
+POST    /upscan/upload                                      uk.gov.hmrc.disareturnsstubs.controllers.upscan.UpscanController.upload()
