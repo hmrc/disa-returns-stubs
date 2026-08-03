@@ -29,4 +29,10 @@ class SubmissionController @Inject() (cc: ControllerComponents) extends BackendC
     month: String,
     submissionId: String
   ): Action[AnyContent] = Action(Ok)
+
+  def declare(
+    zReference: String,
+    taxYear: String,
+    month: String
+  ): Action[AnyContent] = Action(Ok)
 }

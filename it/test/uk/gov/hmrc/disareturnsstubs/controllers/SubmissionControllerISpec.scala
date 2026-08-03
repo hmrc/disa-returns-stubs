@@ -35,4 +35,20 @@ class SubmissionControllerISpec extends BaseISpec {
       status(result) mustBe OK
     }
   }
+
+  "POST /disa-returns-submission/monthly/:zReference/:taxYear/:month/declarations" should {
+    "return 200 OK without parsing the request body or headers" in {
+      val request = FakeRequest(
+        POST,
+        s"/disa-returns-submission/monthly/$validZReference/2026-27/AUG/declarations"
+      ).withHeaders(
+        CONTENT_TYPE  -> "application/json",
+        AUTHORIZATION -> "not parsed"
+      ).withBody("not valid JSON")
+
+      val result = route(app, request).get
+
+      status(result) mustBe OK
+    }
+  }
 }
