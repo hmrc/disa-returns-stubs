@@ -17,11 +17,22 @@
 package uk.gov.hmrc.disareturnsstubs.controllers
 
 import jakarta.inject.{Inject, Singleton}
+import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
+import java.util.UUID
+
 @Singleton
-class SubmissionController @Inject() (cc: ControllerComponents) extends BackendController(cc) {
+class SubmissionsController @Inject() (cc: ControllerComponents) extends BackendController(cc) {
+
+  def createReturn(
+    zReference: String,
+    taxYear: String,
+    month: String
+  ): Action[AnyContent] = Action {
+    Created(Json.obj("submissionId" -> UUID.randomUUID().toString))
+  }
 
   def storeSubmission(
     zReference: String,

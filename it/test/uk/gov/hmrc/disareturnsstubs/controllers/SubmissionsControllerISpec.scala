@@ -20,7 +20,32 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers.*
 import uk.gov.hmrc.disareturnsstubs.BaseISpec
 
-class SubmissionControllerISpec extends BaseISpec {
+import java.util.UUID
+
+class SubmissionsControllerISpec extends BaseISpec {
+
+  "POST /disa-returns-submission/monthly/:zReference/:taxYear/:month" should {
+    "return 201 Created with a random submission ID without parsing the request body or headers" in {
+      val request = FakeRequest(
+        POST,
+        s"/disa-returns-submission/monthly/$validZReference/2026-27/AUG"
+      ).withHeaders(
+        CONTENT_TYPE  -> "application/json",
+        AUTHORIZATION -> "not parsed"
+      ).withBody("not valid JSON")
+
+      val firstResult  = route(app, request).get
+      val secondResult = route(app, request).get
+
+      status(firstResult)  mustBe CREATED
+      status(secondResult) mustBe CREATED
+
+      val firstSubmissionId  = UUID.fromString((contentAsJson(firstResult) \ "submissionId").as[String])
+      val secondSubmissionId = UUID.fromString((contentAsJson(secondResult) \ "submissionId").as[String])
+
+      firstSubmissionId must not be secondSubmissionId
+    }
+  }
 
   "PUT /disa-returns-submission/monthly/:zReference/:taxYear/:month/submissions/:submissionId" should {
     "return 200 OK without parsing the request body or headers" in {
