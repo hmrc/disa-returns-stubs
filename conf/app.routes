@@ -13,6 +13,12 @@ POST    /nps/declaration/:zReference                        uk.gov.hmrc.disaretu
 
 GET     /monthly/:zReference/:taxYear/:month/results        uk.gov.hmrc.disareturnsstubs.controllers.NpsController.getMonthlyReport(zReference: String, taxYear: String, month: String, pageIndex: Int, pageSize: Int)
 
+POST    /disa-returns-submission/monthly/:zReference/:taxYear/:month                                  uk.gov.hmrc.disareturnsstubs.controllers.SubmissionsController.createReturn(zReference: String, taxYear: String, month: String)
+
+PUT     /disa-returns-submission/monthly/:zReference/:taxYear/:month/submissions/:submissionId        uk.gov.hmrc.disareturnsstubs.controllers.SubmissionsController.storeSubmission(zReference: String, taxYear: String, month: String, submissionId: String)
+
+POST    /disa-returns-submission/monthly/:zReference/:taxYear/:month/declarations                     uk.gov.hmrc.disareturnsstubs.controllers.SubmissionsController.declare(zReference: String, taxYear: String, month: String)
+
 POST    /upscan/v2/initiate                                 uk.gov.hmrc.disareturnsstubs.controllers.upscan.UpscanController.initiate()
 
 POST    /upscan/upload                                      uk.gov.hmrc.disareturnsstubs.controllers.upscan.UpscanController.upload()
