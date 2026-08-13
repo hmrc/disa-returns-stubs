@@ -22,12 +22,12 @@ import org.mockito.Mockito.{never, verify, when}
 import play.api.libs.Files
 import play.api.libs.Files.SingletonTemporaryFileCreator
 import play.api.libs.json.{JsValue, Json}
-import play.api.libs.ws.WSResponse
 import play.api.mvc.MultipartFormData
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.disareturnsstubs.connectors.UpscanProxyConnector
 import uk.gov.hmrc.disareturnsstubs.controllers.upscan.UpscanController
+import uk.gov.hmrc.http.HttpResponse
 import utils.BaseUnitSpec
 
 import scala.concurrent.Future
@@ -39,7 +39,9 @@ class UpscanControllerSpec extends BaseUnitSpec {
     val mockConnector: UpscanProxyConnector = mock[UpscanProxyConnector]
     val controller: UpscanController        = new UpscanController(stubControllerComponents(), mockConnector)
 
-    val errorRedirectUrl = "http://localhost:1205/obligations/returns/isa/upscan/error"
+    val frontendBaseUrl  = "http://localhost:1205"
+    val errorRedirectUrl = s"$frontendBaseUrl/obligations/returns/isa/upscan/error"
+    val callbackBaseUrl  = "http://localhost:6063"
 
     val defaultDataParts: Map[String, Seq[String]] =
       Map("error_action_redirect" -> Seq(errorRedirectUrl))
@@ -60,13 +62,11 @@ class UpscanControllerSpec extends BaseUnitSpec {
       MultipartFormData(dataParts = defaultDataParts ++ extraDataParts, files = files, badParts = Nil)
     }
 
-    def wsResponse(statusCode: Int, bodyStr: String = "", headers: Map[String, Seq[String]] = Map.empty): WSResponse = {
-      val r = mock[WSResponse]
-      when(r.status).thenReturn(statusCode)
-      when(r.body).thenReturn(bodyStr)
-      when(r.headers).thenReturn(headers)
-      r
-    }
+    def httpResponse(
+      statusCode: Int,
+      bodyStr: String = "",
+      headers: Map[String, Seq[String]] = Map.empty
+    ): HttpResponse = HttpResponse(statusCode, bodyStr, headers)
   }
 
   "initiate" should {
@@ -83,13 +83,13 @@ class UpscanControllerSpec extends BaseUnitSpec {
         )
         .toString()
 
-      val mockResponse = wsResponse(OK, responseBody)
-      when(mockConnector.initiate(any()))
+      val mockResponse = httpResponse(OK, responseBody)
+      when(mockConnector.initiate(any())(any(), any()))
         .thenReturn(Future.successful(mockResponse))
 
       val request: FakeRequest[JsValue] =
         FakeRequest("POST", "/upscan/v2/initiate")
-          .withBody(Json.obj("successRedirect" -> "http://localhost:1205/success"))
+          .withBody(Json.obj("successRedirect" -> s"$frontendBaseUrl/success"))
 
       val result = controller.initiate()(request)
 
@@ -103,8 +103,8 @@ class UpscanControllerSpec extends BaseUnitSpec {
 
     "return the same status code as the connector response" in new TestSetup {
 
-      val mockResponse = wsResponse(BAD_REQUEST, """{"error":"bad"}""")
-      when(mockConnector.initiate(any()))
+      val mockResponse = httpResponse(BAD_REQUEST, """{"error":"bad"}""")
+      when(mockConnector.initiate(any())(any(), any()))
         .thenReturn(Future.successful(mockResponse))
 
       val request: FakeRequest[JsValue] =
@@ -171,11 +171,10 @@ class UpscanControllerSpec extends BaseUnitSpec {
 
     "proxy a normal file and pass through a redirect response from the connector" in new TestSetup {
 
-      val successUrl   = "http://localhost:1205/obligations/returns/isa/upscan/success?key=abc123"
-      val mockResponse = wsResponse(SEE_OTHER, headers = Map("Location" -> Seq(successUrl)))
-      when(mockResponse.header("Location")).thenReturn(Some(successUrl))
+      val successUrl   = s"$frontendBaseUrl/obligations/returns/isa/upscan/success?key=abc123"
+      val mockResponse = httpResponse(SEE_OTHER, headers = Map("Location" -> Seq(successUrl)))
 
-      when(mockConnector.upload(any(), any()))
+      when(mockConnector.upload(any(), any())(any(), any()))
         .thenReturn(Future.successful(mockResponse))
 
       val result =
@@ -187,10 +186,9 @@ class UpscanControllerSpec extends BaseUnitSpec {
 
     "proxy a normal file and pass through a non-redirect response from the connector" in new TestSetup {
 
-      val mockResponse = wsResponse(OK, "upload accepted", Map("Content-Type" -> Seq("text/plain")))
-      when(mockResponse.header("Content-Type")).thenReturn(Some("text/plain"))
+      val mockResponse = httpResponse(OK, "upload accepted", Map("Content-Type" -> Seq("text/plain")))
 
-      when(mockConnector.upload(any(), any()))
+      when(mockConnector.upload(any(), any())(any(), any()))
         .thenReturn(Future.successful(mockResponse))
 
       val result =
@@ -202,12 +200,12 @@ class UpscanControllerSpec extends BaseUnitSpec {
 
     "intercept a file with a disallowed MIME type, redirect to success_action_redirect and send a REJECTED callback" in new TestSetup {
 
-      val successUrl  = "http://localhost:1205/obligations/returns/isa/upscan/success"
-      val callbackUrl = "http://localhost:6063/disa-returns-backend/monthly/upscan/callback/Z0000/2026-27/6"
+      val successUrl  = s"$frontendBaseUrl/obligations/returns/isa/upscan/success"
+      val callbackUrl = s"$callbackBaseUrl/disa-returns-backend/monthly/upscan/callback/Z0000/2026-27/6"
       val reference   = "f24d44f0-c0b7-4cd4-aea6-f76bc276139c"
 
-      val callbackResponse = wsResponse(NO_CONTENT)
-      when(mockConnector.sendCallback(any(), any())).thenReturn(Future.successful(callbackResponse))
+      val callbackResponse = httpResponse(NO_CONTENT)
+      when(mockConnector.sendCallback(any(), any())(any(), any())).thenReturn(Future.successful(callbackResponse))
 
       val request = FakeRequest("POST", "/upscan/upload")
         .withBody(
@@ -233,7 +231,7 @@ class UpscanControllerSpec extends BaseUnitSpec {
 
       val urlCaptor  = ArgumentCaptor.forClass(classOf[String])
       val bodyCaptor = ArgumentCaptor.forClass(classOf[JsValue])
-      verify(mockConnector).sendCallback(urlCaptor.capture(), bodyCaptor.capture())
+      verify(mockConnector).sendCallback(urlCaptor.capture(), bodyCaptor.capture())(any(), any())
 
       urlCaptor.getValue shouldBe callbackUrl
 
@@ -256,12 +254,12 @@ class UpscanControllerSpec extends BaseUnitSpec {
         )
 
       status(controller.upload()(request)) shouldBe BAD_REQUEST
-      verify(mockConnector, never()).sendCallback(any(), any())
+      verify(mockConnector, never()).sendCallback(any(), any())(any(), any())
     }
 
     "redirect to success_action_redirect without a key parameter and skip the callback when key is missing" in new TestSetup {
 
-      val successUrl = "http://localhost:1205/obligations/returns/isa/upscan/success"
+      val successUrl = s"$frontendBaseUrl/obligations/returns/isa/upscan/success"
 
       val request = FakeRequest("POST", "/upscan/upload")
         .withBody(
@@ -277,16 +275,16 @@ class UpscanControllerSpec extends BaseUnitSpec {
       status(result)           shouldBe SEE_OTHER
       redirectLocation(result) shouldBe Some(successUrl)
 
-      verify(mockConnector, never()).sendCallback(any(), any())
+      verify(mockConnector, never()).sendCallback(any(), any())(any(), any())
     }
 
     "still redirect to success_action_redirect when sending the REJECTED callback fails" in new TestSetup {
 
-      val successUrl  = "http://localhost:1205/obligations/returns/isa/upscan/success"
-      val callbackUrl = "http://localhost:6063/disa-returns-backend/monthly/upscan/callback/Z0000/2026-27/6"
+      val successUrl  = s"$frontendBaseUrl/obligations/returns/isa/upscan/success"
+      val callbackUrl = s"$callbackBaseUrl/disa-returns-backend/monthly/upscan/callback/Z0000/2026-27/6"
       val reference   = "f24d44f0-c0b7-4cd4-aea6-f76bc276139c"
 
-      when(mockConnector.sendCallback(any(), any()))
+      when(mockConnector.sendCallback(any(), any())(any(), any()))
         .thenReturn(Future.failed(new RuntimeException("callback service unavailable")))
 
       val request = FakeRequest("POST", "/upscan/upload")
@@ -307,7 +305,7 @@ class UpscanControllerSpec extends BaseUnitSpec {
       status(result)           shouldBe SEE_OTHER
       redirectLocation(result) shouldBe Some(s"$successUrl?key=$reference")
 
-      verify(mockConnector).sendCallback(any(), any())
+      verify(mockConnector).sendCallback(any(), any())(any(), any())
     }
   }
 }

@@ -21,11 +21,12 @@ import org.mockito.Mockito.when
 import org.mongodb.scala.SingleObservableFuture
 import org.scalatest.matchers.should.Matchers.*
 import org.scalatestplus.mockito.MockitoSugar.mock
+import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers.*
 import play.api.test.*
-import play.api.{Application, inject}
+import play.api.Application
 import uk.gov.hmrc.disareturnsstubs.BaseISpec
 import uk.gov.hmrc.disareturnsstubs.models.generatereport.GenerateReportRequest
 import uk.gov.hmrc.disareturnsstubs.services.GenerateAndStoreReportService
@@ -151,7 +152,7 @@ class GenerateReportControllerISpec extends BaseISpec {
       )
 
       val mockApp = new GuiceApplicationBuilder()
-        .overrides(inject.bind[GenerateAndStoreReportService].toInstance(mockGenerateAndStoreReportService))
+        .overrides(bind[GenerateAndStoreReportService].toInstance(mockGenerateAndStoreReportService))
         .configure("play.http.router" -> "test.Routes")
         .build()
 

@@ -17,34 +17,42 @@
 package uk.gov.hmrc.disareturnsstubs.connectors
 
 import com.google.inject.Inject
+import com.typesafe.config.Config
+import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.stream.scaladsl.Source
 import org.apache.pekko.util.ByteString
 import play.api.libs.Files
 import play.api.libs.json.JsValue
 import play.api.libs.ws.WSBodyWritables._
-import play.api.libs.ws.{WSClient, WSResponse}
 import play.api.mvc.MultipartFormData
 import uk.gov.hmrc.disareturnsstubs.config.AppConfig
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 
 import java.nio.file.{Files => NioFiles}
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class UpscanProxyConnector @Inject() (
-  ws: WSClient,
-  appConfig: AppConfig
-) {
+  httpClient: HttpClientV2,
+  appConfig: AppConfig,
+  override val configuration: Config,
+  override val actorSystem: ActorSystem
+) extends BaseConnector {
 
   private val baseUrl = appConfig.upscanStubBase
 
-  def initiate(body: JsValue): Future[WSResponse] =
-    ws.url(s"$baseUrl/upscan/v2/initiate")
-      .addHttpHeaders("Content-Type" -> "application/json")
-      .post(body)
+  def initiate(body: JsValue)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse] =
+    retryFor[HttpResponse]("initiate upscan upload")(retryCondition) {
+      httpClient
+        .post(url"$baseUrl/upscan/v2/initiate")
+        .withBody(body)
+        .executeWithRetryOnServerError
+    }
 
   def upload(
     file: Option[MultipartFormData.FilePart[Files.TemporaryFile]],
     dataParts: Map[String, Seq[String]]
-  ): Future[WSResponse] = {
+  )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[HttpResponse] = {
 
     val formFields: Seq[MultipartFormData.Part[Source[ByteString, _]]] =
       dataParts.toSeq.flatMap { case (k, values) =>
@@ -61,13 +69,23 @@ class UpscanProxyConnector @Inject() (
         )
       }
 
-    ws.url(s"$baseUrl/upscan/upload")
-      .withFollowRedirects(false)
-      .post(Source(formFields ++ filePart))
+    retryFor[HttpResponse]("upload file to upscan")(retryCondition) {
+      httpClient
+        .post(url"$baseUrl/upscan/upload")
+        .transform(_.withFollowRedirects(false))
+        .withBody(Source(formFields ++ filePart))
+        .executeWithRetryOnServerError
+    }
   }
 
-  def sendCallback(callbackUrl: String, body: JsValue): Future[WSResponse] =
-    ws.url(callbackUrl)
-      .addHttpHeaders("Content-Type" -> "application/json")
-      .post(body)
+  def sendCallback(callbackUrl: String, body: JsValue)(implicit
+    hc: HeaderCarrier,
+    ec: ExecutionContext
+  ): Future[HttpResponse] =
+    retryFor[HttpResponse]("send upscan callback")(retryCondition) {
+      httpClient
+        .post(url"$callbackUrl")
+        .withBody(body)
+        .executeWithRetryOnServerError
+    }
 }
