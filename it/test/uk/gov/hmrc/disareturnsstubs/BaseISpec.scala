@@ -16,44 +16,54 @@
 
 package uk.gov.hmrc.disareturnsstubs
 
-import org.apache.pekko.stream.Materializer
 import org.scalacheck.Gen
+import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatestplus.play.PlaySpec
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
-import play.api.test.{DefaultAwaitTimeout, FakeRequest}
+import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.libs.ws.WSClient
+import play.api.test.DefaultAwaitTimeout
 import uk.gov.hmrc.disareturnsstubs.config.AppConfig
 import uk.gov.hmrc.disareturnsstubs.repositories.generatereport.{ReportEventRepository, ReportIssueRepository}
 import uk.gov.hmrc.disareturnsstubs.repositories.{ObligationStatusRepository, ReportingWindowRepository}
+import uk.gov.hmrc.http.test.WireMockSupport
 
-abstract class BaseISpec
-  extends PlaySpec
-    with GuiceOneAppPerSuite
-    with DefaultAwaitTimeout {
+import scala.reflect.ClassTag
 
-  implicit lazy val application: Application = app
-  implicit lazy val mat: Materializer = app.materializer
+trait BaseISpec
+    extends PlaySpec
+    with GuiceOneServerPerSuite
+    with DefaultAwaitTimeout
+    with ScalaFutures
+    with IntegrationPatience
+    with WireMockSupport {
 
-  lazy val reportingWindowRepository: ReportingWindowRepository =
-    app.injector.instanceOf[ReportingWindowRepository]
+  override def fakeApplication(): Application =
+    GuiceApplicationBuilder()
+      .configure(
+        "microservice.services.upscan-stub.host"     -> wireMockHost,
+        "microservice.services.upscan-stub.port"     -> wireMockPort,
+        "microservice.services.upscan-stub.protocol" -> "http",
+        "http-verbs.retries.intervals"               -> Seq("1ms", "1ms", "1ms")
+      )
+      .build()
 
-  lazy val obligationStatusRepository: ObligationStatusRepository =
-    app.injector.instanceOf[ObligationStatusRepository]
+  protected def inject[T: ClassTag]: T =
+    app.injector.instanceOf[T]
 
-  lazy val reportEventRepository: ReportEventRepository =
-    app.injector.instanceOf[ReportEventRepository]
+  protected lazy val wsClient: WSClient = inject[WSClient]
 
-  lazy val reportIssueRepository: ReportIssueRepository =
-    app.injector.instanceOf[ReportIssueRepository]
+  lazy val reportingWindowRepository: ReportingWindowRepository = inject[ReportingWindowRepository]
+  lazy val obligationStatusRepository: ObligationStatusRepository = inject[ObligationStatusRepository]
+  lazy val reportEventRepository: ReportEventRepository = inject[ReportEventRepository]
+  lazy val reportIssueRepository: ReportIssueRepository = inject[ReportIssueRepository]
+  lazy val appConfig: AppConfig = inject[AppConfig]
 
   val zReferenceGen: Gen[String] =
     Gen.listOfN(4, Gen.numChar).map(digits => s"Z${digits.mkString}")
 
-  lazy val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
-
   val validZReference: String = zReferenceGen.sample.get
 
-  val returnId = "b4aba7b8-0d34-4936-923c-d9ef2747c099"
-
-  protected def fakeRequest = FakeRequest()
+  protected def serviceUrl(path: String): String = s"http://localhost:$port$path"
 }

@@ -2,6 +2,7 @@ import uk.gov.hmrc.DefaultBuildSettings
 
 ThisBuild / majorVersion := 0
 ThisBuild / scalaVersion := "3.3.6"
+ThisBuild / scalacOptions += "-Wconf:msg=Flag.*repeatedly:s"
 
 lazy val microservice = Project("disa-returns-stubs", file("."))
   .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin)
@@ -12,6 +13,10 @@ lazy val microservice = Project("disa-returns-stubs", file("."))
   )
   .settings(CodeCoverageSettings.settings *)
   .settings(PlayKeys.playDefaultPort := 1204)
+
+Test / javaOptions += "-Dlogger.resource=logback-test.xml"
+Test / classLoaderLayeringStrategy := ClassLoaderLayeringStrategy.Flat
+Test / fork := true
 
 addCommandAlias("prePrChecks", "scalafmtCheckAll;scalafmtSbtCheck")
 

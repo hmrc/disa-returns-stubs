@@ -27,7 +27,7 @@ import utils.BaseUnitSpec
 class ReportingWindowRepositorySpec extends BaseUnitSpec {
 
   override lazy val app: Application      = new GuiceApplicationBuilder().build()
-  lazy val mongoComponent: MongoComponent = app.injector.instanceOf[MongoComponent]
+  lazy val mongoComponent: MongoComponent = inject[MongoComponent]
   lazy val repo                           = new ReportingWindowRepository(mongoComponent)
 
   "setReportingWindowState" should {
