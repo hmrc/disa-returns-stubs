@@ -32,8 +32,8 @@ import java.time.Instant
 class ReportEventRepositorySpec extends BaseUnitSpec {
 
   override lazy val app: Application      = new GuiceApplicationBuilder().build()
-  lazy val mongoComponent: MongoComponent = app.injector.instanceOf[MongoComponent]
-  lazy val appConfig: AppConfig           = app.injector.instanceOf[AppConfig]
+  lazy val mongoComponent: MongoComponent = inject[MongoComponent]
+  lazy val appConfig: AppConfig           = inject[AppConfig]
   lazy val repo                           = new ReportEventRepository(mongoComponent, appConfig)
 
   val event1: ReportEvent =

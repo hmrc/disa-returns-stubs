@@ -22,9 +22,10 @@ import play.api.http.HttpEntity
 import play.api.libs.Files
 import play.api.libs.json._
 import play.api.mvc._
-import play.api.libs.ws.WSResponse
 import uk.gov.hmrc.disareturnsstubs.connectors.UpscanProxyConnector
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
+import uk.gov.hmrc.play.http.HeaderCarrierConverter
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
@@ -44,6 +45,7 @@ class UpscanController @Inject() (
 
   def initiate(): Action[JsValue] =
     Action.async(parse.json) { implicit request =>
+      implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
       upscanProxyConnector.initiate(request.body).map { response =>
         val json = Json.parse(response.body)
 
@@ -61,6 +63,7 @@ class UpscanController @Inject() (
 
   def upload(): Action[MultipartFormData[Files.TemporaryFile]] =
     Action.async(parse.multipartFormData) { implicit request =>
+      implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
       request.body.file("file") match {
         case Some(file) if file.filename.toLowerCase.contains("empty") =>
           Future.successful(
@@ -80,7 +83,7 @@ class UpscanController @Inject() (
       }
     }
 
-  private def toResult(response: WSResponse): Result =
+  private def toResult(response: HttpResponse): Result =
     if (response.status >= MULTIPLE_CHOICES && response.status < BAD_REQUEST) {
       val location = response
         .header("Location")

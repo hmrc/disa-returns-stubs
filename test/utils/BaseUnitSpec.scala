@@ -36,6 +36,7 @@ import uk.gov.hmrc.disareturnsstubs.controllers.action.AuthorizationFilter
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.reflect.ClassTag
 import scala.util.Random
 
 abstract class BaseUnitSpec
@@ -61,6 +62,9 @@ abstract class BaseUnitSpec
 
   override def fakeApplication(): Application = GuiceApplicationBuilder()
     .build()
+
+  protected def inject[T: ClassTag]: T =
+    app.injector.instanceOf[T]
 
   class StubAuthorizationFilter(result: Option[Result])(implicit ec: ExecutionContext) extends AuthorizationFilter {
     override def filter[A](request: Request[A]): Future[Option[Result]] = Future.successful(result)
