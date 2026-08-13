@@ -27,19 +27,18 @@ trait BaseConnector extends Retries {
 
   private val retryStatusCodes: Seq[Int] = INTERNAL_SERVER_ERROR to 599
 
-  extension (requestBuilder: RequestBuilder)
-    // Raw responses do not fail on 5xx under readRaw, so we need to convert them into errors that retryFor can handle
-    protected def executeWithRetryOnServerError(implicit ec: ExecutionContext): Future[HttpResponse] =
-      requestBuilder.execute[HttpResponse].flatMap(_.retryOnServerError)
+  extension(requestBuilder: RequestBuilder)
+  // Raw responses do not fail on 5xx under readRaw, so we need to convert them into errors that retryFor can handle
+  protected def executeWithRetryOnServerError(implicit ec: ExecutionContext): Future[HttpResponse] =
+    requestBuilder.execute[HttpResponse].flatMap(_.retryOnServerError)
 
-  extension (response: HttpResponse)
-    private def retryOnServerError: Future[HttpResponse] =
-      if (retryStatusCodes.contains(response.status)) {
-        Future.failed(UpstreamErrorResponse(response.body, response.status))
-      }
-      else {
-        Future.successful(response)
-      }
+  extension(response: HttpResponse)
+  private def retryOnServerError: Future[HttpResponse] =
+    if (retryStatusCodes.contains(response.status)) {
+      Future.failed(UpstreamErrorResponse(response.body, response.status))
+    } else {
+      Future.successful(response)
+    }
 
   protected def retryCondition: PartialFunction[Exception, Boolean] = {
     case UpstreamErrorResponse.Upstream5xxResponse(_) => true
