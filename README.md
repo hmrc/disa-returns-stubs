@@ -1,6 +1,7 @@
 
 # disa-returns-stubs
-App Description to be confirmed
+
+This service provides stubs for the external and internal services used by the [ISA Returns service](https://github.com/hmrc/disa-returns). It supports local development and automated testing by simulating NPS, return submission and Upscan interactions.
 
 ### Before running the app
 
@@ -87,21 +88,6 @@ POST /nps/submit/:zReference
 | Z1503 |  503   | SERVICE UNAVAILABLE |
 |  Any  |  204   |     NO CONTENT      |
 
-## NPS - Notify Obligation Status Update
-
-- This endpoint is used to notify NPS of the obligation status update.
-
-### Endpoint:
-```bash
-POST /nps/declaration/:zReference
-```
-### Z Reference Based Responses:
-
-| ISA_MANAGER_REF  | Status |         Type          |
-|:-----:|:------:|:---------------------:|
-| Z1500 |  500   | INTERNAL SERVER ERROR |
-|  Any  |  204   |      NO CONTENT       |
-
 ## NPS Retrieve Reconciliation Report
 
 - This endpoint is used to retrieve reconciliation report from NPS.
@@ -120,6 +106,51 @@ GET /monthly/:zReference/:taxYear/:month/results
 |:-----:|:-------:|:---------------------:|
 | Z1500 |   500   | INTERNAL SERVER ERROR |
 |  Any  | 200/404 | NO CONTENT/NOT FOUND  |
+
+## Create Monthly Return
+
+- This endpoint creates a monthly return in the stubbed returns submission service and returns a generated submission ID.
+
+### Endpoint:
+```bash
+POST /disa-returns-submission/monthly/:zReference/:taxYear/:month
+```
+
+### Responses:
+
+| Scenario | Status | Type |
+|:---------|:------:|:----:|
+| Monthly return created | 201 | CREATED |
+
+## Store Monthly Return Submission
+
+- This endpoint simulates storing monthly return submission data.
+
+### Endpoint:
+```bash
+PUT /disa-returns-submission/monthly/:zReference/:taxYear/:month/submissions/:submissionId
+```
+
+### Responses:
+
+| Scenario | Status | Type |
+|:---------|:------:|:----:|
+| Submission stored | 200 | OK |
+
+## Declare Monthly Return
+
+- This endpoint simulates declaring a monthly return.
+
+### Endpoint:
+```bash
+POST /disa-returns-submission/monthly/:zReference/:taxYear/:month/declarations
+```
+
+### Responses:
+
+| Scenario | Status | Type |
+|:---------|:------:|:----:|
+| Monthly return declared | 200 | OK |
 
 
 ## ETMP Retrieve Obligation Status
