@@ -11,7 +11,7 @@ lazy val microservice = Project("disa-returns-stubs", file("."))
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
     scalacOptions += "-Wconf:src=routes/.*:s"
   )
-  .settings(CodeCoverageSettings.settings *)
+  .settings(CodeCoverageSettings.settings*)
   .settings(PlayKeys.playDefaultPort := 1204)
 
 Test / javaOptions += "-Dlogger.resource=logback-test.xml"
