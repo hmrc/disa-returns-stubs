@@ -23,8 +23,6 @@ import java.time.Instant
 case class ReportEvent(
   reportId: String,
   zReference: String,
-  year: String,
-  month: String,
   createdAt: Instant = Instant.now()
 )
 

@@ -37,12 +37,10 @@ class GenerateReportControllerISpec extends BaseISpec {
 
   override def fakeApplication(): Application =
     new GuiceApplicationBuilder()
-      .configure("play.http.router" -> "test.Routes")
+      .configure("play.http.router" -> "testOnlyDoNotUseInAppConf.Routes")
       .build()
 
-  val year = "2025-26"
-  val month = "JAN"
-  val createReportEndpoint = s"/$validZReference/$year/$month/reconciliation"
+  val createReportEndpoint = s"/test-only/$validZReference/reconciliation"
   val mockGenerateAndStoreReportService: GenerateAndStoreReportService = mock[GenerateAndStoreReportService]
 
   val validPayload: JsValue = Json.parse(
@@ -60,7 +58,7 @@ class GenerateReportControllerISpec extends BaseISpec {
       |}""".stripMargin
   )
 
-  "POST /:zReference/:year/:month/reconciliation" should {
+  "POST /test-only/:zReference/reconciliation" should {
 
     "create a report event and associated report issues for a valid request" in {
 
@@ -77,15 +75,12 @@ class GenerateReportControllerISpec extends BaseISpec {
       status(result) mustBe NO_CONTENT
 
       val event = await(
-        reportEventRepository.find(validZReference, year, month)
+        reportEventRepository.find(validZReference)
       )
 
       event.isDefined shouldBe true
 
       event.get.zReference shouldBe validZReference
-      event.get.month shouldBe month
-      event.get.year shouldBe year
-
       val reportId = event.get.reportId
 
       val issues =
@@ -143,8 +138,6 @@ class GenerateReportControllerISpec extends BaseISpec {
       when(mockGenerateAndStoreReportService
         .generateAndStore(
           any[GenerateReportRequest](),
-          any[String](),
-          any[String](),
           any[String]()
         )
       ).thenReturn(
@@ -153,7 +146,7 @@ class GenerateReportControllerISpec extends BaseISpec {
 
       val mockApp = new GuiceApplicationBuilder()
         .overrides(bind[GenerateAndStoreReportService].toInstance(mockGenerateAndStoreReportService))
-        .configure("play.http.router" -> "test.Routes")
+        .configure("play.http.router" -> "testOnlyDoNotUseInAppConf.Routes")
         .build()
 
       running(mockApp) {

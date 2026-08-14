@@ -40,8 +40,6 @@ class ReportEventRepositorySpec extends BaseUnitSpec {
     ReportEvent(
       reportId = "report-1",
       zReference = validZReference,
-      year = "2025-26",
-      month = "JAN",
       createdAt = Instant.now()
     )
 
@@ -63,7 +61,7 @@ class ReportEventRepositorySpec extends BaseUnitSpec {
 
     }
 
-    "replace the existing document if one already exists for the same zReference, year and month" in {
+    "replace the existing document if one already exists for the same zReference" in {
       await(repo.collection.drop().toFuture())
 
       await(repo.upsert(event1))
@@ -78,60 +76,59 @@ class ReportEventRepositorySpec extends BaseUnitSpec {
 
     }
 
-    "allow inserting multiple documents for the same zReference and year but different months" in {
+    "allow inserting documents for different zReferences" in {
       await(repo.collection.drop().toFuture())
 
-      val febEvent = event1.copy(
+      val otherEvent = event1.copy(
         reportId = "report-3",
-        month = "FEB"
+        zReference = "Z1235"
       )
 
       await(repo.upsert(event1))
-      await(repo.upsert(febEvent))
+      await(repo.upsert(otherEvent))
 
       val results = await(repo.collection.find().toFuture())
-      results should contain theSameElementsAs Seq(event1, febEvent)
+      results should contain theSameElementsAs Seq(event1, otherEvent)
 
     }
   }
 
   "find" should {
 
-    "return the correct event for a given zReference, year and month" in {
+    "return the correct event for a given zReference" in {
       await(repo.collection.drop().toFuture())
 
       await(repo.upsert(event1))
 
-      val result = await(repo.find(validZReference, "2025-26", "JAN"))
+      val result = await(repo.find(validZReference))
       result shouldBe Some(event1)
 
     }
 
-    "return None if no event exists for the given zReference, year and month" in {
+    "return None if no event exists for the given zReference" in {
       await(repo.collection.drop().toFuture())
 
-      val result = await(repo.find(validZReference, "2025-26", "JAN"))
+      val result = await(repo.find(validZReference))
       result shouldBe None
 
     }
 
-    "return the correct event when multiple months exist" in {
+    "return the correct event when multiple zReferences exist" in {
       await(repo.collection.drop().toFuture())
 
-      val janEvent = event1
-      val febEvent = event1.copy(
+      val otherEvent = event1.copy(
         reportId = "report-4",
-        month = "FEB"
+        zReference = "Z1235"
       )
 
-      await(repo.upsert(janEvent))
-      await(repo.upsert(febEvent))
+      await(repo.upsert(event1))
+      await(repo.upsert(otherEvent))
 
-      val janResult = await(repo.find(validZReference, "2025-26", "JAN"))
-      val febResult = await(repo.find(validZReference, "2025-26", "FEB"))
+      val result      = await(repo.find(validZReference))
+      val otherResult = await(repo.find("Z1235"))
 
-      janResult shouldBe Some(janEvent)
-      febResult shouldBe Some(febEvent)
+      result      shouldBe Some(event1)
+      otherResult shouldBe Some(otherEvent)
 
     }
   }

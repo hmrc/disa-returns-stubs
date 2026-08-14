@@ -294,13 +294,13 @@ GET /etmp/reporting-window-state
 
 ## NPS Generate Reconciliation report
 
-- This test-only endpoint is used to generate an NPS reconciliation report for the supplied zReference, taxYear & month. 
+- This test-only endpoint is used to generate an NPS reconciliation report for the supplied zReference.
 - You can generate reports containing issues identified: traceAndMatch, oversubscribed & failedEligibility.
 - The number supplied for each field in the request body determines how many issues of that type will be generated in the report.
 
 ### Endpoint:
 ```bash
-POST /:zReference/:year/:month/reconciliation
+POST /test-only/:zReference/reconciliation
 ```
 
 ### Request Body Example:

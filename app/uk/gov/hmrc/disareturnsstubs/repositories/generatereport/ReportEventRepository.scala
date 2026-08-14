@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.disareturnsstubs.repositories.generatereport
 
-import org.mongodb.scala.model.Filters.{and, equal}
+import org.mongodb.scala.model.Filters.equal
 import org.mongodb.scala.model.{IndexModel, IndexOptions, Indexes, ReplaceOptions}
 import org.mongodb.scala.result.UpdateResult
 import play.api.Logging
@@ -33,17 +33,10 @@ import scala.concurrent.{ExecutionContext, Future}
 class ReportEventRepository @Inject() (mc: MongoComponent, appConfig: AppConfig)(implicit ec: ExecutionContext)
     extends PlayMongoRepository[ReportEvent](
       mongoComponent = mc,
-      collectionName = "reportEvents",
+      collectionName = "reportEventsByZReference",
       domainFormat = ReportEvent.format,
       indexes = Seq(
-        IndexModel(
-          Indexes.compoundIndex(
-            Indexes.ascending("zReference"),
-            Indexes.ascending("year"),
-            Indexes.ascending("month")
-          ),
-          IndexOptions().unique(true)
-        ),
+        IndexModel(Indexes.ascending("zReference"), IndexOptions().unique(true)),
         IndexModel(
           Indexes.ascending("createdAt"),
           IndexOptions()
@@ -56,15 +49,9 @@ class ReportEventRepository @Inject() (mc: MongoComponent, appConfig: AppConfig)
 
   def upsert(event: ReportEvent): Future[UpdateResult] = {
 
-    val filter = and(
-      equal("zReference", event.zReference),
-      equal("year", event.year),
-      equal("month", event.month)
-    )
+    val filter = equal("zReference", event.zReference)
 
-    logger.debug(
-      s"Upserting report event for zRef=${event.zReference}, year=${event.year}, month=${event.month}"
-    )
+    logger.debug(s"Upserting report event for zRef=${event.zReference}")
 
     collection
       .replaceOne(
@@ -75,20 +62,8 @@ class ReportEventRepository @Inject() (mc: MongoComponent, appConfig: AppConfig)
       .toFuture()
   }
 
-  def find(
-    zReference: String,
-    year: String,
-    month: String
-  ): Future[Option[ReportEvent]] = {
-
-    val filter = and(
-      equal("zReference", zReference),
-      equal("year", year),
-      equal("month", month)
-    )
-
+  def find(zReference: String): Future[Option[ReportEvent]] =
     collection
-      .find(filter)
+      .find(equal("zReference", zReference))
       .headOption()
-  }
 }

@@ -4,4 +4,4 @@ GET     /etmp/reporting-window-state                                  uk.gov.hmr
 
 POST    /etmp/open-obligation-status/:zReference       uk.gov.hmrc.disareturnsstubs.testonly.controllers.EtmpTestOnlyController.openObligationStatus(zReference: String)
 
-POST    /:zReference/:year/:month/reconciliation       uk.gov.hmrc.disareturnsstubs.testonly.controllers.GenerateReportController.create(zReference: String, year: String, month: String)
+POST    /:zReference/reconciliation                    uk.gov.hmrc.disareturnsstubs.testonly.controllers.GenerateReportController.create(zReference: String)
