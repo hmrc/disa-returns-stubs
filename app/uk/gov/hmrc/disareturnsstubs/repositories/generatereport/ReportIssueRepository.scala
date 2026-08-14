@@ -52,7 +52,7 @@ class ReportIssueRepository @Inject() (mc: MongoComponent, appConfig: AppConfig)
     with Logging {
 
   def insertMany(results: Seq[ReportIssueDocument]): Future[Unit] = {
-    logger.debug(s"Inserting ${results.size} report results")
+    logger.debug(s"[ReportIssueRepository][insertMany] Inserting ${results.size} report results")
     if (results.isEmpty) Future.successful(())
     else collection.insertMany(results).toFuture().map(_ => ())
   }

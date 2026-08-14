@@ -44,7 +44,9 @@ class ReportingWindowRepository @Inject() (mc: MongoComponent)(implicit ec: Exec
         new ReplaceOptions().upsert(true)
       )
       .toFuture()
-      .map(_ => logger.debug(s"Set reporting window state as: [$open]"))
+      .map(_ =>
+        logger.debug(s"[ReportingWindowRepository][setReportingWindowState] Set reporting window state as: [$open]")
+      )
   }
 
   def getReportingWindowState: Future[Option[Boolean]] =
@@ -53,7 +55,8 @@ class ReportingWindowRepository @Inject() (mc: MongoComponent)(implicit ec: Exec
       .first()
       .toFutureOption()
       .map(_.map { state =>
-        logger.debug(s"Retrieved reporting window state as: [$state]")
+        logger
+          .debug(s"[ReportingWindowRepository][getReportingWindowState] Retrieved reporting window state as: [$state]")
         state.reportingWindowOpen
       })
 }
