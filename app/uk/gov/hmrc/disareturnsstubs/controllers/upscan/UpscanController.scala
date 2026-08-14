@@ -20,8 +20,8 @@ import org.apache.pekko.util.ByteString
 import play.api.Logging
 import play.api.http.HttpEntity
 import play.api.libs.Files
-import play.api.libs.json._
-import play.api.mvc._
+import play.api.libs.json.*
+import play.api.mvc.*
 import uk.gov.hmrc.disareturnsstubs.connectors.UpscanProxyConnector
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
@@ -136,9 +136,14 @@ class UpscanController @Inject() (
 
       upscanProxyConnector.sendCallback(callbackUrl, callbackBody).onComplete {
         case Success(response)  =>
-          logger.info(s"Sent REJECTED upscan callback to [$callbackUrl], received status [${response.status}]")
+          logger.info(
+            s"[UpscanController][rejectInvalidMimeType] Sent REJECTED upscan callback to [$callbackUrl], received status [${response.status}]"
+          )
         case Failure(exception) =>
-          logger.warn(s"Failed to send REJECTED upscan callback to [$callbackUrl]", exception)
+          logger.warn(
+            s"[UpscanController][rejectInvalidMimeType] Failed to send REJECTED upscan callback to [$callbackUrl]",
+            exception
+          )
       }
     }
 

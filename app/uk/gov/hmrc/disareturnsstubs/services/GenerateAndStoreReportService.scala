@@ -48,7 +48,7 @@ class GenerateAndStoreReportService @Inject() (
     if (totalRequested > appConfig.reportIssueLimit) {
       Future.failed(
         new IllegalArgumentException(
-          s"Requested $totalRequested records which exceeds the maximum allowed of ${appConfig.reportIssueLimit}"
+          s"[GenerateAndStoreReportService][generateAndStore] Requested $totalRequested records which exceeds the maximum allowed of ${appConfig.reportIssueLimit}"
         )
       )
     } else {

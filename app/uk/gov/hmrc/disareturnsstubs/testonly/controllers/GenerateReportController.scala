@@ -47,19 +47,19 @@ class GenerateReportController @Inject() (
           .generateAndStore(generateReport, zReference, year, month)
           .map { _ =>
             logger.info(
-              s"[TestOnly] Generated and stored report for IM ref: [$zReference] for [$month][$year]"
+              s"[GenerateReportController][create] Generated and stored report for IM ref: [$zReference] for [$month][$year]"
             )
             NoContent
           }
           .recover {
             case _: IllegalArgumentException =>
               logger.info(
-                s"[TestOnly] ISSUE_LIMIT_EXCEEDED - Failed to generate and stored report for IM ref: [$zReference] for [$month][$year]"
+                s"[GenerateReportController][create] ISSUE_LIMIT_EXCEEDED - Failed to generate and stored report for IM ref: [$zReference] for [$month][$year]"
               )
               BadRequest(Json.toJson(issueLimitExceeded(appConfig.reportIssueLimit)))
             case ex                          =>
               logger.error(
-                s"[TestOnly] Failed to generate and store report for IM ref: [$zReference] for [$month][$year]"
+                s"[GenerateReportController][create] Failed to generate and store report for IM ref: [$zReference] for [$month][$year]"
               )
               InternalServerError(Json.toJson(internalServerErr(ex.getMessage)))
           }

@@ -34,7 +34,7 @@ class AuthorizationFilter @Inject() (implicit val executionContext: ExecutionCon
     request.headers.get("Authorization") match {
       case Some(_) => Future.successful(None)
       case None    =>
-        logger.warn(s"Authorization failed due to absent token")
+        logger.warn(s"[AuthorizationFilter][filter] Authorization failed due to absent token")
         Future.successful(
           Some(Forbidden(Json.obj("code" -> "FORBIDDEN", "message" -> "Missing required bearer token")))
         )

@@ -58,7 +58,7 @@ class NpsController @Inject() (
         case "Z1400" => Future.successful(BadRequest(Json.toJson(badRequestError)))
         case "Z1503" => Future.successful(ServiceUnavailable(Json.toJson(serviceUnavailableError)))
         case _       =>
-          logger.info(s"Successfully submitted data for IM ref: [$zReference]")
+          logger.info(s"[NpsController][submitMonthlyReturn] Successfully submitted data for IM ref: [$zReference]")
           Future.successful(NoContent)
       }
     }
@@ -67,7 +67,7 @@ class NpsController @Inject() (
     zReference match {
       case "Z1500" => InternalServerError(Json.toJson(internalServerErr("Internal issue, try again later")))
       case _       =>
-        logger.info(s"Successfully submitted declaration for IM Ref: [$zReference]")
+        logger.info(s"[NpsController][send] Successfully submitted declaration for IM Ref: [$zReference]")
         NoContent
     }
   }
@@ -83,7 +83,9 @@ class NpsController @Inject() (
     authorised()
       .retrieve(credentials) {
         case Some(Credentials(credId, _)) if credId.startsWith(perfTestCredIdPrefix) =>
-          logger.info(s"[PerfTest] Returning generated report for IM ref: [$zReference], skipping Mongo")
+          logger.info(
+            s"[NpsController][getMonthlyReport] Returning generated report for IM ref: [$zReference], skipping Mongo"
+          )
           Future.successful(perfTestMonthlyReport(pageSize))
         case _                                                                       =>
           nonPerfTestReport(zReference, taxYear, month, pageIndex, pageSize)
@@ -110,12 +112,12 @@ class NpsController @Inject() (
         .map {
           case Right(response) =>
             logger.info(
-              s"Successful retrieval of monthly report for IM ref: [$zReference] for [$month][$taxYear]"
+              s"[NpsController][nonPerfTestReport] Successful retrieval of monthly report for IM ref: [$zReference] for [$month][$taxYear]"
             )
             Ok(Json.toJson(response))
           case Left(error)     =>
             logger.warn(
-              s"${error.code} for IM ref: [$zReference] for [$month][$taxYear]: ${error.message}"
+              s"[NpsController][nonPerfTestReport] ${error.code} for IM ref: [$zReference] for [$month][$taxYear]: ${error.message}"
             )
             NotFound(Json.toJson(error))
         }

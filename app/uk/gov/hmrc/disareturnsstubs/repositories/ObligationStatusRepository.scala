@@ -58,7 +58,11 @@ class ObligationStatusRepository @Inject() (mc: MongoComponent)(implicit ec: Exe
         UpdateOptions().upsert(true)
       )
       .toFuture()
-      .map(_ => logger.debug(s"Closed obligation status for IM Ref: [$zReference]"))
+      .map(_ =>
+        logger.debug(
+          s"[ObligationStatusRepository][closeObligationStatus] Closed obligation status for IM Ref: [$zReference]"
+        )
+      )
 
   def openObligationStatus(zReference: String): Future[Unit] =
     collection
@@ -72,7 +76,11 @@ class ObligationStatusRepository @Inject() (mc: MongoComponent)(implicit ec: Exe
         UpdateOptions().upsert(true)
       )
       .toFuture()
-      .map(_ => logger.debug(s"Opened obligation status for IM Ref: [$zReference]"))
+      .map(_ =>
+        logger.debug(
+          s"[ObligationStatusRepository][openObligationStatus] Opened obligation status for IM Ref: [$zReference]"
+        )
+      )
 
   def getObligationStatus(zReference: String): Future[Option[Boolean]] =
     collection
@@ -80,7 +88,9 @@ class ObligationStatusRepository @Inject() (mc: MongoComponent)(implicit ec: Exe
       .first()
       .toFutureOption()
       .map(_.map { status =>
-        logger.debug(s"Retrieved obligation status as: [${status.obligationAlreadyMet}]")
+        logger.debug(
+          s"[ObligationStatusRepository][getObligationStatus] Retrieved obligation status as: [${status.obligationAlreadyMet}]"
+        )
         status.obligationAlreadyMet
       })
 
