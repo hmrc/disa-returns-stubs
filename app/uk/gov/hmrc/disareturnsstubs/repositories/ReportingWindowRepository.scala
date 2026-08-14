@@ -16,22 +16,32 @@
 
 package uk.gov.hmrc.disareturnsstubs.repositories
 
-import org.mongodb.scala.model.{Filters, ReplaceOptions}
+import org.mongodb.scala.model.{Filters, IndexModel, IndexOptions, Indexes, ReplaceOptions}
 import play.api.Logging
+import uk.gov.hmrc.disareturnsstubs.config.AppConfig
 import uk.gov.hmrc.disareturnsstubs.models.ReportingWindowState
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
+import java.util.concurrent.TimeUnit
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ReportingWindowRepository @Inject() (mc: MongoComponent)(implicit ec: ExecutionContext)
+class ReportingWindowRepository @Inject() (mc: MongoComponent, appConfig: AppConfig)(implicit ec: ExecutionContext)
     extends PlayMongoRepository[ReportingWindowState](
       mongoComponent = mc,
       collectionName = "reportingWindow",
       domainFormat = ReportingWindowState.format,
-      indexes = Seq.empty
+      indexes = Seq(
+        IndexModel(
+          keys = Indexes.ascending("updatedAt"),
+          indexOptions = IndexOptions()
+            .name("updatedAtTtlIdx")
+            .expireAfter(appConfig.reportingWindowTtlDays.toLong, TimeUnit.DAYS)
+        )
+      ),
+      replaceIndexes = true
     )
     with Logging {
 

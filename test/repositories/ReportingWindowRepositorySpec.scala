@@ -16,28 +16,56 @@
 
 package repositories
 
-import org.mongodb.scala.SingleObservableFuture
+import org.mongodb.scala.{ObservableFuture, SingleObservableFuture}
+import org.mongodb.scala.documentToUntypedDocument
+import org.scalatest.OptionValues.convertOptionToValuable
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.await
+import uk.gov.hmrc.disareturnsstubs.config.AppConfig
 import uk.gov.hmrc.disareturnsstubs.repositories.ReportingWindowRepository
 import uk.gov.hmrc.mongo.MongoComponent
 import utils.BaseUnitSpec
+
+import java.time.Instant
+import java.time.temporal.ChronoUnit
+import java.util.concurrent.TimeUnit
 
 class ReportingWindowRepositorySpec extends BaseUnitSpec {
 
   override lazy val app: Application      = new GuiceApplicationBuilder().build()
   lazy val mongoComponent: MongoComponent = inject[MongoComponent]
-  lazy val repo                           = new ReportingWindowRepository(mongoComponent)
+  lazy val appConfig: AppConfig           = inject[AppConfig]
+  lazy val repo                           = new ReportingWindowRepository(mongoComponent, appConfig)
+
+  "indexes" should {
+    "configure updatedAt to expire after the reporting window TTL" in {
+      await(repo.ensureIndexes())
+
+      val indexes  = await(repo.collection.listIndexes().toFuture())
+      val ttlIndex = indexes.find(_.getString("name") == "updatedAtTtlIdx").value
+
+      ttlIndex.get("key").value.asDocument().getInt32("updatedAt").getValue shouldBe 1
+      ttlIndex.get("expireAfterSeconds").value.asNumber().longValue         shouldBe
+        TimeUnit.DAYS.toSeconds(appConfig.reportingWindowTtlDays.toLong)
+      appConfig.reportingWindowTtlDays                                      shouldBe 3
+    }
+  }
 
   "setReportingWindowState" should {
     "create the document when it doesn't exist" in {
       await(repo.collection.drop().toFuture())
 
+      val startedAt   = Instant.now().truncatedTo(ChronoUnit.MILLIS)
       await(repo.setReportingWindowState(open = true))
+      val completedAt = Instant.now().plusMillis(1).truncatedTo(ChronoUnit.MILLIS)
 
       val result = await(repo.getReportingWindowState)
       result shouldBe Some(true)
+
+      val stored = await(repo.collection.find().headOption()).value
+      stored.updatedAt should be >= startedAt
+      stored.updatedAt should be <= completedAt
     }
 
     "update the document if it already exists" in {
