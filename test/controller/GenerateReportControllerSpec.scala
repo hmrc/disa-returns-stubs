@@ -40,9 +40,6 @@ class GenerateReportControllerSpec extends BaseUnitSpec {
     mockAppConfig
   )
 
-  private val year  = "2025-26"
-  private val month = "JAN"
-
   private val validPayload: JsValue = Json.parse(
     """{
       | "oversubscribed": 2,
@@ -65,27 +62,27 @@ class GenerateReportControllerSpec extends BaseUnitSpec {
   "create" should {
 
     "return 204 NoContent when report generation succeeds" in {
-      when(mockGenerateAndStoreReportService.generateAndStore(any(), any(), any(), any()))
+      when(mockGenerateAndStoreReportService.generateAndStore(any(), any()))
         .thenReturn(Future.successful(()))
 
-      val result = controller.create(validZReference, year, month)(jsonPostRequest(validPayload))
+      val result = controller.create(validZReference)(jsonPostRequest(validPayload))
 
       status(result)          shouldBe NO_CONTENT
       contentAsString(result) shouldBe ""
     }
 
     "return 500 InternalServerError when service fails" in {
-      when(mockGenerateAndStoreReportService.generateAndStore(any(), any(), any(), any()))
+      when(mockGenerateAndStoreReportService.generateAndStore(any(), any()))
         .thenReturn(Future.failed(new RuntimeException("Mongo failure")))
 
-      val result = controller.create(validZReference, year, month)(jsonPostRequest(validPayload))
+      val result = controller.create(validZReference)(jsonPostRequest(validPayload))
 
       status(result)                               shouldBe INTERNAL_SERVER_ERROR
       (contentAsJson(result) \ "message").as[String] should include("Mongo failure")
     }
 
     "return 400 BadRequest when payload is invalid" in {
-      val result = controller.create(validZReference, year, month)(jsonPostRequest(invalidPayload))
+      val result = controller.create(validZReference)(jsonPostRequest(invalidPayload))
 
       status(result) shouldBe BAD_REQUEST
     }

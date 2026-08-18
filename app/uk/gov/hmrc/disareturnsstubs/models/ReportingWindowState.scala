@@ -18,7 +18,13 @@ package uk.gov.hmrc.disareturnsstubs.models
 
 import play.api.libs.json.{Json, OFormat}
 
-case class ReportingWindowState(_id: String = "test-scenario", reportingWindowOpen: Boolean)
+import java.time.Instant
+
+case class ReportingWindowState(
+  _id: String = "test-scenario",
+  reportingWindowOpen: Boolean,
+  updatedAt: Instant = Instant.now()
+)
 
 object ReportingWindowState {
   implicit val format: OFormat[ReportingWindowState] = Json.format[ReportingWindowState]

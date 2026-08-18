@@ -26,6 +26,7 @@ class AppConfig @Inject() (config: ServicesConfig) {
   val appName: String             = config.getString("appName")
   val reportIssueLimit: Int       = config.getInt("reportIssueLimit")
   val reportTtlDays: Int          = config.getInt("reportTtlDays")
+  val reportingWindowTtlDays: Int = config.getInt("reportingWindowTtlDays")
   lazy val upscanStubBase: String = config.baseUrl("upscan-stub")
 
 }

@@ -168,8 +168,6 @@ class NpsControllerISpec extends BaseISpec {
   val reportEventDocument: ReportEvent = ReportEvent(
     reportId   = "RPT_TEST",
     zReference = validZReference,
-    year       = taxYear,
-    month      = month,
     createdAt  = Instant.now()
   )
 

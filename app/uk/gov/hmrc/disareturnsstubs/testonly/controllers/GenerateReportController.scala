@@ -40,26 +40,26 @@ class GenerateReportController @Inject() (
     with WithJsonBody
     with Logging {
 
-  def create(zReference: String, year: String, month: String): Action[JsValue] =
+  def create(zReference: String): Action[JsValue] =
     (Action andThen authorizationFilter).async(parse.json) { implicit request =>
       withJsonBody[GenerateReportRequest] { generateReport =>
         generateAndStoreReportService
-          .generateAndStore(generateReport, zReference, year, month)
+          .generateAndStore(generateReport, zReference)
           .map { _ =>
             logger.info(
-              s"[GenerateReportController][create] Generated and stored report for IM ref: [$zReference] for [$month][$year]"
+              s"[GenerateReportController][create] Generated and stored report for IM ref: [$zReference]"
             )
             NoContent
           }
           .recover {
             case _: IllegalArgumentException =>
               logger.info(
-                s"[GenerateReportController][create] ISSUE_LIMIT_EXCEEDED - Failed to generate and stored report for IM ref: [$zReference] for [$month][$year]"
+                s"[GenerateReportController][create] ISSUE_LIMIT_EXCEEDED - Failed to generate and store report for IM ref: [$zReference]"
               )
               BadRequest(Json.toJson(issueLimitExceeded(appConfig.reportIssueLimit)))
             case ex                          =>
               logger.error(
-                s"[GenerateReportController][create] Failed to generate and store report for IM ref: [$zReference] for [$month][$year]"
+                s"[GenerateReportController][create] Failed to generate and store report for IM ref: [$zReference]"
               )
               InternalServerError(Json.toJson(internalServerErr(ex.getMessage)))
           }

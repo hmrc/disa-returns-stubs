@@ -35,9 +35,7 @@ class GenerateAndStoreReportService @Inject() (
 
   def generateAndStore(
     generateReportRequest: GenerateReportRequest,
-    zReference: String,
-    year: String,
-    month: String
+    zReference: String
   ): Future[Unit] = {
 
     val totalRequested =
@@ -60,9 +58,7 @@ class GenerateAndStoreReportService @Inject() (
 
       val event = ReportEvent(
         reportId = reportId,
-        zReference = zReference,
-        year = year,
-        month = month
+        zReference = zReference
       )
 
       val documents = results.map { result =>

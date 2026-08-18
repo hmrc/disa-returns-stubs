@@ -40,7 +40,7 @@ class RetrieveReportService @Inject() (
     val skip  = pageIndex * pageSize
     val limit = pageSize
 
-    reportEventRepository.find(zReference, year, month).flatMap {
+    reportEventRepository.find(zReference).flatMap {
       case None =>
         Future.successful(Left(reportNotFoundError))
 
