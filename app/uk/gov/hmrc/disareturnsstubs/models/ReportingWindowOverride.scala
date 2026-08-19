@@ -16,7 +16,8 @@
 
 package uk.gov.hmrc.disareturnsstubs.models
 
-import play.api.libs.json.{Json, JsonValidationError, OFormat, Reads}
+import play.api.libs.json.{Format, Json, JsonValidationError, OFormat, Reads}
+import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 
 import java.time.Instant
 
@@ -42,5 +43,6 @@ final case class ReportingWindowOverride(
 )
 
 object ReportingWindowOverride {
+  implicit val instantFormat: Format[Instant]           = MongoJavatimeFormats.instantFormat
   implicit val format: OFormat[ReportingWindowOverride] = Json.format[ReportingWindowOverride]
 }

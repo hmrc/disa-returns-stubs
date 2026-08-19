@@ -16,6 +16,9 @@
 
 package repositories
 
+import org.bson.BsonType
+import org.mongodb.scala.bson.collection.immutable.Document
+import org.mongodb.scala.model.Filters
 import org.mongodb.scala.{ObservableFuture, SingleObservableFuture}
 import org.mongodb.scala.documentToUntypedDocument
 import org.scalatest.OptionValues.convertOptionToValuable
@@ -30,11 +33,12 @@ import java.time.{Clock, Instant, ZoneOffset}
 
 class ReportingWindowOverrideRepositorySpec extends BaseUnitSpec {
 
-  private val now             = Instant.parse("2026-08-25T12:00:00Z")
-  private val clock           = Clock.fixed(now, ZoneOffset.UTC)
-  private lazy val component  = inject[MongoComponent]
-  private lazy val appConfig  = inject[AppConfig]
-  private lazy val repository = new ReportingWindowOverrideRepository(component, appConfig, clock)
+  private val now                = Instant.parse("2026-08-25T12:00:00Z")
+  private val clock              = Clock.fixed(now, ZoneOffset.UTC)
+  private lazy val component     = inject[MongoComponent]
+  private lazy val appConfig     = inject[AppConfig]
+  private lazy val repository    = new ReportingWindowOverrideRepository(component, appConfig, clock)
+  private lazy val rawCollection = component.database.getCollection[Document]("reportingWindowOverrides")
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -69,6 +73,15 @@ class ReportingWindowOverrideRepositorySpec extends BaseUnitSpec {
       updated.startDate                                        shouldBe now
       updated.endDate                                          shouldBe now.plusSeconds(120)
       await(repository.collection.countDocuments().toFuture()) shouldBe 1
+    }
+
+    "store timestamps as BSON dates for the TTL index" in {
+      await(repository.set("cred-1", ReportingWindowOverrideRequest(now, now.plusSeconds(60))))
+
+      val document = await(rawCollection.find(Filters.equal("_id", "cred-1")).first().toFuture())
+
+      document.toBsonDocument.get("expiresAt").getBsonType shouldBe BsonType.DATE_TIME
+      document.toBsonDocument.get("updatedAt").getBsonType shouldBe BsonType.DATE_TIME
     }
 
     "isolate overrides by credential ID" in {
