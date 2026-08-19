@@ -36,10 +36,10 @@ import scala.concurrent.Future
 class ReportingWindowOverrideControllerSpec extends BaseUnitSpec {
 
   private implicit lazy val materializer: Materializer = app.materializer
-  private val credentialIdHeader = "X-Cred-Id"
-  private val startDate          = Instant.parse("2026-08-25T11:00:00Z")
-  private val endDate            = Instant.parse("2026-08-25T13:00:00Z")
-  private val validBody = Json.obj(
+  private val credentialIdHeader                       = "X-Cred-Id"
+  private val startDate                                = Instant.parse("2026-08-25T11:00:00Z")
+  private val endDate                                  = Instant.parse("2026-08-25T13:00:00Z")
+  private val validBody                                = Json.obj(
     "startDate" -> startDate.toString,
     "endDate"   -> endDate.toString
   )
@@ -67,7 +67,7 @@ class ReportingWindowOverrideControllerSpec extends BaseUnitSpec {
 
       val result = controller.set(request(validBody, None))
 
-      status(result)                      shouldBe BAD_REQUEST
+      status(result)                               shouldBe BAD_REQUEST
       (contentAsJson(result) \ "error").as[String] shouldBe "Missing X-Cred-Id header"
       verify(repository, never()).set(any(), any())
     }
@@ -83,8 +83,8 @@ class ReportingWindowOverrideControllerSpec extends BaseUnitSpec {
     }
 
     "return BadRequest for an invalid override" in {
-      val repository = mock[ReportingWindowOverrideRepository]
-      val controller = new ReportingWindowOverrideController(stubControllerComponents(), repository)
+      val repository  = mock[ReportingWindowOverrideRepository]
+      val controller  = new ReportingWindowOverrideController(stubControllerComponents(), repository)
       val invalidBody = Json.obj(
         "startDate" -> endDate.toString,
         "endDate"   -> startDate.toString
@@ -92,7 +92,7 @@ class ReportingWindowOverrideControllerSpec extends BaseUnitSpec {
 
       val result = controller.set(request(invalidBody))
 
-      status(result)                      shouldBe BAD_REQUEST
+      status(result)                               shouldBe BAD_REQUEST
       (contentAsJson(result) \ "error").as[String] shouldBe "Invalid reporting window override"
       verify(repository, never()).set(any(), any())
     }
