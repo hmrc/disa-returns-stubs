@@ -23,10 +23,13 @@ import javax.inject.{Inject, Singleton}
 @Singleton
 class AppConfig @Inject() (config: ServicesConfig) {
 
-  val appName: String             = config.getString("appName")
-  val reportIssueLimit: Int       = config.getInt("reportIssueLimit")
-  val reportTtlDays: Int          = config.getInt("reportTtlDays")
-  val reportingWindowTtlDays: Int = config.getInt("reportingWindowTtlDays")
-  lazy val upscanStubBase: String = config.baseUrl("upscan-stub")
+  val appName: String                      = config.getString("appName")
+  val reportIssueLimit: Int                = config.getInt("reportIssueLimit")
+  val reportTtlDays: Int                   = config.getInt("reportTtlDays")
+  val reportingWindowTtlDays: Int          = config.getInt("reportingWindowTtlDays")
+  val reportingWindowOverrideTtlHours: Int = config.getInt("reportingWindowOverrideTtlHours")
+  val declarationPeriodStart: Int          = config.getInt("declarationPeriodStart")
+  val declarationPeriodEnd: Int            = config.getInt("declarationPeriodEnd")
+  lazy val upscanStubBase: String          = config.baseUrl("upscan-stub")
 
 }

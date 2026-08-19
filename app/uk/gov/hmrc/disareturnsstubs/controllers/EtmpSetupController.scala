@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.disareturnsstubs.testonly.controllers
+package uk.gov.hmrc.disareturnsstubs.controllers
 
 import play.api.Logging
 import play.api.libs.json._
@@ -26,7 +26,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class EtmpTestOnlyController @Inject() (
+class EtmpSetupController @Inject() (
   cc: ControllerComponents,
   reportingWindowRepository: ReportingWindowRepository,
   obligationStatusRepository: ObligationStatusRepository
@@ -38,12 +38,12 @@ class EtmpTestOnlyController @Inject() (
     request.body.validate[EtmpReportingWindow] match {
       case JsSuccess(value, _) =>
         logger.info(
-          s"[EtmpTestOnlyController][setReportingWindowState] Setting reporting window state as: [${value.reportingWindowOpen}]"
+          s"[EtmpSetupController][setReportingWindowState] Setting reporting window state as: [${value.reportingWindowOpen}]"
         )
         reportingWindowRepository.setReportingWindowState(value.reportingWindowOpen).map(_ => NoContent)
       case JsError(errors)     =>
         logger.warn(
-          s"[EtmpTestOnlyController][setReportingWindowState] Failed to set reporting window state with errors: [$errors]"
+          s"[EtmpSetupController][setReportingWindowState] Failed to set reporting window state with errors: [$errors]"
         )
         Future.successful(BadRequest(Json.obj("error" -> "Missing or invalid 'reportingWindowOpen' field")))
     }
@@ -52,10 +52,10 @@ class EtmpTestOnlyController @Inject() (
   def getReportingWindowState: Action[AnyContent] = Action.async {
     reportingWindowRepository.getReportingWindowState.map {
       case Some(open) =>
-        logger.info(s"[EtmpTestOnlyController][getReportingWindowState] Retreived reporting window state as: [$open]")
+        logger.info(s"[EtmpSetupController][getReportingWindowState] Retreived reporting window state as: [$open]")
         Ok(Json.obj("reportingWindowOpen" -> open))
       case None       =>
-        logger.warn(s"[EtmpTestOnlyController][getReportingWindowState] Reporting window state not found")
+        logger.warn(s"[EtmpSetupController][getReportingWindowState] Reporting window state not found")
         NotFound(Json.obj("error" -> "No reporting window state found"))
     }
   }
@@ -65,7 +65,7 @@ class EtmpTestOnlyController @Inject() (
       .openObligationStatus(zReference)
       .map { _ =>
         logger.info(
-          s"[EtmpTestOnlyController][openObligationStatus] Created open obligation status for IM Ref: [$zReference]"
+          s"[EtmpSetupController][openObligationStatus] Created open obligation status for IM Ref: [$zReference]"
         )
         Ok(Json.toJson(EtmpObligations(obligationAlreadyMet = false)))
       }

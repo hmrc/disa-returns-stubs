@@ -17,6 +17,7 @@
 package uk.gov.hmrc.disareturnsstubs.controllers
 
 import org.mongodb.scala.SingleObservableFuture
+import play.api.http.HeaderNames.AUTHORIZATION
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers.*
 import play.api.test.*
@@ -91,7 +92,7 @@ class NpsControllerISpec extends BaseISpec {
 
     "return 204 NoContent for any non-error ISA ref" in {
       val request = FakeRequest(POST, s"$submitMonthlyReturnEndpoint/$validZReference")
-        .withHeaders("Authorization" -> "Bearer token")
+        .withHeaders(AUTHORIZATION -> "Bearer token")
         .withJsonBody(validPayload)
 
       val result = route(app, request).get
@@ -100,7 +101,7 @@ class NpsControllerISpec extends BaseISpec {
 
     "return 400 BadRequest for isaRef Z1400" in {
       val request = FakeRequest(POST, s"$submitMonthlyReturnEndpoint/Z1400")
-        .withHeaders("Authorization" -> "Bearer token")
+        .withHeaders(AUTHORIZATION -> "Bearer token")
         .withJsonBody(validPayload)
 
       val result = route(app, request).get
@@ -110,7 +111,7 @@ class NpsControllerISpec extends BaseISpec {
 
     "return 503 ServiceUnavailable for isaRef Z1503" in {
       val request = FakeRequest(POST, s"$submitMonthlyReturnEndpoint/Z1503")
-        .withHeaders("Authorization" -> "Bearer token")
+        .withHeaders(AUTHORIZATION -> "Bearer token")
         .withJsonBody(validPayload)
 
       val result = route(app, request).get
@@ -133,7 +134,7 @@ class NpsControllerISpec extends BaseISpec {
       val request =
         FakeRequest(POST, s"$submitMonthlyReturnEndpoint/$validZReference")
           .withHeaders(
-            "Authorization" -> "Bearer token")
+            AUTHORIZATION -> "Bearer token")
           .withBody(oversizedBody)
 
       val result = route(app, request).get

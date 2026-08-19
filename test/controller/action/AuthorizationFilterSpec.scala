@@ -19,6 +19,7 @@ package controller.action
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import play.api.http.HeaderNames.AUTHORIZATION
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -34,7 +35,7 @@ class AuthorizationFilterSpec extends AnyWordSpec with Matchers with ScalaFuture
   "AuthorizationFilter" should {
 
     "allow requests with an Authorization header" in {
-      val request = FakeRequest().withHeaders("Authorization" -> "Bearer token")
+      val request = FakeRequest().withHeaders(AUTHORIZATION -> "Bearer token")
 
       whenReady(authorizationFilter.filter(request)) { resultOption =>
         resultOption shouldBe None

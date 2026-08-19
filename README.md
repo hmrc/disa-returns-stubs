@@ -20,7 +20,7 @@ Reference instructions for [setting up docker](https://docs.tax.service.gov.uk/m
 ### Running the app locally
 
 ```bash
-sbt 'run -Dapplication.router=testOnlyDoNotUseInAppConf.Routes'
+sbt run
 ```
 
 You can then query the app to ensure it is working with the following command:
@@ -97,7 +97,7 @@ POST /nps/submit/:zReference
 GET /monthly/:zReference/:taxYear/:month/results
 ```
 
-- This endpoint requires a report to be generated either via the stub test-only endpoint or disa-returns-test-support-api. 
+- This endpoint requires a report to be generated either via the stub setup endpoint or disa-returns-test-support-api.
 - If no report is generated then any Z_REF other than Z1500 will return 404 NOT_FOUND
 
 ### Z Reference Based Responses:
@@ -241,11 +241,11 @@ POST /upscan/upload
 - For the full list of valid `S3_ERROR_CODE` values for the `reject.*` scenario, see the [AWS S3 ErrorCodeList](https://docs.aws.amazon.com/AmazonS3/latest/API/ErrorResponses.html#ErrorCodeList).
 - The `reject`, `infected`, `invalid` and `unknown` scenarios are simulated by `upscan-stub` itself - see its [`UploadController`](https://github.com/hmrc/upscan-stub/blob/main/app/uk/gov/hmrc/upscanstub/controller/UploadController.scala) for implementation details.
 
-# Test-Only Endpoints:
+# Stub Setup Endpoints
 
 ## ETMP Open Obligation Status
 
-- This test-only endpoint is used to open the obligation status for the supplied zReference.
+- This setup endpoint is used to open the obligation status for the supplied zReference.
 
 ### Endpoint:
 ```bash
@@ -261,7 +261,7 @@ POST /etmp/open-obligation-status/:zReference
 
 ## ETMP Set Reporting Window Status
 
-- This test-only endpoint is used to set the ETMP reporting window status.
+- This setup endpoint is used to set the ETMP reporting window status.
 - Simulates both reporting window open and closed for the stubbed ETMP reporting window status endpoint.
 
 ### Endpoint:
@@ -278,7 +278,7 @@ POST /etmp/reporting-window-state
 
 ## ETMP Retrieve Reporting Window Status
 
-- This test-only endpoint is used to retrieve the ETMP reporting window status.
+- This setup endpoint is used to retrieve the ETMP reporting window status.
 
 ### Endpoint:
 ```bash
@@ -294,13 +294,13 @@ GET /etmp/reporting-window-state
 
 ## NPS Generate Reconciliation report
 
-- This test-only endpoint is used to generate an NPS reconciliation report for the supplied zReference.
+- This test-support endpoint is used to generate an NPS reconciliation report for the supplied zReference.
 - You can generate reports containing issues identified: traceAndMatch, oversubscribed & failedEligibility.
 - The number supplied for each field in the request body determines how many issues of that type will be generated in the report.
 
 ### Endpoint:
 ```bash
-POST /test-only/:zReference/reconciliation
+POST /monthly/:zReference/reconciliation
 ```
 
 ### Request Body Example:

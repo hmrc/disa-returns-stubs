@@ -1,24 +1,43 @@
 # microservice specific routes
 
+POST    /monthly/:zReference/reconciliation                                                       uk.gov.hmrc.disareturnsstubs.controllers.GenerateReportController.create(zReference: String)
 
-GET     /etmp/check-obligation-status/:zReference           uk.gov.hmrc.disareturnsstubs.controllers.EtmpController.checkReturnsObligationStatus(zReference: String)
+PUT     /reporting-window-override                                                                uk.gov.hmrc.disareturnsstubs.controllers.ReportingWindowOverrideController.set()
 
-GET     /etmp/check-reporting-window                        uk.gov.hmrc.disareturnsstubs.controllers.EtmpController.checkReportingWindowStatus()
+## ETMP routes
 
-POST    /etmp/declaration/:zReference                       uk.gov.hmrc.disareturnsstubs.controllers.EtmpController.declare(zReference: String)
+GET     /etmp/check-obligation-status/:zReference                                                 uk.gov.hmrc.disareturnsstubs.controllers.EtmpController.checkReturnsObligationStatus(zReference: String)
 
-POST    /nps/submit/:zReference                             uk.gov.hmrc.disareturnsstubs.controllers.NpsController.submitMonthlyReturn(zReference: String)
+GET     /etmp/check-reporting-window                                                              uk.gov.hmrc.disareturnsstubs.controllers.EtmpController.checkReportingWindowStatus()
 
-POST    /nps/declaration/:zReference                        uk.gov.hmrc.disareturnsstubs.controllers.NpsController.send(zReference: String)
+POST    /etmp/reporting-window-state                                                              uk.gov.hmrc.disareturnsstubs.controllers.EtmpSetupController.setReportingWindowState()
 
-GET     /monthly/:zReference/:taxYear/:month/results        uk.gov.hmrc.disareturnsstubs.controllers.NpsController.getMonthlyReport(zReference: String, taxYear: String, month: String, pageIndex: Int, pageSize: Int)
+GET     /etmp/reporting-window-state                                                              uk.gov.hmrc.disareturnsstubs.controllers.EtmpSetupController.getReportingWindowState()
 
-POST    /disa-returns-submission/monthly/:zReference/:taxYear/:month                                  uk.gov.hmrc.disareturnsstubs.controllers.SubmissionsController.createReturn(zReference: String, taxYear: String, month: String)
+POST    /etmp/open-obligation-status/:zReference                                                  uk.gov.hmrc.disareturnsstubs.controllers.EtmpSetupController.openObligationStatus(zReference: String)
 
-PUT     /disa-returns-submission/monthly/:zReference/:taxYear/:month/submissions/:submissionId        uk.gov.hmrc.disareturnsstubs.controllers.SubmissionsController.storeSubmission(zReference: String, taxYear: String, month: String, submissionId: String)
+POST    /etmp/declaration/:zReference                                                             uk.gov.hmrc.disareturnsstubs.controllers.EtmpController.declare(zReference: String)
 
-POST    /disa-returns-submission/monthly/:zReference/:taxYear/:month/declarations                     uk.gov.hmrc.disareturnsstubs.controllers.SubmissionsController.declare(zReference: String, taxYear: String, month: String)
+## NPS routes
 
-POST    /upscan/v2/initiate                                 uk.gov.hmrc.disareturnsstubs.controllers.upscan.UpscanController.initiate()
+POST    /nps/submit/:zReference                                                                   uk.gov.hmrc.disareturnsstubs.controllers.NpsController.submitMonthlyReturn(zReference: String)
 
-POST    /upscan/upload                                      uk.gov.hmrc.disareturnsstubs.controllers.upscan.UpscanController.upload()
+POST    /nps/declaration/:zReference                                                              uk.gov.hmrc.disareturnsstubs.controllers.NpsController.send(zReference: String)
+
+GET     /monthly/:zReference/:taxYear/:month/results                                              uk.gov.hmrc.disareturnsstubs.controllers.NpsController.getMonthlyReport(zReference: String, taxYear: String, month: String, pageIndex: Int, pageSize: Int)
+
+## Upscan routes
+
+POST    /upscan/v2/initiate                                                                       uk.gov.hmrc.disareturnsstubs.controllers.upscan.UpscanController.initiate()
+
+POST    /upscan/upload                                                                            uk.gov.hmrc.disareturnsstubs.controllers.upscan.UpscanController.upload()
+
+## Returns Submission routes
+
+POST    /disa-returns-submission/monthly/:zReference/:taxYear/:month                              uk.gov.hmrc.disareturnsstubs.controllers.SubmissionsController.createReturn(zReference: String, taxYear: String, month: String)
+
+PUT     /disa-returns-submission/monthly/:zReference/:taxYear/:month/submissions/:submissionId    uk.gov.hmrc.disareturnsstubs.controllers.SubmissionsController.storeSubmission(zReference: String, taxYear: String, month: String, submissionId: String)
+
+POST    /disa-returns-submission/monthly/:zReference/:taxYear/:month/declarations                 uk.gov.hmrc.disareturnsstubs.controllers.SubmissionsController.declare(zReference: String, taxYear: String, month: String)
+
+GET     /disa-returns-submission/reporting-window/status                                          uk.gov.hmrc.disareturnsstubs.controllers.ReportingWindowController.status()
