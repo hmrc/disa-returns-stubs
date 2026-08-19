@@ -23,7 +23,7 @@ import uk.gov.hmrc.disareturnsstubs.controllers.action.AuthorizationFilter
 import uk.gov.hmrc.disareturnsstubs.services.ReportingWindowService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class ReportingWindowController @Inject() (
@@ -37,7 +37,7 @@ class ReportingWindowController @Inject() (
     (Action andThen authorizationFilter).async { request =>
       request.headers.get("X-Cred-Id").map(_.trim).filter(_.nonEmpty) match {
         case Some(credId) => service.isOpen(credId).map(open => Ok(Json.obj("reportingWindowOpen" -> open)))
-        case None         => scala.concurrent.Future.successful(BadRequest(Json.obj("error" -> "Missing X-Cred-Id header")))
+        case None         => Future.successful(BadRequest(Json.obj("error" -> "Missing X-Cred-Id header")))
       }
     }
 }
