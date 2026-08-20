@@ -18,7 +18,9 @@ package uk.gov.hmrc.disareturnsstubs.controllers.upscan
 
 import org.apache.pekko.util.ByteString
 import play.api.Logging
+import play.api.http.HeaderNames.{CONTENT_TYPE, LOCATION}
 import play.api.http.HttpEntity
+import play.api.http.MimeTypes.{TEXT => TEXT_MIME_TYPE}
 import play.api.libs.Files
 import play.api.libs.json.*
 import play.api.mvc.*
@@ -86,17 +88,17 @@ class UpscanController @Inject() (
   private def toResult(response: HttpResponse): Result =
     if (response.status >= MULTIPLE_CHOICES && response.status < BAD_REQUEST) {
       val location = response
-        .header("Location")
+        .header(LOCATION)
         .getOrElse(throw new RuntimeException("Missing Location header from Upscan stub"))
       Result(
-        header = ResponseHeader(response.status, Map("Location" -> location)),
+        header = ResponseHeader(response.status, Map(LOCATION -> location)),
         body = HttpEntity.NoEntity
       )
     } else {
       val headers = response.headers.toSeq.flatMap { case (k, vs) => vs.map(v => k -> v) }.toMap
       Result(
         header = ResponseHeader(response.status, headers),
-        body = HttpEntity.Strict(ByteString(response.body), response.header("Content-Type").orElse(Some("text/plain")))
+        body = HttpEntity.Strict(ByteString(response.body), response.header(CONTENT_TYPE).orElse(Some(TEXT_MIME_TYPE)))
       )
     }
 

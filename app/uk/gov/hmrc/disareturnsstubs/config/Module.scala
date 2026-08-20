@@ -17,9 +17,17 @@
 package uk.gov.hmrc.disareturnsstubs.config
 
 import com.google.inject.AbstractModule
+import com.google.inject.Provides
+
+import java.time.{Clock, ZoneOffset}
+import javax.inject.Singleton
 
 class Module extends AbstractModule {
 
   override def configure(): Unit =
     bind(classOf[AppConfig]).asEagerSingleton()
+
+  @Provides
+  @Singleton
+  def clock: Clock = Clock.systemUTC().withZone(ZoneOffset.UTC)
 }

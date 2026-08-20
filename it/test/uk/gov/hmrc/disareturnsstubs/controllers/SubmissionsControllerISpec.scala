@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.disareturnsstubs.controllers
 
+import play.api.http.HeaderNames.{AUTHORIZATION, CONTENT_TYPE}
+import play.api.http.MimeTypes.JSON
 import play.api.test.FakeRequest
 import play.api.test.Helpers.*
 import uk.gov.hmrc.disareturnsstubs.BaseISpec
@@ -30,7 +32,7 @@ class SubmissionsControllerISpec extends BaseISpec {
         POST,
         s"/disa-returns-submission/monthly/$validZReference/2026-27/AUG"
       ).withHeaders(
-        CONTENT_TYPE  -> "application/json",
+        CONTENT_TYPE  -> JSON,
         AUTHORIZATION -> "not parsed"
       ).withBody("not valid JSON")
 
@@ -67,7 +69,7 @@ class SubmissionsControllerISpec extends BaseISpec {
         POST,
         s"/disa-returns-submission/monthly/$validZReference/2026-27/AUG/declarations"
       ).withHeaders(
-        CONTENT_TYPE  -> "application/json",
+        CONTENT_TYPE  -> JSON,
         AUTHORIZATION -> "not parsed"
       ).withBody("not valid JSON")
 

@@ -18,24 +18,19 @@ package uk.gov.hmrc.disareturnsstubs.controllers
 
 
 import org.mongodb.scala.SingleObservableFuture
-import play.api.Application
-import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.http.HeaderNames.CONTENT_TYPE
+import play.api.http.MimeTypes.JSON
 import play.api.libs.json.Json
 import play.api.test.Helpers.*
 import play.api.test.*
 import uk.gov.hmrc.disareturnsstubs.BaseISpec
 
-class EtmpTestOnlyControllerISpec extends BaseISpec {
-
-  override def fakeApplication(): Application =
-    new GuiceApplicationBuilder()
-      .configure("play.http.router" -> "test.Routes")
-      .build()
+class EtmpSetupControllerISpec extends BaseISpec {
 
   "setReportingWindowState" should {
     "return 204 NoContent when valid boolean is provided" in {
       val request = FakeRequest(POST, "/etmp/reporting-window-state")
-        .withHeaders("Content-Type" -> "application/json")
+        .withHeaders(CONTENT_TYPE -> JSON)
         .withJsonBody(Json.obj("reportingWindowOpen" -> true))
 
       val result = route(app, request).get
@@ -45,7 +40,7 @@ class EtmpTestOnlyControllerISpec extends BaseISpec {
 
     "return 400 BadRequest when request body is missing or invalid" in {
       val invalidRequest = FakeRequest(POST, "/etmp/reporting-window-state")
-        .withHeaders("Content-Type" -> "application/json")
+        .withHeaders(CONTENT_TYPE -> JSON)
         .withJsonBody(Json.obj("invalidField" -> "oops"))
 
       val result = route(app, invalidRequest).get

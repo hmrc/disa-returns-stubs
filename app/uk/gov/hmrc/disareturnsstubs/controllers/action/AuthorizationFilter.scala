@@ -18,6 +18,7 @@ package uk.gov.hmrc.disareturnsstubs.controllers.action
 
 import com.google.inject.Singleton
 import play.api.Logging
+import play.api.http.HeaderNames.AUTHORIZATION
 import play.api.libs.json.Json
 import play.api.mvc.Results.Forbidden
 import play.api.mvc._
@@ -31,7 +32,7 @@ class AuthorizationFilter @Inject() (implicit val executionContext: ExecutionCon
     with Logging {
 
   override def filter[A](request: Request[A]): Future[Option[Result]] =
-    request.headers.get("Authorization") match {
+    request.headers.get(AUTHORIZATION) match {
       case Some(_) => Future.successful(None)
       case None    =>
         logger.warn(s"[AuthorizationFilter][filter] Authorization failed due to absent token")

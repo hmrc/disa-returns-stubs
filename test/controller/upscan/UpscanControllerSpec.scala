@@ -19,6 +19,8 @@ package controller.upscan
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.{never, verify, when}
+import play.api.http.HeaderNames.{CONTENT_TYPE, LOCATION}
+import play.api.http.MimeTypes.TEXT
 import play.api.libs.Files
 import play.api.libs.Files.SingletonTemporaryFileCreator
 import play.api.libs.json.{JsValue, Json}
@@ -150,7 +152,7 @@ class UpscanControllerSpec extends BaseUnitSpec {
         dataParts = Map.empty,
         files = Seq(
           MultipartFormData
-            .FilePart("file", "empty.csv", Some("text/plain"), SingletonTemporaryFileCreator.create("t", ".csv"))
+            .FilePart("file", "empty.csv", Some(TEXT), SingletonTemporaryFileCreator.create("t", ".csv"))
         ),
         badParts = Nil
       )
@@ -172,7 +174,7 @@ class UpscanControllerSpec extends BaseUnitSpec {
     "proxy a normal file and pass through a redirect response from the connector" in new TestSetup {
 
       val successUrl   = s"$frontendBaseUrl/obligations/returns/isa/upscan/success?key=abc123"
-      val mockResponse = httpResponse(SEE_OTHER, headers = Map("Location" -> Seq(successUrl)))
+      val mockResponse = httpResponse(SEE_OTHER, headers = Map(LOCATION -> Seq(successUrl)))
 
       when(mockConnector.upload(any(), any())(any(), any()))
         .thenReturn(Future.successful(mockResponse))
@@ -186,7 +188,7 @@ class UpscanControllerSpec extends BaseUnitSpec {
 
     "proxy a normal file and pass through a non-redirect response from the connector" in new TestSetup {
 
-      val mockResponse = httpResponse(OK, "upload accepted", Map("Content-Type" -> Seq("text/plain")))
+      val mockResponse = httpResponse(OK, "upload accepted", Map(CONTENT_TYPE -> Seq(TEXT)))
 
       when(mockConnector.upload(any(), any())(any(), any()))
         .thenReturn(Future.successful(mockResponse))

@@ -18,12 +18,14 @@ package controller
 
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
+import play.api.http.HeaderNames.CONTENT_TYPE
+import play.api.http.MimeTypes.JSON
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.disareturnsstubs.config.AppConfig
 import uk.gov.hmrc.disareturnsstubs.services.GenerateAndStoreReportService
-import uk.gov.hmrc.disareturnsstubs.testonly.controllers.GenerateReportController
+import uk.gov.hmrc.disareturnsstubs.controllers.GenerateReportController
 import utils.BaseUnitSpec
 
 import scala.concurrent.Future
@@ -56,7 +58,7 @@ class GenerateReportControllerSpec extends BaseUnitSpec {
 
   private def jsonPostRequest(body: JsValue) =
     FakeRequest(POST, "/")
-      .withHeaders("Content-Type" -> "application/json")
+      .withHeaders(CONTENT_TYPE -> JSON)
       .withBody(body)
 
   "create" should {

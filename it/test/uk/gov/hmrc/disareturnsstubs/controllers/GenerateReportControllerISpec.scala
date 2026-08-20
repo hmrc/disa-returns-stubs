@@ -21,12 +21,13 @@ import org.mockito.Mockito.when
 import org.mongodb.scala.SingleObservableFuture
 import org.scalatest.matchers.should.Matchers.*
 import org.scalatestplus.mockito.MockitoSugar.mock
+import play.api.http.HeaderNames.{AUTHORIZATION, CONTENT_TYPE}
+import play.api.http.MimeTypes.JSON
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers.*
 import play.api.test.*
-import play.api.Application
 import uk.gov.hmrc.disareturnsstubs.BaseISpec
 import uk.gov.hmrc.disareturnsstubs.models.generatereport.GenerateReportRequest
 import uk.gov.hmrc.disareturnsstubs.services.GenerateAndStoreReportService
@@ -35,12 +36,7 @@ import scala.concurrent.Future
 
 class GenerateReportControllerISpec extends BaseISpec {
 
-  override def fakeApplication(): Application =
-    new GuiceApplicationBuilder()
-      .configure("play.http.router" -> "testOnlyDoNotUseInAppConf.Routes")
-      .build()
-
-  val createReportEndpoint = s"/test-only/$validZReference/reconciliation"
+  val createReportEndpoint = s"/monthly/$validZReference/reconciliation"
   val mockGenerateAndStoreReportService: GenerateAndStoreReportService = mock[GenerateAndStoreReportService]
 
   val validPayload: JsValue = Json.parse(
@@ -58,7 +54,7 @@ class GenerateReportControllerISpec extends BaseISpec {
       |}""".stripMargin
   )
 
-  "POST /test-only/:zReference/reconciliation" should {
+  "POST /monthly/:zReference/reconciliation" should {
 
     "create a report event and associated report issues for a valid request" in {
 
@@ -66,8 +62,8 @@ class GenerateReportControllerISpec extends BaseISpec {
       await(reportIssueRepository.collection.drop().toFuture())
 
       val request = FakeRequest(POST, createReportEndpoint)
-        .withHeaders("Authorization" -> "Bearer token")
-        .withHeaders("Content-Type" -> "application/json")
+        .withHeaders(AUTHORIZATION -> "Bearer token")
+        .withHeaders(CONTENT_TYPE -> JSON)
         .withJsonBody(validPayload)
 
       val result = route(app, request).get
@@ -94,7 +90,7 @@ class GenerateReportControllerISpec extends BaseISpec {
     "return 400 BadRequest when the payload is invalid JSON" in {
 
       val request = FakeRequest(POST, createReportEndpoint)
-        .withHeaders("Authorization" -> "Bearer token")
+        .withHeaders(AUTHORIZATION -> "Bearer token")
         .withJsonBody(invalidPayload)
 
       val result = route(app, request).get
@@ -111,7 +107,7 @@ class GenerateReportControllerISpec extends BaseISpec {
           |}""".stripMargin
       )
       val request = FakeRequest(POST, createReportEndpoint)
-        .withHeaders("Authorization" -> "Bearer token")
+        .withHeaders(AUTHORIZATION -> "Bearer token")
         .withJsonBody(validPayload)
 
       val result = route(app, request).get
@@ -146,13 +142,12 @@ class GenerateReportControllerISpec extends BaseISpec {
 
       val mockApp = new GuiceApplicationBuilder()
         .overrides(bind[GenerateAndStoreReportService].toInstance(mockGenerateAndStoreReportService))
-        .configure("play.http.router" -> "testOnlyDoNotUseInAppConf.Routes")
         .build()
 
       running(mockApp) {
 
         val request = FakeRequest(POST, createReportEndpoint)
-          .withHeaders("Authorization" -> "Bearer token")
+          .withHeaders(AUTHORIZATION -> "Bearer token")
           .withJsonBody(validPayload)
 
         val result = route(mockApp, request).get

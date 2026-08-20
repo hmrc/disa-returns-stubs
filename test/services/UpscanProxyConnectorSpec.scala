@@ -20,6 +20,7 @@ import com.typesafe.config.{Config, ConfigFactory}
 import org.apache.pekko.actor.ActorSystem
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.{times, verify, when}
+import play.api.http.MimeTypes.TEXT
 import play.api.libs.Files
 import play.api.libs.Files.SingletonTemporaryFileCreator
 import play.api.http.Status.{BAD_GATEWAY, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE}
@@ -102,7 +103,7 @@ class UpscanProxyConnectorSpec extends BaseUnitSpec {
       val filePart = MultipartFormData.FilePart[Files.TemporaryFile](
         key = "file",
         filename = "test.txt",
-        contentType = Some("text/plain"),
+        contentType = Some(TEXT),
         ref = SingletonTemporaryFileCreator.create("test", ".txt")
       )
 
