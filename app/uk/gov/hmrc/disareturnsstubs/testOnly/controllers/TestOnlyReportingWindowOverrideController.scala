@@ -42,7 +42,7 @@ class TestOnlyReportingWindowOverrideController @Inject() (
         } else {
           reportingWindowOverrideRepository.deleteByZReferences(normalized.flatten.distinct).map(_ => NoContent)
         }
-      case _                                           => Future.successful(BadRequest)
+      case _                                         => Future.successful(BadRequest)
     }
   }
 }

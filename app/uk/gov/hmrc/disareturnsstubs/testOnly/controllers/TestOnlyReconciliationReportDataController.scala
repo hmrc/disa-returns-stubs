@@ -49,7 +49,7 @@ class TestOnlyReconciliationReportDataController @Inject() (
             _            <- reportEventRepository.deleteByZReferences(normalizedZReferences)
           } yield NoContent
         }
-      case _                                           => Future.successful(BadRequest)
+      case _                                         => Future.successful(BadRequest)
     }
   }
 }
