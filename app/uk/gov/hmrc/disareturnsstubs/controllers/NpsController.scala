@@ -28,13 +28,13 @@ import uk.gov.hmrc.disareturnsstubs.mappers.ErrorMapper._
 import uk.gov.hmrc.disareturnsstubs.models.ReturnResultResponse
 import uk.gov.hmrc.disareturnsstubs.models.generatereport.GenerateReportRequest
 import uk.gov.hmrc.disareturnsstubs.services.{GenerateReportIssuesService, RetrieveReportService}
+import uk.gov.hmrc.disareturnsstubs.services.RetrieveReportService.{decodeCursor, encodeCursor}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Random
 import scala.util.control.NonFatal
 
 @Singleton
@@ -51,6 +51,7 @@ class NpsController @Inject() (
 
   private val perfTestCredIdPrefix: String = "disa-returns-perf-test"
   private val perfTestTotalRecords: Int    = 1000
+  private val maxLimit: Int                = 1000
 
   def submitMonthlyReturn(zReference: String): Action[RawBuffer] =
     (Action(parse.raw) andThen authorizationFilter).async { _ =>
@@ -76,31 +77,39 @@ class NpsController @Inject() (
     zReference: String,
     taxYear: String,
     month: String,
-    pageIndex: Int,
-    pageSize: Int
+    cursor: Option[String],
+    limit: Int
   ): Action[AnyContent] = Action.async { implicit request =>
-    implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
-    authorised()
-      .retrieve(credentials) {
-        case Some(Credentials(credId, _)) if credId.startsWith(perfTestCredIdPrefix) =>
-          logger.info(
-            s"[NpsController][getMonthlyReport] Returning generated report for IM ref: [$zReference], skipping Mongo"
-          )
-          Future.successful(perfTestMonthlyReport(pageSize))
-        case _                                                                       =>
-          nonPerfTestReport(zReference, taxYear, month, pageIndex, pageSize)
-      }
-      .recoverWith { case NonFatal(_) =>
-        nonPerfTestReport(zReference, taxYear, month, pageIndex, pageSize)
-      }
+    val offset = cursor.fold(Some(0))(decodeCursor)
+
+    if (offset.isEmpty) {
+      Future.successful(BadRequest(Json.toJson(invalidCursorError)))
+    } else if (limit < 1 || limit > maxLimit) {
+      Future.successful(BadRequest(Json.toJson(badRequestError)))
+    } else {
+      implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
+      authorised()
+        .retrieve(credentials) {
+          case Some(Credentials(credId, _)) if credId.startsWith(perfTestCredIdPrefix) =>
+            logger.info(
+              s"[NpsController][getMonthlyReport] Returning generated report for IM ref: [$zReference], skipping Mongo"
+            )
+            Future.successful(perfTestMonthlyReport(offset.get, limit, cursor.nonEmpty))
+          case _                                                                       =>
+            nonPerfTestReport(zReference, taxYear, month, offset.get, limit)
+        }
+        .recoverWith { case NonFatal(_) =>
+          nonPerfTestReport(zReference, taxYear, month, offset.get, limit)
+        }
+    }
   }
 
   private def nonPerfTestReport(
     zReference: String,
     taxYear: String,
     month: String,
-    pageIndex: Int,
-    pageSize: Int
+    offset: Int,
+    limit: Int
   ): Future[Result] =
     if (zReference == "Z1500") {
       Future.successful(
@@ -108,14 +117,16 @@ class NpsController @Inject() (
       )
     } else {
       retrieveReportService
-        .getMonthlyReport(zReference, taxYear, month, pageIndex, pageSize)
+        .getMonthlyReport(zReference, taxYear, month, offset, limit)
         .map {
-          case Right(response) =>
+          case Right(response)                                      =>
             logger.info(
               s"[NpsController][nonPerfTestReport] Successful retrieval of monthly report for IM ref: [$zReference] for [$month][$taxYear]"
             )
             Ok(Json.toJson(response))
-          case Left(error)     =>
+          case Left(error) if error.code == invalidCursorError.code =>
+            BadRequest(Json.toJson(error))
+          case Left(error)                                          =>
             logger.warn(
               s"[NpsController][nonPerfTestReport] ${error.code} for IM ref: [$zReference] for [$month][$taxYear]: ${error.message}"
             )
@@ -131,9 +142,13 @@ class NpsController @Inject() (
         }
     }
 
-  private def perfTestMonthlyReport(pageSize: Int): Result = {
-    val recordCount = Random.nextInt(pageSize) + 1
+  private def perfTestMonthlyReport(offset: Int, limit: Int, isContinuation: Boolean): Result = {
+    if (isContinuation && offset >= perfTestTotalRecords) return BadRequest(Json.toJson(invalidCursorError))
+
+    val remaining   = (perfTestTotalRecords - offset).max(0)
+    val recordCount = limit.min(remaining)
     val results     = reportIssuesService.generateResults(GenerateReportRequest(recordCount, 0, 0))
-    Ok(Json.toJson(ReturnResultResponse(totalRecords = perfTestTotalRecords, returnResults = results)))
+    val nextCursor  = Option.when(offset + recordCount < perfTestTotalRecords)(encodeCursor(offset + recordCount))
+    Ok(Json.toJson(ReturnResultResponse(results, nextCursor)))
   }
 }

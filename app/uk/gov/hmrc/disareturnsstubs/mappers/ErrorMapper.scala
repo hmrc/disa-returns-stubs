@@ -22,6 +22,7 @@ object ErrorMapper {
   val badRequestError: ErrorResponse         = ErrorResponse("BAD_REQUEST", "Bad request")
   val serviceUnavailableError: ErrorResponse = ErrorResponse("SERVICE_UNAVAILABLE", "Service unavailable")
   val reportNotFoundError: ErrorResponse     = ErrorResponse("REPORT_NOT_FOUND", "Report not found")
+  val invalidCursorError: ErrorResponse      = ErrorResponse("INVALID_CURSOR", "INVALID_CURSOR")
 
   def issueLimitExceeded(limit: Int): ErrorResponse =
     ErrorResponse(
@@ -29,8 +30,6 @@ object ErrorMapper {
       message =
         s"The maximum number of records that can be generated in a single request is $limit. Please reduce the number of requested records and try again."
     )
-
-  def pageNotFoundError(pageIndex: Int): ErrorResponse = ErrorResponse("PAGE_NOT_FOUND", s"No page $pageIndex found")
 
   def internalServerErr(message: String): ErrorResponse = ErrorResponse("INTERNAL_SERVER_ERROR", message)
 }

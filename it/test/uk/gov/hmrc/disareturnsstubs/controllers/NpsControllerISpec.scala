@@ -24,6 +24,7 @@ import play.api.test.*
 import uk.gov.hmrc.disareturnsstubs.BaseISpec
 import uk.gov.hmrc.disareturnsstubs.models.generatereport.{ReportEvent, ReportIssueDocument}
 import uk.gov.hmrc.disareturnsstubs.models.*
+import uk.gov.hmrc.disareturnsstubs.services.RetrieveReportService.encodeCursor
 
 import java.time.Instant
 
@@ -132,8 +133,7 @@ class NpsControllerISpec extends BaseISpec {
 
       val request =
         FakeRequest(POST, s"$submitMonthlyReturnEndpoint/$validZReference")
-          .withHeaders(
-            AUTHORIZATION -> "Bearer token")
+          .withHeaders(AUTHORIZATION -> "Bearer token")
           .withBody(oversizedBody)
 
       val result = route(app, request).get
@@ -146,7 +146,7 @@ class NpsControllerISpec extends BaseISpec {
 
     "return 204 NoContent for any non-error ISA ref" in {
       val request = FakeRequest(POST, s"$npsDeclarationEndpoint/$validZReference")
-      val result = route(app, request).get
+      val result  = route(app, request).get
       status(result) mustBe NO_CONTENT
     }
 
@@ -160,57 +160,56 @@ class NpsControllerISpec extends BaseISpec {
     }
   }
 
-
-  val pageSize  = 2
-  val pageIndex0 = 0
-  val pageIndex1 = 1
+  val limit = 2
 
   val reportEventDocument: ReportEvent = ReportEvent(
-    reportId   = "RPT_TEST",
+    reportId = "RPT_TEST",
     zReference = validZReference,
-    createdAt  = Instant.now()
+    createdAt = Instant.now()
   )
 
   val reportIssueDocumentMessage: ReportIssueDocument = ReportIssueDocument(
-    reportId       = "RPT_TEST",
-    accountNumber  = "100000001",
-    nino           = "AB123457C",
+    reportId = "RPT_TEST",
+    accountNumber = "100000001",
+    nino = "AB123457C",
     issueIdentified = IssueIdentifiedMessage(
-      code    = "UNABLE_TO_IDENTIFY_INVESTOR",
+      code = "UNABLE_TO_IDENTIFY_INVESTOR",
       message = "Unable to identify investor"
     ),
-    createdAt      = Instant.now()
+    createdAt = Instant.now()
   )
 
   val reportIssueDocumentOverSubscribed: ReportIssueDocument = ReportIssueDocument(
-    reportId       = "RPT_TEST",
-    accountNumber  = "100000001",
-    nino           = "AB123457C",
+    reportId = "RPT_TEST",
+    accountNumber = "100000001",
+    nino = "AB123457C",
     issueIdentified = IssueIdentifiedOverSubscribed(
-      code                  = "OVER_SUBSCRIBED",
-      overSubscribedAmount  = 123.1
+      code = "OVER_SUBSCRIBED",
+      overSubscribedAmount = 123.1
     ),
-    createdAt      = Instant.now()
+    createdAt = Instant.now()
   )
 
-  "GET /reports/:zReference/:taxYear/:month" should {
+  "GET /monthly/:zReference/:taxYear/:month/results" should {
 
-    "return 200 OK and the returnResults when a report exists" in {
+    "return 200 OK using the default limit when a report exists" in {
       val reportEvent = reportEventDocument.copy(reportId = "RPT1")
       await(reportEventRepository.upsert(reportEvent))
 
       val issue = reportIssueDocumentMessage.copy(reportId = "RPT1")
       await(reportIssueRepository.insertMany(Seq(issue)))
 
-      val request = FakeRequest(GET, s"/monthly/$validZReference/$taxYear/$month/results?pageIndex=$pageIndex0&pageSize=10")
+      val request = FakeRequest(GET, s"/monthly/$validZReference/$taxYear/$month/results")
       val result  = route(app, request).get
 
       status(result) mustBe OK
       val jsonBody = contentAsJson(result)
       val response = jsonBody.as[ReturnResultResponse]
 
-      response.totalRecords mustBe 1
       response.returnResults must have size 1
+      response.nextCursor mustBe None
+      (jsonBody \ "totalRecords").toOption mustBe None
+      (jsonBody \ "nextCursor").toOption mustBe None
 
       val first = response.returnResults.head
       first.accountNumber mustBe "100000001"
@@ -218,7 +217,7 @@ class NpsControllerISpec extends BaseISpec {
       first.issueIdentified.code mustBe "UNABLE_TO_IDENTIFY_INVESTOR"
     }
 
-    "return 200 OK with correct pages across multiple pages" in {
+    "return 200 OK with a raw cursor across multiple pages" in {
       val reportEvent = reportEventDocument.copy(reportId = "RPT2")
       await(reportEventRepository.upsert(reportEvent))
 
@@ -229,40 +228,57 @@ class NpsControllerISpec extends BaseISpec {
       )
       await(reportIssueRepository.insertMany(issues))
 
-      // Page 0
-      val requestPage0 = FakeRequest(GET, s"/monthly/$validZReference/$taxYear/$month/results?pageIndex=$pageIndex0&pageSize=$pageSize")
-      val resultPage0  = route(app, requestPage0).get
-      status(resultPage0) mustBe OK
-      val jsonPage0 = contentAsJson(resultPage0)
-      (jsonPage0 \ "returnResults").as[Seq[ReturnResult]].map(_.accountNumber) must contain allOf ("100000001", "100000002")
+      val firstRequest = FakeRequest(GET, s"/monthly/$validZReference/$taxYear/$month/results?limit=$limit")
+      val firstResult  = route(app, firstRequest).get
+      status(firstResult) mustBe OK
+      val firstJson    = contentAsJson(firstResult)
+      val nextCursor   = (firstJson \ "nextCursor").as[String]
+      (firstJson \ "returnResults")
+        .as[Seq[ReturnResult]]
+        .map(_.accountNumber) must contain allOf ("100000001", "100000002")
+      (firstJson \ "totalRecords").toOption mustBe None
+      nextCursor mustBe "b2Zmc2V0OjI"
 
-      // Page 1
-      val requestPage1 = FakeRequest(GET, s"/monthly/$validZReference/$taxYear/$month/results?pageIndex=$pageIndex1&pageSize=$pageSize")
-      val resultPage1  = route(app, requestPage1).get
-      status(resultPage1) mustBe OK
-      val jsonPage1 = contentAsJson(resultPage1)
-      (jsonPage1 \ "returnResults").as[Seq[ReturnResult]].map(_.accountNumber) must contain ("100000003")
+      val secondRequest = FakeRequest(
+        GET,
+        s"/monthly/$validZReference/$taxYear/$month/results?cursor=$nextCursor&limit=$limit"
+      )
+      val secondResult  = route(app, secondRequest).get
+      status(secondResult) mustBe OK
+      val secondJson    = contentAsJson(secondResult)
+      (secondJson \ "returnResults").as[Seq[ReturnResult]].map(_.accountNumber) must contain("100000003")
+      (secondJson \ "totalRecords").toOption mustBe None
+      (secondJson \ "nextCursor").toOption mustBe None
+
+      val staleCursorRequest = FakeRequest(
+        GET,
+        s"/monthly/$validZReference/$taxYear/$month/results?cursor=${encodeCursor(3)}&limit=$limit"
+      )
+      val staleCursorResult  = route(app, staleCursorRequest).get
+      status(staleCursorResult) mustBe BAD_REQUEST
+      (contentAsJson(staleCursorResult) \ "code").as[String] mustBe "INVALID_CURSOR"
     }
 
-    "return 404 PageNotFound when page does not exist in report" in {
-      val reportEvent = reportEventDocument.copy(reportId = "RPT3")
-      await(reportEventRepository.upsert(reportEvent))
-      val issue = reportIssueDocumentMessage.copy(reportId = "RPT3")
-      await(reportIssueRepository.insertMany(Seq(issue)))
-
-      val nonExistentPageIndex = 10
-      val request = FakeRequest(GET, s"/monthly/$validZReference/$taxYear/$month/results?pageIndex=$nonExistentPageIndex&pageSize=10")
+    "return 400 BadRequest for an invalid cursor" in {
+      val request = FakeRequest(GET, s"/monthly/$validZReference/$taxYear/$month/results?cursor=not-a-cursor")
       val result  = route(app, request).get
 
-      status(result) mustBe NOT_FOUND
-      (contentAsJson(result) \ "code").asOpt[String] mustBe Some("PAGE_NOT_FOUND")
-      (contentAsJson(result) \ "message").asOpt[String] mustBe Some(s"No page $nonExistentPageIndex found")
+      status(result) mustBe BAD_REQUEST
+      (contentAsJson(result) \ "code").asOpt[String] mustBe Some("INVALID_CURSOR")
+    }
+
+    "return 400 BadRequest when limit exceeds 1000" in {
+      val request = FakeRequest(GET, s"/monthly/$validZReference/$taxYear/$month/results?limit=1001")
+      val result  = route(app, request).get
+
+      status(result) mustBe BAD_REQUEST
+      (contentAsJson(result) \ "code").asOpt[String] mustBe Some("BAD_REQUEST")
     }
 
     "return 404 NotFound when no report exists for given identifiers" in {
       await(reportEventRepository.collection.drop().toFuture())
       await(reportIssueRepository.collection.drop().toFuture())
-      val request = FakeRequest(GET, s"/monthly/$validZReference/$taxYear/$month/results?pageIndex=$pageIndex0&pageSize=10")
+      val request = FakeRequest(GET, s"/monthly/$validZReference/$taxYear/$month/results?limit=10")
       val result  = route(app, request).get
 
       status(result) mustBe NOT_FOUND
@@ -271,7 +287,7 @@ class NpsControllerISpec extends BaseISpec {
     }
 
     "return 500 InternalServerError when zReference is Z1500" in {
-      val request = FakeRequest(GET, s"/monthly/Z1500/$taxYear/$month/results?pageIndex=$pageIndex0&pageSize=10")
+      val request = FakeRequest(GET, s"/monthly/Z1500/$taxYear/$month/results?limit=10")
       val result  = route(app, request).get
 
       status(result) mustBe INTERNAL_SERVER_ERROR
