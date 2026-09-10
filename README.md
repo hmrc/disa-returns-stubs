@@ -94,11 +94,14 @@ POST /nps/submit/:zReference
 
 ### Endpoint:
 ```bash
-GET /monthly/:zReference/:taxYear/:month/results
+GET /monthly/:zReference/:taxYear/:month/results?cursor=:cursor&limit=:limit
 ```
 
 - This endpoint requires a report to be generated either via the stub setup endpoint or disa-returns-test-support-api.
 - If no report is generated then any Z_REF other than Z1500 will return 404 NOT_FOUND
+- `cursor` is optional. Omit it for the first page, then pass the raw `nextCursor` value returned by the previous response.
+- `limit` is optional and defaults to 200.
+- Responses contain `returnResults`. `nextCursor` is present only when another page is available; `totalRecords` is not returned.
 
 ### Z Reference Based Responses:
 

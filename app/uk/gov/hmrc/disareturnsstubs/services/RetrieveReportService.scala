@@ -16,12 +16,16 @@
 
 package uk.gov.hmrc.disareturnsstubs.services
 
-import uk.gov.hmrc.disareturnsstubs.mappers.ErrorMapper.{pageNotFoundError, reportNotFoundError}
+import uk.gov.hmrc.disareturnsstubs.mappers.ErrorMapper.{invalidCursorError, reportNotFoundError}
 import uk.gov.hmrc.disareturnsstubs.models.{ErrorResponse, ReturnResult, ReturnResultResponse}
 import uk.gov.hmrc.disareturnsstubs.repositories.generatereport.{ReportEventRepository, ReportIssueRepository}
+import uk.gov.hmrc.disareturnsstubs.services.RetrieveReportService.encodeCursor
 
+import java.nio.charset.StandardCharsets
+import java.util.Base64
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Try
 
 @Singleton
 class RetrieveReportService @Inject() (
@@ -33,40 +37,52 @@ class RetrieveReportService @Inject() (
     zReference: String,
     year: String,
     month: String,
-    pageIndex: Int,
-    pageSize: Int
-  ): Future[Either[ErrorResponse, ReturnResultResponse]] = {
-
-    val skip  = pageIndex * pageSize
-    val limit = pageSize
-
+    offset: Int,
+    limit: Int
+  ): Future[Either[ErrorResponse, ReturnResultResponse]] =
     reportEventRepository.find(zReference).flatMap {
       case None =>
         Future.successful(Left(reportNotFoundError))
 
       case Some(event) =>
-        for {
-          total  <- reportIssueRepository.countByReportId(event.reportId)
-          issues <- reportIssueRepository.findByReportId(event.reportId, skip, limit)
-        } yield
-          if (skip >= total) {
-            Left(pageNotFoundError(pageIndex))
-          } else {
-            val results = issues.map { issue =>
-              ReturnResult(
-                accountNumber = issue.accountNumber,
-                nino = issue.nino,
-                issueIdentified = issue.issueIdentified
+        reportIssueRepository.countByReportId(event.reportId).flatMap { total =>
+          if (offset > 0 && offset >= total) Future.successful(Left(invalidCursorError))
+          else
+            reportIssueRepository.findByReportId(event.reportId, offset, limit).map { issues =>
+              val results = issues.map { issue =>
+                ReturnResult(
+                  accountNumber = issue.accountNumber,
+                  nino = issue.nino,
+                  issueIdentified = issue.issueIdentified
+                )
+              }
+
+              Right(
+                ReturnResultResponse(
+                  returnResults = results,
+                  nextCursor = Option.when(offset + results.size < total)(encodeCursor(offset + results.size))
+                )
               )
             }
-
-            Right(
-              ReturnResultResponse(
-                totalRecords = total.toInt,
-                returnResults = results
-              )
-            )
-          }
+        }
     }
-  }
+}
+
+object RetrieveReportService {
+  private val cursorPrefix = "offset:"
+
+  def encodeCursor(offset: Int): String =
+    Base64.getUrlEncoder.withoutPadding.encodeToString(
+      s"$cursorPrefix$offset".getBytes(StandardCharsets.UTF_8)
+    )
+
+  def decodeCursor(cursor: String): Option[Int] =
+    Try {
+      val decoded = new String(
+        Base64.getUrlDecoder.decode(cursor),
+        StandardCharsets.UTF_8
+      )
+      if (decoded.startsWith(cursorPrefix)) decoded.drop(cursorPrefix.length).toInt else -1
+    }.toOption
+      .filter(_ >= 0)
 }

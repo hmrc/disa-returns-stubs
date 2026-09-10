@@ -22,10 +22,12 @@ import org.mockito.Mockito.when
 import play.api.Play.materializer
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import uk.gov.hmrc.auth.core.MissingBearerToken
 import uk.gov.hmrc.disareturnsstubs.controllers.NpsController
-import uk.gov.hmrc.disareturnsstubs.mappers.ErrorMapper.{pageNotFoundError, reportNotFoundError}
+import uk.gov.hmrc.disareturnsstubs.mappers.ErrorMapper.reportNotFoundError
 import uk.gov.hmrc.disareturnsstubs.models.{IssueIdentifiedMessage, ReturnResult, ReturnResultResponse}
 import uk.gov.hmrc.disareturnsstubs.services.{GenerateReportIssuesService, RetrieveReportService}
+import uk.gov.hmrc.disareturnsstubs.services.RetrieveReportService.encodeCursor
 import utils.BaseUnitSpec
 
 import scala.concurrent.Future
@@ -121,58 +123,69 @@ class NpsControllerSpec extends BaseUnitSpec {
 
   "getMonthlyReport" should {
 
-    val pageIndex = 0
-    val pageSize  = 10
+    val limit = 10
 
     "return 200 OK with returnResults when report exists" in {
       when(
         mockRetrieveReportService.getMonthlyReport(any(), any(), any(), any(), any())
-      ).thenReturn(Future.successful(Right(ReturnResultResponse(totalRecords = 3, returnResults = sampleReturnResult))))
+      ).thenReturn(Future.successful(Right(ReturnResultResponse(returnResults = sampleReturnResult))))
 
       val request = FakeRequest(GET, s"/nps/monthly/$validZReference/2025-26/APR/results")
-      val result  = controller.getMonthlyReport(validZReference, "2025-26", "APR", pageIndex, pageSize)(request)
+      val result  = controller.getMonthlyReport(validZReference, "2025-26", "APR", None, limit)(request)
 
       status(result) shouldBe OK
       val jsonBody = contentAsJson(result)
       (jsonBody \\ "accountNumber").map(_.as[String]) should contain("100000001")
+      (jsonBody \ "totalRecords").toOption          shouldBe None
+      (jsonBody \ "nextCursor").asOpt[String]       shouldBe None
     }
 
-    "return 200 OK with correct pages across multiple pages" in {
+    "return 200 OK with a raw cursor across multiple pages" in {
+      val nextCursor = encodeCursor(2)
       when(
         mockRetrieveReportService.getMonthlyReport(any(), any(), any(), ArgumentMatchers.eq(0), ArgumentMatchers.eq(2))
       )
         .thenReturn(
-          Future.successful(Right(ReturnResultResponse(totalRecords = 3, returnResults = sampleReturnResult.take(2))))
+          Future.successful(
+            Right(ReturnResultResponse(sampleReturnResult.take(2), nextCursor = Some(nextCursor)))
+          )
         )
 
       when(
-        mockRetrieveReportService.getMonthlyReport(any(), any(), any(), ArgumentMatchers.eq(1), ArgumentMatchers.eq(2))
+        mockRetrieveReportService.getMonthlyReport(any(), any(), any(), ArgumentMatchers.eq(2), ArgumentMatchers.eq(2))
       )
         .thenReturn(
-          Future.successful(Right(ReturnResultResponse(totalRecords = 3, returnResults = sampleReturnResult.drop(2))))
+          Future.successful(Right(ReturnResultResponse(returnResults = sampleReturnResult.drop(2))))
         )
       val request = FakeRequest(GET, s"/nps/monthly/$validZReference/2025-26/APR/results")
 
-      val resultForPage0 = controller.getMonthlyReport(validZReference, "2025-26", "APR", 0, 2)(request)
-      val resultForPage1 = controller.getMonthlyReport(validZReference, "2025-26", "APR", 1, 2)(request)
+      val firstResult  = controller.getMonthlyReport(validZReference, "2025-26", "APR", None, 2)(request)
+      val secondResult = controller.getMonthlyReport(validZReference, "2025-26", "APR", Some(nextCursor), 2)(request)
 
-      val jsonBodyPage0 = contentAsJson(resultForPage0)
-      val jsonBodyPage1 = contentAsJson(resultForPage1)
+      val firstJson  = contentAsJson(firstResult)
+      val secondJson = contentAsJson(secondResult)
 
-      (jsonBodyPage0 \ "returnResults").as[Seq[ReturnResult]].size shouldBe 2
-      (jsonBodyPage1 \ "returnResults").as[Seq[ReturnResult]].size shouldBe 1
+      (firstJson \ "returnResults").as[Seq[ReturnResult]].size  shouldBe 2
+      (firstJson \ "totalRecords").toOption                     shouldBe None
+      (firstJson \ "nextCursor").as[String]                     shouldBe nextCursor
+      (secondJson \ "returnResults").as[Seq[ReturnResult]].size shouldBe 1
+      (secondJson \ "totalRecords").toOption                    shouldBe None
+      (secondJson \ "nextCursor").asOpt[String]                 shouldBe None
     }
 
-    "return 404 PageNotFound when page does not exist" in {
-      when(
-        mockRetrieveReportService.getMonthlyReport(any(), any(), any(), any(), any())
-      ).thenReturn(Future.successful(Left(pageNotFoundError(10))))
-
+    "return 400 BadRequest for an invalid cursor" in {
       val request = FakeRequest(GET, s"/nps/monthly/$validZReference/2025-26/APR/results")
-      val result  = controller.getMonthlyReport(validZReference, "2025-26", "APR", 10, pageSize)(request)
+      val result  = controller.getMonthlyReport(validZReference, "2025-26", "APR", Some("not-a-cursor"), limit)(request)
 
-      status(result)                                 shouldBe NOT_FOUND
-      (contentAsJson(result) \ "code").asOpt[String] shouldBe Some("PAGE_NOT_FOUND")
+      status(result)                                 shouldBe BAD_REQUEST
+      (contentAsJson(result) \ "code").asOpt[String] shouldBe Some("INVALID_CURSOR")
+    }
+
+    "return 400 BadRequest when limit is outside the supported range" in {
+      val request = FakeRequest(GET, s"/nps/monthly/$validZReference/2025-26/APR/results")
+
+      status(controller.getMonthlyReport(validZReference, "2025-26", "APR", None, 0)(request))    shouldBe BAD_REQUEST
+      status(controller.getMonthlyReport(validZReference, "2025-26", "APR", None, 1001)(request)) shouldBe BAD_REQUEST
     }
 
     "return 404 NotFound when no report exists" in {
@@ -181,7 +194,7 @@ class NpsControllerSpec extends BaseUnitSpec {
       ).thenReturn(Future.successful(Left(reportNotFoundError)))
 
       val request = FakeRequest(GET, s"/nps/monthly/$validZReference/2025-26/APR/results")
-      val result  = controller.getMonthlyReport(validZReference, "2025-26", "APR", pageIndex, pageSize)(request)
+      val result  = controller.getMonthlyReport(validZReference, "2025-26", "APR", None, limit)(request)
 
       status(result)                                 shouldBe NOT_FOUND
       (contentAsJson(result) \ "code").asOpt[String] shouldBe Some("REPORT_NOT_FOUND")
@@ -189,59 +202,38 @@ class NpsControllerSpec extends BaseUnitSpec {
 
     "return 500 InternalServerError when zReference is Z1500" in {
       val request = FakeRequest(GET, s"/nps/monthly/Z1500/2025-26/APR/results")
-      val result  = controller.getMonthlyReport("Z1500", "2025-26", "APR", pageIndex, pageSize)(request)
+      val result  = controller.getMonthlyReport("Z1500", "2025-26", "APR", None, limit)(request)
 
       status(result)                                    shouldBe INTERNAL_SERVER_ERROR
       (contentAsJson(result) \ "code").asOpt[String]    shouldBe Some("INTERNAL_SERVER_ERROR")
       (contentAsJson(result) \ "message").asOpt[String] shouldBe Some("Internal issue, try again later")
     }
 
-    "return 404 PageNotFound when requested page exceeds available records" in {
-      val pageIndexOutOfRange = 10
-      val pageSize            = 2
-
-      when(
-        mockRetrieveReportService.getMonthlyReport(any(), any(), any(), any(), any())
-      ).thenReturn(
-        Future.successful(
-          Left(pageNotFoundError(pageIndexOutOfRange))
-        )
-      )
-
-      val request = FakeRequest(GET, s"/nps/monthly/$validZReference/2025-26/APR/results")
-      val result  =
-        controller.getMonthlyReport(validZReference, "2025-26", "APR", pageIndexOutOfRange, pageSize)(request)
-
-      status(result) shouldBe NOT_FOUND
-      val jsonBody = contentAsJson(result)
-      (jsonBody \ "code").as[String]    shouldBe "PAGE_NOT_FOUND"
-      (jsonBody \ "message").as[String] shouldBe "No page 10 found"
-    }
-
     "return a generated report without calling RetrieveReportService when authorised with a perf-test credId" in {
       authorisedUser(Some(s"disa-returns-perf-test-$validZReference"))
 
       val request = FakeRequest(GET, s"/nps/monthly/$validZReference/2025-26/APR/results")
-      val result  = controller.getMonthlyReport(validZReference, "2025-26", "APR", pageIndex, pageSize)(request)
+      val result  = controller.getMonthlyReport(validZReference, "2025-26", "APR", None, limit)(request)
 
       status(result) shouldBe OK
-      val jsonBody = contentAsJson(result)
-      (jsonBody \ "totalRecords").as[Int] shouldBe 1000
+      val jsonBody          = contentAsJson(result)
       val returnResultsSize = (jsonBody \ "returnResults").as[Seq[ReturnResult]].size
-      returnResultsSize should (be > 0 and be <= pageSize)
+      returnResultsSize                       should (be > 0 and be <= limit)
+      (jsonBody \ "totalRecords").toOption  shouldBe None
+      (jsonBody \ "nextCursor").asOpt[String] should not be empty
     }
 
     "fall back to Mongo-backed lookup when auth fails to resolve credentials" in {
       when(
         mockAuthConnector.authorise(any(), any())(any(), any())
-      ).thenReturn(Future.failed(uk.gov.hmrc.auth.core.MissingBearerToken()))
+      ).thenReturn(Future.failed(MissingBearerToken()))
 
       when(
         mockRetrieveReportService.getMonthlyReport(any(), any(), any(), any(), any())
-      ).thenReturn(Future.successful(Right(ReturnResultResponse(totalRecords = 3, returnResults = sampleReturnResult))))
+      ).thenReturn(Future.successful(Right(ReturnResultResponse(returnResults = sampleReturnResult))))
 
       val request = FakeRequest(GET, s"/nps/monthly/$validZReference/2025-26/APR/results")
-      val result  = controller.getMonthlyReport(validZReference, "2025-26", "APR", pageIndex, pageSize)(request)
+      val result  = controller.getMonthlyReport(validZReference, "2025-26", "APR", None, limit)(request)
 
       status(result) shouldBe OK
       val jsonBody = contentAsJson(result)
@@ -254,7 +246,7 @@ class NpsControllerSpec extends BaseUnitSpec {
       ).thenReturn(Future.failed(new RuntimeException("Mongo unavailable")))
 
       val request = FakeRequest(GET, s"/nps/monthly/$validZReference/2025-26/APR/results")
-      val result  = controller.getMonthlyReport(validZReference, "2025-26", "APR", pageIndex, pageSize)(request)
+      val result  = controller.getMonthlyReport(validZReference, "2025-26", "APR", None, limit)(request)
 
       status(result)                                    shouldBe INTERNAL_SERVER_ERROR
       (contentAsJson(result) \ "code").asOpt[String]    shouldBe Some("INTERNAL_SERVER_ERROR")
