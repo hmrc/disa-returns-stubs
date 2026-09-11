@@ -33,13 +33,13 @@ class ReportingWindowControllerSpec extends BaseUnitSpec {
     "use the normalized Z-reference path parameter" in {
       val service    = mock[ReportingWindowService]
       val controller = new ReportingWindowController(stubControllerComponents(), service, stubAuthFilter)
-      when(service.isOpen(eqTo("Z1234"))).thenReturn(Future.successful(true))
+      when(service.isOpen(eqTo("Z12345678"))).thenReturn(Future.successful(true))
 
-      val result = controller.status(" z1234 ")(FakeRequest())
+      val result = controller.status(" z12345678 ")(FakeRequest())
 
       status(result)                                              shouldBe OK
       (contentAsJson(result) \ "reportingWindowOpen").as[Boolean] shouldBe true
-      verify(service).isOpen("Z1234")
+      verify(service).isOpen("Z12345678")
     }
 
     "return a closed status from the service" in {
@@ -57,7 +57,7 @@ class ReportingWindowControllerSpec extends BaseUnitSpec {
       val service    = mock[ReportingWindowService]
       val controller = new ReportingWindowController(stubControllerComponents(), service, stubAuthFilter)
 
-      val result = controller.status("Z12345")(FakeRequest())
+      val result = controller.status("Z123456789")(FakeRequest())
 
       status(result)                               shouldBe BAD_REQUEST
       (contentAsJson(result) \ "error").as[String] shouldBe "Invalid zReference"

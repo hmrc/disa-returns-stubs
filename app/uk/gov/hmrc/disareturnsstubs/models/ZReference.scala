@@ -19,7 +19,9 @@ package uk.gov.hmrc.disareturnsstubs.models
 import java.util.Locale
 
 object ZReference {
-  private val Pattern = "Z[0-9]{4}".r
+  // We allow 4-8 here instead of just 4, to support loose validation for performance testing in staging
+  // where we need a larger pool of Zreferences than just 9999
+  private val Pattern = "Z[0-9]{4,8}".r
 
   def normalize(value: String): Option[String] = {
     val normalized = value.trim.toUpperCase(Locale.ROOT)
