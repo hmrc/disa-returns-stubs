@@ -41,9 +41,10 @@ class UpscanControllerSpec extends BaseUnitSpec {
     val mockConnector: UpscanProxyConnector = mock[UpscanProxyConnector]
     val controller: UpscanController        = new UpscanController(stubControllerComponents(), mockConnector)
 
-    val frontendBaseUrl  = "http://localhost:1205"
-    val errorRedirectUrl = s"$frontendBaseUrl/obligations/returns/isa/upscan/error"
-    val callbackBaseUrl  = "http://localhost:6063"
+    val returnsPrefix: String = "/submit-manage-isas-return"
+    val frontendBaseUrl       = "http://localhost:1205"
+    val errorRedirectUrl      = s"$frontendBaseUrl$returnsPrefix/upscan/error"
+    val callbackBaseUrl       = "http://localhost:6063"
 
     val defaultDataParts: Map[String, Seq[String]] =
       Map("error_action_redirect" -> Seq(errorRedirectUrl))
@@ -173,7 +174,7 @@ class UpscanControllerSpec extends BaseUnitSpec {
 
     "proxy a normal file and pass through a redirect response from the connector" in new TestSetup {
 
-      val successUrl   = s"$frontendBaseUrl/obligations/returns/isa/upscan/success?key=abc123"
+      val successUrl   = s"$frontendBaseUrl$returnsPrefix/upscan/success?key=abc123"
       val mockResponse = httpResponse(SEE_OTHER, headers = Map(LOCATION -> Seq(successUrl)))
 
       when(mockConnector.upload(any(), any())(any(), any()))
@@ -202,7 +203,7 @@ class UpscanControllerSpec extends BaseUnitSpec {
 
     "intercept a file with a disallowed MIME type, redirect to success_action_redirect and send a REJECTED callback" in new TestSetup {
 
-      val successUrl  = s"$frontendBaseUrl/obligations/returns/isa/upscan/success"
+      val successUrl  = s"$frontendBaseUrl$returnsPrefix/upscan/success"
       val callbackUrl = s"$callbackBaseUrl/disa-returns-backend/monthly/upscan/callback/Z0000/2026-27/6"
       val reference   = "f24d44f0-c0b7-4cd4-aea6-f76bc276139c"
 
@@ -261,7 +262,7 @@ class UpscanControllerSpec extends BaseUnitSpec {
 
     "redirect to success_action_redirect without a key parameter and skip the callback when key is missing" in new TestSetup {
 
-      val successUrl = s"$frontendBaseUrl/obligations/returns/isa/upscan/success"
+      val successUrl = s"$frontendBaseUrl$returnsPrefix/upscan/success"
 
       val request = FakeRequest("POST", "/upscan/upload")
         .withBody(
@@ -282,7 +283,7 @@ class UpscanControllerSpec extends BaseUnitSpec {
 
     "still redirect to success_action_redirect when sending the REJECTED callback fails" in new TestSetup {
 
-      val successUrl  = s"$frontendBaseUrl/obligations/returns/isa/upscan/success"
+      val successUrl  = s"$frontendBaseUrl$returnsPrefix/upscan/success"
       val callbackUrl = s"$callbackBaseUrl/disa-returns-backend/monthly/upscan/callback/Z0000/2026-27/6"
       val reference   = "f24d44f0-c0b7-4cd4-aea6-f76bc276139c"
 
