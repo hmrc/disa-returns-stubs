@@ -35,22 +35,6 @@ class NpsControllerISpec extends BaseISpec {
   val month                       = "APR"
   val taxYear                     = "2025-26"
 
-  val report: MonthlyReport = MonthlyReport(
-    zReference = validZReference,
-    year = taxYear,
-    month = month,
-    returnResults = Seq(
-      ReturnResult(
-        accountNumber = "100000001",
-        nino = "AB123457C",
-        issueIdentified = IssueIdentifiedMessage(
-          code = "UNABLE_TO_IDENTIFY_INVESTOR",
-          message = "Unable to identify investor"
-        )
-      )
-    )
-  )
-
   val validPayload: JsValue = Json.parse("""[
   |  {
   |    "accountNumber": "12345678",
