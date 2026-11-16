@@ -22,7 +22,7 @@ POST    /etmp/declaration/:zReference                                           
 
 POST    /nps/submit/:zReference                                                                   uk.gov.hmrc.disareturnsstubs.controllers.NpsController.submitMonthlyReturn(zReference: String)
 
-POST    /nps/declaration/:zReference                                                              uk.gov.hmrc.disareturnsstubs.controllers.NpsController.send(zReference: String)
+POST    /disa/:zReference/obligations/monthly/declarations                                        uk.gov.hmrc.disareturnsstubs.controllers.NpsController.send(zReference: String)
 
 GET     /monthly/:zReference/:taxYear/:month/results                                              uk.gov.hmrc.disareturnsstubs.controllers.NpsController.getMonthlyReport(zReference: String, taxYear: String, month: String, cursor: Option[String], limit: Int ?= 200)
 
