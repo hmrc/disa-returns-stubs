@@ -31,46 +31,48 @@ import java.time.Instant
 class NpsControllerISpec extends BaseISpec {
 
   val submitMonthlyReturnEndpoint = "/nps/submit"
-  val npsDeclarationEndpoint      = "/nps/declaration"
-  val month                       = "APR"
-  val taxYear                     = "2025-26"
+  val npsDeclarationEndpoint = s"/disa/$validZReference/obligations/monthly/declarations"
+  val faultyNpsDeclarationEndpoint = s"/disa/Z1500/obligations/monthly/declarations"
+  val month = "APR"
+  val taxYear = "2025-26"
 
-  val validPayload: JsValue = Json.parse("""[
-  |  {
-  |    "accountNumber": "12345678",
-  |    "nino": "AB123456C",
-  |    "firstName": "John",
-  |    "middleName": "Michael",
-  |    "lastName": "Smith",
-  |    "dateOfBirth": "1980-01-01",
-  |    "isaType": "LIFETIME_CASH",
-  |    "reportingATransfer": true,
-  |    "dateOfLastSubscription": "2025-05-01",
-  |    "totalCurrentYearSubscriptionsToDate": 5000,
-  |    "marketValueOfAccount": 10000,
-  |    "dateOfFirstSubscription": "2025-04-06",
-  |    "lisaQualifyingAddition": 1000,
-  |    "lisaBonusClaim": 1000
-  |  },
-  |  {
-  |    "accountNumber": "12345678",
-  |    "nino": "AB123456C",
-  |    "firstName": "John",
-  |    "middleName": "Michael",
-  |    "lastName": "Smith",
-  |    "dateOfBirth": "1980-01-01",
-  |    "isaType": "LIFETIME_CASH",
-  |    "reportingATransfer": true,
-  |    "dateOfLastSubscription": "2025-05-01",
-  |    "totalCurrentYearSubscriptionsToDate": 5000,
-  |    "marketValueOfAccount": 10000,
-  |    "accountNumberOfTransferringAccount": "87654321",
-  |    "amountTransferred": 5000,
-  |    "dateOfFirstSubscription": "2025-04-06",
-  |    "lisaQualifyingAddition": 1000,
-  |    "lisaBonusClaim": 1000
-  |  }
-  |]""".stripMargin)
+  val validPayload: JsValue = Json.parse(
+    """[
+      |  {
+      |    "accountNumber": "12345678",
+      |    "nino": "AB123456C",
+      |    "firstName": "John",
+      |    "middleName": "Michael",
+      |    "lastName": "Smith",
+      |    "dateOfBirth": "1980-01-01",
+      |    "isaType": "LIFETIME_CASH",
+      |    "reportingATransfer": true,
+      |    "dateOfLastSubscription": "2025-05-01",
+      |    "totalCurrentYearSubscriptionsToDate": 5000,
+      |    "marketValueOfAccount": 10000,
+      |    "dateOfFirstSubscription": "2025-04-06",
+      |    "lisaQualifyingAddition": 1000,
+      |    "lisaBonusClaim": 1000
+      |  },
+      |  {
+      |    "accountNumber": "12345678",
+      |    "nino": "AB123456C",
+      |    "firstName": "John",
+      |    "middleName": "Michael",
+      |    "lastName": "Smith",
+      |    "dateOfBirth": "1980-01-01",
+      |    "isaType": "LIFETIME_CASH",
+      |    "reportingATransfer": true,
+      |    "dateOfLastSubscription": "2025-05-01",
+      |    "totalCurrentYearSubscriptionsToDate": 5000,
+      |    "marketValueOfAccount": 10000,
+      |    "accountNumberOfTransferringAccount": "87654321",
+      |    "amountTransferred": 5000,
+      |    "dateOfFirstSubscription": "2025-04-06",
+      |    "lisaQualifyingAddition": 1000,
+      |    "lisaBonusClaim": 1000
+      |  }
+      |]""".stripMargin)
 
   "POST /nps/submit/:zReference" should {
 
@@ -129,13 +131,13 @@ class NpsControllerISpec extends BaseISpec {
   "POST /nps/declaration/:zReference" should {
 
     "return 204 NoContent for any non-error ISA ref" in {
-      val request = FakeRequest(POST, s"$npsDeclarationEndpoint/$validZReference")
-      val result  = route(app, request).get
+      val request = FakeRequest(POST, npsDeclarationEndpoint)
+      val result = route(app, request).get
       status(result) mustBe NO_CONTENT
     }
 
     "return 500 InternalServerError for ISA ref Z1500" in {
-      val request = FakeRequest(POST, s"$npsDeclarationEndpoint/Z1500")
+      val request = FakeRequest(POST, faultyNpsDeclarationEndpoint)
 
       val result = route(app, request).get
       status(result) mustBe INTERNAL_SERVER_ERROR
@@ -184,7 +186,7 @@ class NpsControllerISpec extends BaseISpec {
       await(reportIssueRepository.insertMany(Seq(issue)))
 
       val request = FakeRequest(GET, s"/monthly/$validZReference/$taxYear/$month/results")
-      val result  = route(app, request).get
+      val result = route(app, request).get
 
       status(result) mustBe OK
       val jsonBody = contentAsJson(result)
@@ -213,13 +215,13 @@ class NpsControllerISpec extends BaseISpec {
       await(reportIssueRepository.insertMany(issues))
 
       val firstRequest = FakeRequest(GET, s"/monthly/$validZReference/$taxYear/$month/results?limit=$limit")
-      val firstResult  = route(app, firstRequest).get
+      val firstResult = route(app, firstRequest).get
       status(firstResult) mustBe OK
-      val firstJson    = contentAsJson(firstResult)
-      val nextCursor   = (firstJson \ "nextCursor").as[String]
+      val firstJson = contentAsJson(firstResult)
+      val nextCursor = (firstJson \ "nextCursor").as[String]
       (firstJson \ "returnResults")
         .as[Seq[ReturnResult]]
-        .map(_.accountNumber) must contain allOf ("100000001", "100000002")
+        .map(_.accountNumber) must contain allOf("100000001", "100000002")
       (firstJson \ "totalRecords").toOption mustBe None
       nextCursor mustBe "b2Zmc2V0OjI"
 
@@ -227,9 +229,9 @@ class NpsControllerISpec extends BaseISpec {
         GET,
         s"/monthly/$validZReference/$taxYear/$month/results?cursor=$nextCursor&limit=$limit"
       )
-      val secondResult  = route(app, secondRequest).get
+      val secondResult = route(app, secondRequest).get
       status(secondResult) mustBe OK
-      val secondJson    = contentAsJson(secondResult)
+      val secondJson = contentAsJson(secondResult)
       (secondJson \ "returnResults").as[Seq[ReturnResult]].map(_.accountNumber) must contain("100000003")
       (secondJson \ "totalRecords").toOption mustBe None
       (secondJson \ "nextCursor").toOption mustBe None
@@ -238,14 +240,14 @@ class NpsControllerISpec extends BaseISpec {
         GET,
         s"/monthly/$validZReference/$taxYear/$month/results?cursor=${encodeCursor(3)}&limit=$limit"
       )
-      val staleCursorResult  = route(app, staleCursorRequest).get
+      val staleCursorResult = route(app, staleCursorRequest).get
       status(staleCursorResult) mustBe BAD_REQUEST
       (contentAsJson(staleCursorResult) \ "code").as[String] mustBe "INVALID_CURSOR"
     }
 
     "return 400 BadRequest for an invalid cursor" in {
       val request = FakeRequest(GET, s"/monthly/$validZReference/$taxYear/$month/results?cursor=not-a-cursor")
-      val result  = route(app, request).get
+      val result = route(app, request).get
 
       status(result) mustBe BAD_REQUEST
       (contentAsJson(result) \ "code").asOpt[String] mustBe Some("INVALID_CURSOR")
@@ -253,7 +255,7 @@ class NpsControllerISpec extends BaseISpec {
 
     "return 400 BadRequest when limit exceeds 1000" in {
       val request = FakeRequest(GET, s"/monthly/$validZReference/$taxYear/$month/results?limit=1001")
-      val result  = route(app, request).get
+      val result = route(app, request).get
 
       status(result) mustBe BAD_REQUEST
       (contentAsJson(result) \ "code").asOpt[String] mustBe Some("BAD_REQUEST")
@@ -263,7 +265,7 @@ class NpsControllerISpec extends BaseISpec {
       await(reportEventRepository.collection.drop().toFuture())
       await(reportIssueRepository.collection.drop().toFuture())
       val request = FakeRequest(GET, s"/monthly/$validZReference/$taxYear/$month/results?limit=10")
-      val result  = route(app, request).get
+      val result = route(app, request).get
 
       status(result) mustBe NOT_FOUND
       (contentAsJson(result) \ "code").asOpt[String] mustBe Some("REPORT_NOT_FOUND")
@@ -272,7 +274,7 @@ class NpsControllerISpec extends BaseISpec {
 
     "return 500 InternalServerError when zReference is Z1500" in {
       val request = FakeRequest(GET, s"/monthly/Z1500/$taxYear/$month/results?limit=10")
-      val result  = route(app, request).get
+      val result = route(app, request).get
 
       status(result) mustBe INTERNAL_SERVER_ERROR
       (contentAsJson(result) \ "code").asOpt[String] mustBe Some("INTERNAL_SERVER_ERROR")
