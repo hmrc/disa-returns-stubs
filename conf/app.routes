@@ -20,7 +20,7 @@ POST    /etmp/declaration/:zReference                                           
 
 ## NPS routes
 
-POST    /nps/submit/:zReference                                                                   uk.gov.hmrc.disareturnsstubs.controllers.NpsController.submitMonthlyReturn(zReference: String)
+POST    /disa/:zReference/obligations/monthly                                                     uk.gov.hmrc.disareturnsstubs.controllers.NpsController.submitMonthlyReturn(zReference: String)
 
 POST    /disa/:zReference/obligations/monthly/declarations                                        uk.gov.hmrc.disareturnsstubs.controllers.NpsController.send(zReference: String)
 
