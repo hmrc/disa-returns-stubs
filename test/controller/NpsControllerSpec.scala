@@ -74,7 +74,7 @@ class NpsControllerSpec extends BaseUnitSpec {
   "submitMonthlyReturn" should {
     "return 204 no content for successful submission" in {
       val request =
-        FakeRequest(POST, s"/nps/submit/$validZReference")
+        FakeRequest(POST, s"/disa/$validZReference/obligations/monthly")
 
       val result = controller.submitMonthlyReturn(validZReference)(request)
       status(result) shouldBe NO_CONTENT
@@ -82,7 +82,7 @@ class NpsControllerSpec extends BaseUnitSpec {
 
     "return 400 Bad Request for ISA Manager Reference Z1400" in {
       val zReference = "Z1400"
-      val request    = FakeRequest(POST, s"/nps/submit/$zReference")
+      val request    = FakeRequest(POST, s"/disa/$zReference/obligations/monthly")
 
       val result = controller.submitMonthlyReturn(zReference)(request)
       status(result)                                 shouldBe BAD_REQUEST
@@ -92,7 +92,7 @@ class NpsControllerSpec extends BaseUnitSpec {
 
     "return 503 Service Unavailable for ISA Manager Reference Z1503" in {
       val zReference = "Z1503"
-      val request    = FakeRequest(POST, s"/nps/submit/$zReference")
+      val request    = FakeRequest(POST, s"/disa/$zReference/obligations/monthly")
 
       val result = controller.submitMonthlyReturn(zReference)(request)
       status(result)                                 shouldBe SERVICE_UNAVAILABLE

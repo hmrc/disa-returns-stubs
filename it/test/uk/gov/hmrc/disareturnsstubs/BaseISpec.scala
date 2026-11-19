@@ -64,6 +64,8 @@ trait BaseISpec
     Gen.listOfN(4, Gen.numChar).map(digits => s"Z${digits.mkString}")
 
   val validZReference: String = zReferenceGen.sample.get
+  val MonthlySubmit400Url: String = "/disa/Z1400/obligations/monthly"
+  val MonthlySubmit500Url: String = "/disa/Z1503/obligations/monthly"
 
   protected def serviceUrl(path: String): String = s"http://localhost:$port$path"
 }

@@ -77,7 +77,7 @@ sbt scalafmt
 
 ### Endpoint:
 ```bash
-POST /nps/submit/:zReference
+POST /disa/:zReference/obligations/monthly
 ```
 
 ### Z Reference Based Responses:

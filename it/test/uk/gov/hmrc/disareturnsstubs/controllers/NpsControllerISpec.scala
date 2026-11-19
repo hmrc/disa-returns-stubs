@@ -30,7 +30,7 @@ import java.time.Instant
 
 class NpsControllerISpec extends BaseISpec {
 
-  val submitMonthlyReturnEndpoint = "/nps/submit"
+  val submitMonthlyReturnEndpoint = s"/disa/$validZReference/obligations/monthly"
   val npsDeclarationEndpoint = s"/disa/$validZReference/obligations/monthly/declarations"
   val faultyNpsDeclarationEndpoint = s"/disa/Z1500/obligations/monthly/declarations"
   val month = "APR"
@@ -74,10 +74,10 @@ class NpsControllerISpec extends BaseISpec {
       |  }
       |]""".stripMargin)
 
-  "POST /nps/submit/:zReference" should {
+  "POST /disa/:zReference/obligations/monthly" should {
 
     "return 204 NoContent for any non-error ISA ref" in {
-      val request = FakeRequest(POST, s"$submitMonthlyReturnEndpoint/$validZReference")
+      val request = FakeRequest(POST, submitMonthlyReturnEndpoint)
         .withHeaders(AUTHORIZATION -> "Bearer token")
         .withJsonBody(validPayload)
 
@@ -86,7 +86,7 @@ class NpsControllerISpec extends BaseISpec {
     }
 
     "return 400 BadRequest for isaRef Z1400" in {
-      val request = FakeRequest(POST, s"$submitMonthlyReturnEndpoint/Z1400")
+      val request = FakeRequest(POST, MonthlySubmit400Url)
         .withHeaders(AUTHORIZATION -> "Bearer token")
         .withJsonBody(validPayload)
 
@@ -96,7 +96,7 @@ class NpsControllerISpec extends BaseISpec {
     }
 
     "return 503 ServiceUnavailable for isaRef Z1503" in {
-      val request = FakeRequest(POST, s"$submitMonthlyReturnEndpoint/Z1503")
+      val request = FakeRequest(POST, MonthlySubmit500Url)
         .withHeaders(AUTHORIZATION -> "Bearer token")
         .withJsonBody(validPayload)
 
@@ -106,7 +106,7 @@ class NpsControllerISpec extends BaseISpec {
     }
 
     "return 403 Forbidden when Authorization header is missing" in {
-      val request = FakeRequest(POST, s"$submitMonthlyReturnEndpoint/$validZReference")
+      val request = FakeRequest(POST, submitMonthlyReturnEndpoint)
         .withJsonBody(validPayload)
 
       val result = route(app, request).get
@@ -118,7 +118,7 @@ class NpsControllerISpec extends BaseISpec {
       val oversizedBody = "a" * (10 * 1024 * 1024 + 1)
 
       val request =
-        FakeRequest(POST, s"$submitMonthlyReturnEndpoint/$validZReference")
+        FakeRequest(POST, submitMonthlyReturnEndpoint)
           .withHeaders(AUTHORIZATION -> "Bearer token")
           .withBody(oversizedBody)
 
